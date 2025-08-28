@@ -5,10 +5,12 @@ import type { ApiResponse, UploadResponse } from '@/lib/types';
 export async function POST(request: NextRequest) {
   try {
     // Validate environment variables
+    console.log('Upload API: Validating Supabase configuration...');
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('Upload API: Supabase configuration missing');
       return NextResponse.json<ApiResponse>({
         success: false,
-        error: 'Supabase configuration missing'
+        error: 'Supabase configuration missing. Please check environment variables.'
       }, { status: 500 });
     }
 
@@ -47,7 +49,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Upload to Supabase
+    console.log(`Upload API: Starting upload for ${file.name} (${file.size} bytes)`);
     const uploadResult = await uploadFileToSupabase(file);
+    console.log('Upload API: Upload completed successfully:', uploadResult);
 
     const response: ApiResponse<UploadResponse> = {
       success: true,
@@ -60,12 +64,28 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Upload API error:', error);
     
-    const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+    // Provide more detailed error messages based on error type
+    let errorMessage = 'Upload failed';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      // Handle specific Supabase errors
+      if (error.message.includes('signature verification failed')) {
+        errorMessage = 'Supabase authentication failed. Please check your API keys.';
+        statusCode = 401;
+      } else if (error.message.includes('Invalid API key')) {
+        errorMessage = 'Invalid Supabase API key. Please check your configuration.';
+        statusCode = 401;
+      } else if (error.message.includes('Upload failed')) {
+        statusCode = 400;
+      }
+    }
     
     return NextResponse.json<ApiResponse>({
       success: false,
       error: errorMessage
-    }, { status: 500 });
+    }, { status: statusCode });
   }
 }
 

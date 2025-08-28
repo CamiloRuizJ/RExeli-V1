@@ -6,9 +6,10 @@ export async function POST(request: NextRequest) {
   try {
     // Validate environment variables
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'dummy-key-for-build') {
+      console.error('Classification API: OpenAI API key not configured');
       return NextResponse.json<ApiResponse>({
         success: false,
-        error: 'OpenAI API key not configured'
+        error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.'
       }, { status: 500 });
     }
 
@@ -26,16 +27,21 @@ export async function POST(request: NextRequest) {
     let imageBase64: string;
     
     try {
+      console.log(`Processing file: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
       imageBase64 = await fileToBase64(file);
-    } catch (error) {
+      console.log('File converted to base64 successfully');
+    } catch (fileError) {
+      console.error('File conversion error:', fileError);
       return NextResponse.json<ApiResponse>({
         success: false,
-        error: 'Failed to process file for classification'
+        error: `Failed to process file for classification: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`
       }, { status: 400 });
     }
 
     // Classify document using OpenAI Vision
+    console.log('Starting document classification...');
     const classification = await classifyDocument(imageBase64);
+    console.log('Classification completed:', classification);
 
     const response: ApiResponse<ClassificationResponse> = {
       success: true,
@@ -51,12 +57,29 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Classification API error:', error);
     
-    const errorMessage = error instanceof Error ? error.message : 'Classification failed';
+    // Provide more detailed error messages based on error type
+    let errorMessage = 'Classification failed';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      // Handle specific OpenAI errors
+      if (error.message.includes('401') || error.message.includes('invalid_api_key')) {
+        errorMessage = 'Invalid OpenAI API key. Please check your API key configuration.';
+        statusCode = 401;
+      } else if (error.message.includes('429')) {
+        errorMessage = 'OpenAI API rate limit exceeded. Please try again later.';
+        statusCode = 429;
+      } else if (error.message.includes('insufficient_quota')) {
+        errorMessage = 'OpenAI API quota exceeded. Please check your billing details.';
+        statusCode = 402;
+      }
+    }
     
     return NextResponse.json<ApiResponse>({
       success: false,
       error: errorMessage
-    }, { status: 500 });
+    }, { status: statusCode });
   }
 }
 

@@ -6,6 +6,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy-key'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Log configuration for debugging
+if (typeof window === 'undefined') {
+  console.log('Supabase configured:', {
+    url: supabaseUrl.substring(0, 30) + '...',
+    keyPrefix: supabaseAnonKey.substring(0, 10) + '...',
+    hasUrl: !!supabaseUrl && supabaseUrl !== 'https://dummy.supabase.co',
+    hasKey: !!supabaseAnonKey && supabaseAnonKey !== 'dummy-key'
+  });
+}
+
 /**
  * Upload a file to Supabase Storage
  */
@@ -14,10 +24,14 @@ export async function uploadFileToSupabase(
   bucket: string = 'documents'
 ): Promise<UploadResponse> {
   try {
+    console.log(`Supabase: Starting upload to bucket '${bucket}' for file: ${file.name}`);
+    
     // Generate unique filename with timestamp
     const timestamp = Date.now();
     const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const fileName = `${timestamp}_${cleanFileName}`;
+    
+    console.log(`Supabase: Generated filename: ${fileName}`);
 
     const { data, error } = await supabase.storage
       .from(bucket)
@@ -27,13 +41,21 @@ export async function uploadFileToSupabase(
       });
 
     if (error) {
+      console.error('Supabase upload error details:', {
+        message: error.message,
+        error: error
+      });
       throw new Error(`Upload failed: ${error.message}`);
     }
+    
+    console.log('Supabase: File uploaded successfully:', data);
 
     // Get public URL
     const { data: urlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(data.path);
+    
+    console.log('Supabase: Generated public URL:', urlData.publicUrl);
 
     return {
       fileId: data.path,

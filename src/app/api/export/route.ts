@@ -13,12 +13,37 @@ import type {
 
 export async function POST(request: NextRequest) {
   try {
-    const { extractedData, options } = await request.json();
+    console.log('Export API: Processing request...');
+    
+    // Parse JSON with better error handling
+    let requestBody;
+    try {
+      const requestText = await request.text();
+      console.log('Raw request body:', requestText.substring(0, 200) + '...');
+      requestBody = JSON.parse(requestText);
+    } catch (jsonError) {
+      console.error('JSON parsing error:', jsonError);
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: `Invalid JSON in request body: ${jsonError instanceof Error ? jsonError.message : 'Parse error'}`
+      }, { status: 400 });
+    }
+    
+    const { extractedData, options } = requestBody;
+    console.log('Parsed request data:', { hasExtractedData: !!extractedData, options });
 
     if (!extractedData) {
       return NextResponse.json<ApiResponse>({
         success: false,
         error: 'No extracted data provided'
+      }, { status: 400 });
+    }
+    
+    // Validate extracted data structure
+    if (!extractedData.documentType || !extractedData.data) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Invalid extracted data structure. Missing documentType or data.'
       }, { status: 400 });
     }
 
@@ -28,10 +53,14 @@ export async function POST(request: NextRequest) {
     workbook.created = new Date();
 
     // Generate Excel based on document type
+    console.log(`Generating Excel for document type: ${extractedData.documentType}`);
     await generateExcelByType(workbook, extractedData, options);
+    console.log('Excel generation completed');
 
     // Generate buffer
+    console.log('Converting workbook to buffer...');
     const buffer = await workbook.xlsx.writeBuffer();
+    console.log(`Excel buffer generated: ${buffer.byteLength} bytes`);
 
     // Create filename
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
@@ -50,12 +79,25 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Export API error:', error);
     
-    const errorMessage = error instanceof Error ? error.message : 'Export failed';
+    // Provide more detailed error messages
+    let errorMessage = 'Export failed';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // Handle specific Excel generation errors
+      if (error.message.includes('JSON')) {
+        statusCode = 400;
+      } else if (error.message.includes('Invalid extracted data')) {
+        statusCode = 400;
+      }
+    }
     
     return NextResponse.json<ApiResponse>({
       success: false,
-      error: errorMessage
-    }, { status: 500 });
+      error: errorMessage,
+    }, { status: statusCode });
   }
 }
 

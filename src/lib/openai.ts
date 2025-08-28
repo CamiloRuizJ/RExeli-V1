@@ -10,27 +10,37 @@ import type {
   FinancialData 
 } from './types';
 
+// Following OpenAI Quickstart Guide best practices
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build',
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Validate API key is present
+if (!process.env.OPENAI_API_KEY) {
+  console.error('OPENAI_API_KEY environment variable is required');
+}
+
 /**
- * Commercial Real Estate Document Classification Prompts
+ * Enhanced Real Estate Professional Document Classification Prompts
  */
 const CLASSIFICATION_PROMPT = `
-You are an expert commercial real estate analyst. Analyze this document image and classify it into one of these categories:
+You are an expert commercial real estate professional with 20+ years of experience in property investment, valuation, and portfolio management. Your expertise includes analyzing all types of commercial real estate documents for investment firms, property managers, and real estate professionals.
 
-1. RENT_ROLL - Contains tenant information, unit numbers, rental rates, lease terms, occupancy data
-2. OFFERING_MEMO - Marketing material for property sales, includes property details, financial projections, highlights
-3. LEASE_AGREEMENT - Legal document between landlord and tenant with lease terms
-4. COMPARABLE_SALES - Market data showing recent property sales with pricing information
-5. FINANCIAL_STATEMENT - Income/expense statements, cash flow analysis, NOI calculations
+Analyze this document image with the precision of a seasoned commercial real estate analyst and classify it into one of these categories:
+
+1. RENT_ROLL - Contains tenant information, unit/suite numbers, rental rates, lease terms, occupancy data, tenant mix analysis
+2. OFFERING_MEMO - Marketing material for property sales/acquisitions, includes property details, financial projections, investment highlights, market analysis
+3. LEASE_AGREEMENT - Legal document between landlord and tenant with lease terms, rent escalations, CAM charges, tenant improvements
+4. COMPARABLE_SALES - Market data showing recent property sales with pricing information, cap rates, price per square foot analysis
+5. FINANCIAL_STATEMENT - Income/expense statements, cash flow analysis, NOI calculations, operating expense breakdowns, T-12 statements
+
+As a real estate professional, focus on identifying key indicators that matter for investment decisions and property valuation.
 
 Respond with this exact JSON structure:
 {
   "type": "rent_roll|offering_memo|lease_agreement|comparable_sales|financial_statement",
   "confidence": 0.95,
-  "reasoning": "Brief explanation of classification decision"
+  "reasoning": "Brief explanation of classification decision based on real estate investment criteria"
 }
 `;
 
@@ -39,13 +49,19 @@ Respond with this exact JSON structure:
  */
 const EXTRACTION_PROMPTS = {
   rent_roll: `
-Extract rent roll data from this document. Focus on:
-- Unit/suite numbers
-- Tenant names (or "VACANT")
-- Square footage
-- Monthly rent amounts
-- Lease start/end dates
-- Occupancy status
+You are an expert commercial real estate professional analyzing a rent roll for investment analysis and property management decisions. Extract comprehensive rent roll data with the precision required for NOI calculations and investment underwriting.
+
+Focus on extracting ALL relevant data points that real estate professionals need:
+- Unit/suite numbers and floor locations
+- Tenant names (company names, or "VACANT" for empty units)
+- Square footage per unit (rentable and usable SF)
+- Monthly rent amounts (base rent)
+- Lease start/end dates and remaining lease terms
+- Occupancy status and lease type (NNN, Modified Gross, Full Service)
+- Annual rent escalations and CAM charges
+- Security deposits and tenant improvements
+- Lease expiration rollover schedule
+- Tenant credit ratings if available
 
 Return JSON with this structure:
 {
@@ -80,10 +96,18 @@ Return JSON with this structure:
   `,
 
   offering_memo: `
-Extract key property and financial data from this offering memorandum:
-- Property details (name, address, type, year built)
-- Financial metrics (asking price, cap rate, NOI)
-- Key highlights and features
+You are an expert commercial real estate investment analyst reviewing an offering memorandum for potential acquisition. Extract comprehensive property and financial data with the precision required for investment committee presentations and due diligence processes.
+
+Focus on extracting critical investment metrics and property details:
+- Property fundamentals (name, address, property type, year built, recent renovations)
+- Financial performance (asking price, cap rate, NOI, cash-on-cash returns)
+- Investment highlights and value-add opportunities
+- Market positioning and competitive advantages
+- Tenant mix and credit quality
+- Physical property characteristics (building size, parking, amenities)
+- Location attributes (demographics, traffic counts, nearby anchors)
+- Investment thesis and growth projections
+- Capital improvement requirements
 
 Return JSON with this structure:
 {
@@ -119,10 +143,20 @@ Return JSON with this structure:
   `,
 
   lease_agreement: `
-Extract lease terms and key data from this lease agreement:
-- Tenant and landlord information
-- Lease dates and rental terms
-- Property details
+You are an expert commercial real estate attorney and leasing professional analyzing a lease agreement for portfolio management and cash flow projections. Extract comprehensive lease terms with the detail required for lease administration and investment analysis.
+
+Focus on extracting all financially relevant lease provisions:
+- Tenant and landlord legal entities and contact information
+- Leased premises description (suite number, square footage, common areas)
+- Lease term (commencement, expiration, renewal options)
+- Rental structure (base rent, escalations, percentage rent if applicable)
+- Additional charges (CAM, taxes, insurance, utilities)
+- Security deposit and personal guarantees
+- Tenant improvement allowances and landlord work
+- Assignment and subletting rights
+- Default provisions and cure periods
+- Early termination options and penalties
+- Special clauses affecting cash flow
 
 Return JSON with this structure:
 {
@@ -151,10 +185,20 @@ Return JSON with this structure:
   `,
 
   comparable_sales: `
-Extract comparable sales data from this document:
-- Property addresses
-- Sale prices and dates
-- Property characteristics
+You are an expert commercial real estate appraiser and market analyst extracting comparable sales data for property valuation and investment analysis. Extract comprehensive market data with the precision required for appraisal reports and investment underwriting.
+
+Focus on extracting all relevant valuation metrics:
+- Property addresses and exact locations
+- Sale prices and closing dates
+- Property characteristics (SF, year built, property type, condition)
+- Financial metrics (price per SF, cap rates, NOI at sale)
+- Market conditions at time of sale
+- Buyer and seller information (if available)
+- Financing terms and assumptions
+- Property improvements and renovations
+- Occupancy levels at time of sale
+- Special circumstances affecting the sale
+- Days on market and marketing approach
 
 Return JSON with this structure:
 {
@@ -179,10 +223,19 @@ Return JSON with this structure:
   `,
 
   financial_statement: `
-Extract financial data from this statement:
-- Revenue items (rent, other income)
-- Operating expenses by category
-- Net operating income
+You are an expert commercial real estate financial analyst extracting operating performance data for investment analysis and asset management decisions. Extract comprehensive financial data with the precision required for NOI calculations, budget variance analysis, and investor reporting.
+
+Focus on extracting all revenue and expense line items:
+- Revenue streams (base rent, percentage rent, reimbursements, parking, other income)
+- Operating expenses by detailed category (management, maintenance, utilities, insurance, taxes, professional fees)
+- Capital expenditures and tenant improvements
+- Net operating income and cash flow calculations
+- Occupancy rates and rental rate trends
+- Budget vs actual variance analysis
+- Year-over-year performance comparisons
+- Expense ratios and benchmarking data
+- Reserve fund allocations
+- Debt service and capital structure (if shown)
 
 Return JSON with this structure:
 {
@@ -215,11 +268,19 @@ Return JSON with this structure:
 
 /**
  * Classify a document using OpenAI Vision API
+ * Following OpenAI Quickstart Guide best practices
  */
 export async function classifyDocument(imageBase64: string): Promise<DocumentClassification> {
   try {
+    console.log('OpenAI: Starting document classification...');
+    
+    // Check API key availability
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key not configured');
+    }
+    
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini", // Cost-effective model as specified
       messages: [
         {
           role: "user",
@@ -229,25 +290,62 @@ export async function classifyDocument(imageBase64: string): Promise<DocumentCla
               type: "image_url",
               image_url: {
                 url: `data:image/jpeg;base64,${imageBase64}`,
+                detail: "high" // Better quality analysis for real estate documents
               },
             },
           ],
         },
       ],
       max_tokens: 500,
-      temperature: 0.1,
+      temperature: 0.1, // Low temperature for consistent results
+      response_format: { type: "json_object" }, // Ensure JSON response
     });
 
+    console.log('OpenAI: Classification response received');
     const content = response.choices[0]?.message?.content;
     if (!content) {
-      throw new Error('No classification response received');
+      throw new Error('No classification response received from OpenAI');
     }
 
-    // Parse JSON response
-    const classification = JSON.parse(content);
-    return classification;
-  } catch (error) {
+    console.log('OpenAI classification response:', content);
+
+    // Parse JSON response with OpenAI quickstart error handling pattern
+    try {
+      const classification = JSON.parse(content);
+      
+      // Validate required fields per OpenAI best practices
+      if (!classification.type || classification.confidence === undefined || !classification.reasoning) {
+        throw new Error('Invalid classification response structure');
+      }
+      
+      console.log('Classification successful:', classification);
+      return classification;
+    } catch (jsonError) {
+      console.error('Failed to parse classification JSON:', jsonError);
+      console.error('Raw response:', content);
+      throw new Error(`Invalid JSON response from OpenAI: ${content}`);
+    }
+  } catch (error: unknown) {
     console.error('Document classification error:', error);
+    
+    // OpenAI quickstart guide error handling patterns
+    if (error && typeof error === 'object' && 'response' in error) {
+      const apiError = error as { response?: { status?: number } };
+      if (apiError.response?.status === 401) {
+        throw new Error('OpenAI API authentication failed. Please check your API key.');
+      } else if (apiError.response?.status === 429) {
+        throw new Error('OpenAI API rate limit exceeded. Please try again later.');
+      } else if (apiError.response?.status === 402) {
+        throw new Error('OpenAI API quota exceeded. Please check your billing.');
+      } else if (apiError.response?.status && apiError.response.status >= 500) {
+        throw new Error('OpenAI API server error. Please try again later.');
+      }
+    }
+    
+    // Re-throw original error if it's already formatted
+    if (error instanceof Error) {
+      throw error;
+    }
     throw new Error('Failed to classify document');
   }
 }
@@ -260,13 +358,17 @@ export async function extractDocumentData(
   documentType: DocumentType
 ): Promise<ExtractedData> {
   try {
+    console.log(`OpenAI: Starting data extraction for ${documentType}...`);
+    
     const prompt = EXTRACTION_PROMPTS[documentType as keyof typeof EXTRACTION_PROMPTS];
     if (!prompt) {
       throw new Error(`No extraction prompt available for document type: ${documentType}`);
     }
 
+    console.log(`OpenAI: Using extraction prompt for ${documentType}`);
+    
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
@@ -285,16 +387,46 @@ export async function extractDocumentData(
       temperature: 0.1,
     });
 
+    console.log('OpenAI: Extraction response received');
     const content = response.choices[0]?.message?.content;
     if (!content) {
-      throw new Error('No extraction response received');
+      throw new Error('No extraction response received from OpenAI');
     }
 
-    // Parse JSON response
-    const extractedData = JSON.parse(content);
-    return extractedData;
+    console.log('OpenAI extraction response:', content);
+
+    // Parse JSON response with better error handling
+    try {
+      const extractedData = JSON.parse(content);
+      
+      // Validate the response structure
+      if (!extractedData.documentType || !extractedData.data) {
+        throw new Error('Invalid extraction response structure - missing documentType or data');
+      }
+      
+      console.log('Extraction successful:', extractedData);
+      return extractedData;
+    } catch (jsonError) {
+      console.error('Failed to parse extraction JSON:', jsonError);
+      console.error('Raw response:', content);
+      throw new Error(`Invalid JSON response from OpenAI: ${content}`);
+    }
   } catch (error) {
     console.error('Document extraction error:', error);
+    
+    // Re-throw with more specific error message
+    if (error instanceof Error) {
+      if (error.message.includes('401') || error.message.includes('invalid_api_key')) {
+        throw new Error('OpenAI API authentication failed. Please check your API key.');
+      } else if (error.message.includes('429')) {
+        throw new Error('OpenAI API rate limit exceeded. Please try again later.');
+      } else if (error.message.includes('insufficient_quota')) {
+        throw new Error('OpenAI API quota exceeded. Please check your billing.');
+      } else if (error.message.includes('No extraction prompt available')) {
+        throw error; // Re-throw as is
+      }
+      throw error;
+    }
     throw new Error('Failed to extract document data');
   }
 }
@@ -304,15 +436,54 @@ export async function extractDocumentData(
  */
 export function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
+    console.log(`Converting file to base64: ${file.name}, ${file.size} bytes, ${file.type}`);
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      console.error(`Invalid file type: ${file.type}. Supported types: ${validTypes.join(', ')}`);
+      reject(new Error(`Unsupported file type: ${file.type}. Please upload JPG, PNG, or PDF files.`));
+      return;
+    }
+    
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      console.error(`File too large: ${file.size} bytes. Max size: ${maxSize} bytes`);
+      reject(new Error(`File too large (${Math.round(file.size / 1024 / 1024)}MB). Maximum size is 10MB.`));
+      return;
+    }
+    
     const reader = new FileReader();
     reader.readAsDataURL(file);
+    
     reader.onload = () => {
-      const result = reader.result as string;
-      // Remove data:image/jpeg;base64, prefix
-      const base64 = result.split(',')[1];
-      resolve(base64);
+      try {
+        const result = reader.result as string;
+        if (!result || typeof result !== 'string') {
+          reject(new Error('Failed to read file as data URL'));
+          return;
+        }
+        
+        // Remove data:image/jpeg;base64, prefix
+        const base64 = result.split(',')[1];
+        if (!base64) {
+          reject(new Error('Invalid data URL format'));
+          return;
+        }
+        
+        console.log(`File converted successfully: ${base64.length} base64 characters`);
+        resolve(base64);
+      } catch (error) {
+        console.error('Error processing file reader result:', error);
+        reject(new Error('Failed to process file data'));
+      }
     };
-    reader.onerror = error => reject(error);
+    
+    reader.onerror = (error) => {
+      console.error('FileReader error:', error);
+      reject(new Error('Failed to read file'));
+    };
   });
 }
 
