@@ -4,6 +4,14 @@ import type { ApiResponse, ClassificationResponse } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate environment variables
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'dummy-key-for-build') {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'OpenAI API key not configured'
+      }, { status: 500 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
