@@ -113,20 +113,21 @@ export function ProcessingWorkflow({ file, steps, currentStep, isComplete }: Pro
                     {step.description}
                   </p>
                   
-                  {/* Step Result */}
-                  {step.result && step.status === 'completed' && (
+                  {step.status === 'completed' && step.result != null ? (
                     <div className="mt-3 p-3 bg-white rounded border">
                       <div className="text-xs font-medium text-gray-700 mb-1">Result:</div>
                       {typeof step.result === 'string' ? (
                         <p className="text-sm text-gray-600">{step.result}</p>
-                      ) : step.result.type ? (
+                      ) : typeof step.result === 'object' && step.result !== null && 'type' in step.result ? (
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">
-                            <span className="font-medium">Document Type:</span> {step.result.type.replace('_', ' ')}
+                            <span className="font-medium">Document Type:</span> {String((step.result as Record<string, unknown>).type).replace('_', ' ')}
                           </p>
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Confidence:</span> {(step.result.confidence * 100).toFixed(1)}%
-                          </p>
+                          {typeof (step.result as Record<string, unknown>).confidence === 'number' && (
+                            <p className="text-sm text-gray-600">
+                              <span className="font-medium">Confidence:</span> {((step.result as Record<string, unknown>).confidence as number * 100).toFixed(1)}%
+                            </p>
+                          )}
                         </div>
                       ) : (
                         <div className="text-sm text-gray-600">
@@ -136,14 +137,13 @@ export function ProcessingWorkflow({ file, steps, currentStep, isComplete }: Pro
                         </div>
                       )}
                     </div>
-                  )}
+                  ) : null}
                   
-                  {/* Error Details */}
                   {step.status === 'error' && (
                     <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
                       <div className="text-xs font-medium text-red-700 mb-1">Error:</div>
                       <p className="text-sm text-red-600">
-                        {step.result || 'An error occurred during processing'}
+                        {typeof step.result === 'string' ? step.result : 'An error occurred during processing'}
                       </p>
                     </div>
                   )}
