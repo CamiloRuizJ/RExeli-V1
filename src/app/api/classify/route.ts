@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { classifyDocument, fileToBase64 } from '@/lib/openai';
+import { classifyDocument } from '@/lib/openai';
 import type { ApiResponse, ClassificationResponse } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -23,24 +23,10 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Convert file to base64 for OpenAI Vision API
-    let imageBase64: string;
-    
-    try {
-      console.log(`Processing file: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
-      imageBase64 = await fileToBase64(file);
-      console.log('File converted to base64 successfully');
-    } catch (fileError) {
-      console.error('File conversion error:', fileError);
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: `Failed to process file for classification: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`
-      }, { status: 400 });
-    }
-
-    // Classify document using OpenAI Vision
+    // Classify document using OpenAI Vision (handles PDF conversion automatically)
+    console.log(`Processing file: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
     console.log('Starting document classification...');
-    const classification = await classifyDocument(imageBase64);
+    const classification = await classifyDocument(file);
     console.log('Classification completed:', classification);
 
     const response: ApiResponse<ClassificationResponse> = {

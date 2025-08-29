@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractDocumentData, fileToBase64 } from '@/lib/openai';
+import { extractDocumentData } from '@/lib/openai';
 import type { ApiResponse, ExtractionResponse, DocumentType } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -47,25 +47,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Convert file to base64 for OpenAI Vision API
-    let imageBase64: string;
+    // Extract structured data using OpenAI Vision (handles PDF conversion automatically)
     const startTime = Date.now();
-    
-    try {
-      console.log(`Processing file for extraction: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
-      imageBase64 = await fileToBase64(file);
-      console.log('File converted to base64 successfully for extraction');
-    } catch (fileError) {
-      console.error('File conversion error in extract:', fileError);
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: `Failed to process file for extraction: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`
-      }, { status: 400 });
-    }
-
-    // Extract structured data using OpenAI Vision
+    console.log(`Processing file for extraction: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
     console.log(`Starting data extraction for document type: ${documentType}`);
-    const extractedData = await extractDocumentData(imageBase64, documentType);
+    const extractedData = await extractDocumentData(file, documentType);
     console.log('Data extraction completed:', extractedData);
     
     const processingTime = Date.now() - startTime;

@@ -163,67 +163,142 @@ export function FileUpload({
   };
 
   return (
-    <div className="w-full space-y-4">
-      <Card className={`transition-colors duration-200 ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-dashed border-gray-300'}`}>
-        <CardContent className="p-8">
+    <div className="w-full space-y-6">
+      <Card className={`card-hover transition-all duration-300 ${
+        isDragActive 
+          ? 'border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg' 
+          : 'border-2 border-dashed border-gray-200 hover:border-blue-300'
+      }`}>
+        <CardContent className="p-10">
           <div
             {...getRootProps()}
-            className={`text-center cursor-pointer transition-colors duration-200 ${
-              isDragActive ? 'text-blue-600' : 'text-gray-500'
+            className={`text-center cursor-pointer transition-all duration-300 ${
+              isDragActive ? 'text-blue-600 scale-105' : 'text-gray-600'
             } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:text-blue-600'}`}
           >
             <input {...getInputProps()} />
-            <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragActive ? 'animate-bounce' : ''}`} />
+            
+            {/* Upload Icon with Animation */}
+            <div className={`mx-auto mb-6 transition-all duration-300 ${
+              isDragActive ? 'scale-110' : 'hover:scale-105'
+            }`}>
+              <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${
+                isDragActive 
+                  ? 'bg-blue-100 border-2 border-blue-300' 
+                  : 'bg-gray-50 border-2 border-gray-200'
+              }`}>
+                <Upload className={`w-8 h-8 ${
+                  isDragActive ? 'animate-bounce text-blue-600' : 'text-gray-400'
+                }`} />
+              </div>
+            </div>
             
             {isDragActive ? (
-              <p className="text-lg font-medium">Drop your document here...</p>
+              <div className="space-y-2">
+                <p className="text-xl font-semibold text-blue-600">Drop your document here</p>
+                <p className="text-sm text-blue-500">We'll process it instantly</p>
+              </div>
             ) : (
-              <div>
-                <p className="text-lg font-medium mb-2">
-                  {isProcessing ? 'Processing...' : 'Upload Real Estate Document'}
-                </p>
-                <p className="text-sm text-gray-500 mb-4">
-                  Drag & drop your PDF, JPEG, or PNG file here, or click to browse
-                </p>
-                <Button variant="outline" disabled={isProcessing}>
-                  Choose File
+              <div className="space-y-4">
+                <div>
+                  <p className="text-2xl font-semibold text-gray-900 mb-2">
+                    {isProcessing ? 'Processing your document...' : 'Upload Your Real Estate Document'}
+                  </p>
+                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                    Drag & drop your file here, or click to browse. We support rent rolls, 
+                    offering memos, lease agreements, and more.
+                  </p>
+                </div>
+                
+                <Button 
+                  className="px-8 py-3 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus-ring" 
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    'Choose File'
+                  )}
                 </Button>
+                
+                {/* Supported File Types */}
+                <div className="flex items-center justify-center space-x-4 mt-6 text-xs text-gray-400">
+                  <div className="flex items-center space-x-1">
+                    <FileText className="w-3 h-3" />
+                    <span>PDF</span>
+                  </div>
+                  <span>•</span>
+                  <div className="flex items-center space-x-1">
+                    <FileText className="w-3 h-3" />
+                    <span>JPEG</span>
+                  </div>
+                  <span>•</span>
+                  <div className="flex items-center space-x-1">
+                    <FileText className="w-3 h-3" />
+                    <span>PNG</span>
+                  </div>
+                  <span>•</span>
+                  <span>Up to 25MB</span>
+                </div>
               </div>
             )}
-            
-            <p className="text-xs text-gray-400 mt-4">
-              Maximum file size: 25MB • Supported formats: PDF, JPEG, PNG
-            </p>
           </div>
         </CardContent>
       </Card>
 
       {/* Upload Progress */}
       {uploadingFiles.size > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {Array.from(uploadingFiles.values()).map((file) => (
-            <Card key={file.id} className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">
+            <Card key={file.id} className="p-6 card-hover border border-gray-100 shadow-sm">
+              <div className="flex items-center space-x-4">
+                <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+                  file.status === 'uploading' 
+                    ? 'bg-blue-100' 
+                    : file.status === 'uploaded' 
+                    ? 'bg-green-100' 
+                    : 'bg-red-100'
+                }`}>
                   {getStatusIcon(file.status)}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-base font-semibold text-gray-900 truncate">
                       {file.name}
                     </p>
-                    <span className={`text-xs font-medium ${getStatusColor(file.status)}`}>
-                      {file.status === 'uploading' ? `${file.uploadProgress}%` : file.status.toUpperCase()}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      file.status === 'uploading' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : file.status === 'uploaded' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {file.status === 'uploading' 
+                        ? `${file.uploadProgress}%` 
+                        : file.status === 'uploaded' 
+                        ? 'Ready' 
+                        : 'Error'
+                      }
                     </span>
                   </div>
                   
-                  <p className="text-xs text-gray-500 mb-2">
-                    {formatFileSize(file.size)}
+                  <p className="text-sm text-gray-500 mb-3">
+                    {formatFileSize(file.size)} • {file.type.split('/')[1]?.toUpperCase() || 'Unknown'}
                   </p>
                   
                   {file.status === 'uploading' && (
-                    <Progress value={file.uploadProgress} className="h-2" />
+                    <div className="space-y-2">
+                      <Progress value={file.uploadProgress} className="h-2 bg-gray-100" />
+                      <p className="text-xs text-gray-400">Uploading to secure storage...</p>
+                    </div>
+                  )}
+                  
+                  {file.status === 'uploaded' && (
+                    <p className="text-xs text-green-600 font-medium">✓ Upload complete, ready for AI processing</p>
                   )}
                 </div>
               </div>

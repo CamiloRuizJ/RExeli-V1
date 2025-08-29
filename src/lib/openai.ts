@@ -270,13 +270,29 @@ Return JSON with this structure:
  * Classify a document using OpenAI Vision API
  * Following OpenAI Quickstart Guide best practices
  */
-export async function classifyDocument(imageBase64: string): Promise<DocumentClassification> {
+export async function classifyDocument(file: File): Promise<DocumentClassification> {
   try {
     console.log('OpenAI: Starting document classification...');
     
     // Check API key availability
     if (!process.env.OPENAI_API_KEY) {
       throw new Error('OpenAI API key not configured');
+    }
+    
+    let imageBase64: string;
+    let mimeType: string;
+    
+    // Handle different file types
+    if (file.type === 'application/pdf') {
+      // For PDFs, we need to return an error since server-side PDF processing is complex
+      throw new Error('PDF processing on server not supported. Please convert PDF to image on client side first.');
+    } else {
+      // Handle image files directly
+      imageBase64 = await fileToBase64(file);
+      mimeType = file.type;
+      if (file.type === 'image/png') mimeType = 'image/png';
+      else if (file.type === 'image/gif') mimeType = 'image/gif';
+      else mimeType = 'image/jpeg';
     }
     
     const response = await openai.chat.completions.create({
@@ -289,8 +305,8 @@ export async function classifyDocument(imageBase64: string): Promise<DocumentCla
             {
               type: "image_url",
               image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`,
-                detail: "high" // Better quality analysis for real estate documents
+                url: `data:${mimeType};base64,${imageBase64}`,
+                detail: "low" // Use low detail to reduce token usage for free tier
               },
             },
           ],
@@ -354,7 +370,7 @@ export async function classifyDocument(imageBase64: string): Promise<DocumentCla
  * Extract structured data from a classified document
  */
 export async function extractDocumentData(
-  imageBase64: string, 
+  file: File, 
   documentType: DocumentType
 ): Promise<ExtractedData> {
   try {
@@ -366,6 +382,21 @@ export async function extractDocumentData(
     }
 
     console.log(`OpenAI: Using extraction prompt for ${documentType}`);
+
+    // Handle file conversion (should be image at this point)
+    let imageBase64: string;
+    let mimeType: string;
+    
+    if (file.type === 'application/pdf') {
+      // PDFs should have been converted to images on client side
+      throw new Error('PDF processing on server not supported. PDF should have been converted to image on client side.');
+    } else {
+      imageBase64 = await fileToBase64(file);
+      mimeType = file.type;
+      if (file.type === 'image/png') mimeType = 'image/png';
+      else if (file.type === 'image/gif') mimeType = 'image/gif';
+      else mimeType = 'image/jpeg';
+    }
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -377,7 +408,8 @@ export async function extractDocumentData(
             {
               type: "image_url",
               image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`,
+                url: `data:${mimeType};base64,${imageBase64}`,
+                detail: "low" // Use low detail to reduce token usage
               },
             },
           ],
@@ -432,59 +464,37 @@ export async function extractDocumentData(
 }
 
 /**
- * Convert file to base64 for OpenAI API
+ * Convert file to base64 for OpenAI API (Server-side version)
  */
-export function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    console.log(`Converting file to base64: ${file.name}, ${file.size} bytes, ${file.type}`);
+export async function fileToBase64(file: File): Promise<string> {
+  console.log(`Converting file to base64: ${file.name}, ${file.size} bytes, ${file.type}`);
+  
+  // Validate file type
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+  if (!validTypes.includes(file.type)) {
+    console.error(`Invalid file type: ${file.type}. Supported types: ${validTypes.join(', ')}`);
+    throw new Error(`Unsupported file type: ${file.type}. Please upload JPG, PNG, or PDF files.`);
+  }
+  
+  // Validate file size (max 10MB)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    console.error(`File too large: ${file.size} bytes. Max size: ${maxSize} bytes`);
+    throw new Error(`File too large (${Math.round(file.size / 1024 / 1024)}MB). Maximum size is 10MB.`);
+  }
+  
+  try {
+    // Convert File to ArrayBuffer, then to base64
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString('base64');
     
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-    if (!validTypes.includes(file.type)) {
-      console.error(`Invalid file type: ${file.type}. Supported types: ${validTypes.join(', ')}`);
-      reject(new Error(`Unsupported file type: ${file.type}. Please upload JPG, PNG, or PDF files.`));
-      return;
-    }
-    
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      console.error(`File too large: ${file.size} bytes. Max size: ${maxSize} bytes`);
-      reject(new Error(`File too large (${Math.round(file.size / 1024 / 1024)}MB). Maximum size is 10MB.`));
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    
-    reader.onload = () => {
-      try {
-        const result = reader.result as string;
-        if (!result || typeof result !== 'string') {
-          reject(new Error('Failed to read file as data URL'));
-          return;
-        }
-        
-        // Remove data:image/jpeg;base64, prefix
-        const base64 = result.split(',')[1];
-        if (!base64) {
-          reject(new Error('Invalid data URL format'));
-          return;
-        }
-        
-        console.log(`File converted successfully: ${base64.length} base64 characters`);
-        resolve(base64);
-      } catch (error) {
-        console.error('Error processing file reader result:', error);
-        reject(new Error('Failed to process file data'));
-      }
-    };
-    
-    reader.onerror = (error) => {
-      console.error('FileReader error:', error);
-      reject(new Error('Failed to read file'));
-    };
-  });
+    console.log(`File converted successfully: ${base64.length} base64 characters`);
+    return base64;
+  } catch (error) {
+    console.error('Error converting file to base64:', error);
+    throw new Error('Failed to convert file to base64');
+  }
 }
 
 /**
