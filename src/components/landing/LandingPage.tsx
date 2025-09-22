@@ -11,7 +11,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-100 to-emerald-50">
       {/* Header */}
       <header className="border-b border-emerald-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
@@ -19,25 +19,18 @@ export default function LandingPage() {
             <h1 className="text-2xl font-bold text-gray-900">RExeli</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" className="text-gray-600 hover:text-emerald-600">
-              Features
-            </Button>
-            <Button variant="ghost" className="text-gray-600 hover:text-emerald-600">
-              Pricing
-            </Button>
-            <Button variant="ghost" className="text-gray-600 hover:text-emerald-600">
-              Contact
-            </Button>
-            <Button variant="outline" className="border-emerald-200 text-emerald-600 hover:bg-emerald-50">
-              Sign In
-            </Button>
+            <Link href="/tool">
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                Try RExeli Now
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-24">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <section className="w-full px-6 py-24">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
               <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
@@ -182,8 +175,8 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white py-24">
-        <div className="container mx-auto px-4">
+      <section className="bg-white py-24 w-full">
+        <div className="max-w-7xl mx-auto px-6">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl font-bold text-gray-900">Powerful Features for Real Estate Professionals</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -268,8 +261,8 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-emerald-600 py-24">
-        <div className="container mx-auto px-4 text-center">
+      <section className="bg-emerald-600 py-24 w-full">
+        <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="space-y-8">
             <h2 className="text-4xl font-bold text-white">
               Ready to Transform Your Document Processing?
@@ -293,52 +286,24 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-white">RExeli</h3>
+      <footer className="bg-gray-900 py-8 w-full">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-emerald-600 rounded flex items-center justify-center">
+                <FileText className="w-4 h-4 text-white" />
               </div>
-              <p className="text-gray-400">
-                Transforming real estate document processing with AI-powered analysis and intelligent data extraction.
-              </p>
+              <h3 className="text-lg font-bold text-white">RExeli</h3>
             </div>
 
-            <div className="space-y-4">
-              <h4 className="font-semibold text-white">Product</h4>
-              <div className="space-y-2">
-                <Link href="#" className="block text-gray-400 hover:text-white">Features</Link>
-                <Link href="#" className="block text-gray-400 hover:text-white">Pricing</Link>
-                <Link href="#" className="block text-gray-400 hover:text-white">API</Link>
-              </div>
+            <div className="flex items-center space-x-6 text-sm">
+              <Link href="#" className="text-gray-400 hover:text-white">Privacy</Link>
+              <Link href="#" className="text-gray-400 hover:text-white">Terms</Link>
+              <Link href="#" className="text-gray-400 hover:text-white">Contact</Link>
             </div>
 
-            <div className="space-y-4">
-              <h4 className="font-semibold text-white">Company</h4>
-              <div className="space-y-2">
-                <Link href="#" className="block text-gray-400 hover:text-white">About</Link>
-                <Link href="#" className="block text-gray-400 hover:text-white">Blog</Link>
-                <Link href="#" className="block text-gray-400 hover:text-white">Careers</Link>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="font-semibold text-white">Support</h4>
-              <div className="space-y-2">
-                <Link href="#" className="block text-gray-400 hover:text-white">Help Center</Link>
-                <Link href="#" className="block text-gray-400 hover:text-white">Contact</Link>
-                <Link href="#" className="block text-gray-400 hover:text-white">Privacy</Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-            <p className="text-gray-400">
-              © 2024 RExeli. All rights reserved. Built with ❤️ for the commercial real estate industry.
+            <p className="text-gray-400 text-sm">
+              © 2024 RExeli. All rights reserved.
             </p>
           </div>
         </div>
