@@ -10,7 +10,7 @@ if (typeof window !== 'undefined') {
   // Client-side: import PDF.js normally
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   pdfjsLib = require('pdfjs-dist');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  pdfjsLib!.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.js';
 } else {
   // Server-side: We'll handle PDFs differently to avoid canvas dependency
   pdfjsLib = null;
