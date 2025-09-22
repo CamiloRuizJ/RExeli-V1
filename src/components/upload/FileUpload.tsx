@@ -196,7 +196,7 @@ export function FileUpload({
             {isDragActive ? (
               <div className="space-y-2">
                 <p className="text-xl font-semibold text-blue-600">Drop your document here</p>
-                <p className="text-sm text-blue-500">We'll process it instantly</p>
+                <p className="text-sm text-blue-500">We&apos;ll process it instantly</p>
               </div>
             ) : (
               <div className="space-y-4">

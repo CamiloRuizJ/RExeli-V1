@@ -278,7 +278,7 @@ export default function LandingPage() {
               Ready to Transform Your Document Processing?
             </h2>
             <p className="text-xl text-emerald-100 max-w-2xl mx-auto">
-              Join real estate professionals who are already saving hours with RExeli's AI-powered document analysis.
+              Join real estate professionals who are already saving hours with RExeli&apos;s AI-powered document analysis.
             </p>
             <div className="flex items-center justify-center space-x-4">
               <Link href="/tool">

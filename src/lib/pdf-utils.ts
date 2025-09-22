@@ -4,10 +4,11 @@
  */
 
 // Import PDF.js with proper server-side configuration
-let pdfjsLib: any;
+let pdfjsLib: typeof import('pdfjs-dist') | null;
 
 if (typeof window !== 'undefined') {
   // Client-side: import PDF.js normally
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   pdfjsLib = require('pdfjs-dist');
   pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 } else {
