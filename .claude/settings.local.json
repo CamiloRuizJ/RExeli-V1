@@ -9,7 +9,9 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(npm run build:*)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "mcp__browser-mcp__browser_navigate",
+      "mcp__browser-mcp__browser_screenshot"
     ],
     "deny": [],
     "ask": []

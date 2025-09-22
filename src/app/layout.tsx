@@ -72,10 +72,8 @@ export default function RootLayout({
           </header>
 
           {/* Main Content */}
-          <main className="flex-1 py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
+          <main className="flex-1">
+            {children}
           </main>
 
           {/* Modern Footer */}

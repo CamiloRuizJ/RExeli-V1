@@ -8,28 +8,9 @@ import Link from "next/link"
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-100 to-emerald-50">
-      {/* Header */}
-      <header className="border-b border-emerald-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">RExeli</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Link href="/tool">
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                Try RExeli Now
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
-
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8">
       {/* Hero Section */}
-      <section className="w-full px-6 py-24">
+      <section className="bg-gradient-to-br from-emerald-100 to-emerald-50 px-6 py-24">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
@@ -175,8 +156,8 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white py-24 w-full">
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="bg-white py-24 px-6">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl font-bold text-gray-900">Powerful Features for Real Estate Professionals</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
@@ -261,8 +242,8 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-emerald-600 py-24 w-full">
-        <div className="max-w-7xl mx-auto px-6 text-center">
+      <section className="bg-emerald-600 py-24 px-6">
+        <div className="max-w-7xl mx-auto text-center">
           <div className="space-y-8">
             <h2 className="text-4xl font-bold text-white">
               Ready to Transform Your Document Processing?
@@ -284,30 +265,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 py-8 w-full">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 bg-emerald-600 rounded flex items-center justify-center">
-                <FileText className="w-4 h-4 text-white" />
-              </div>
-              <h3 className="text-lg font-bold text-white">RExeli</h3>
-            </div>
-
-            <div className="flex items-center space-x-6 text-sm">
-              <Link href="#" className="text-gray-400 hover:text-white">Privacy</Link>
-              <Link href="#" className="text-gray-400 hover:text-white">Terms</Link>
-              <Link href="#" className="text-gray-400 hover:text-white">Contact</Link>
-            </div>
-
-            <p className="text-gray-400 text-sm">
-              © 2024 RExeli. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
