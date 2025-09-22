@@ -8,7 +8,7 @@ import Link from "next/link"
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-100 to-emerald-50">
       {/* Header */}
       <header className="border-b border-emerald-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -74,16 +74,13 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-center">
               <Link href="/tool">
                 <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-8">
                   Try RExeli Now
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="border-emerald-200 text-emerald-600 hover:bg-emerald-50">
-                Watch Demo
-              </Button>
             </div>
           </div>
 
