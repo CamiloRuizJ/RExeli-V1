@@ -257,35 +257,19 @@ export default function ToolPage() {
   }, [extractedData]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
-      {/* Header */}
-      <header className="border-b border-emerald-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8 min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
+      {/* Main Content with Back Navigation */}
+      <div className="px-6 py-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Back to Home Navigation */}
+          <div className="mb-8">
             <Link href="/">
               <Button variant="ghost" size="sm" className="text-gray-600 hover:text-emerald-600">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Home
               </Button>
             </Link>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900">RExeli</h1>
-              <span className="text-sm text-gray-500">Document Processor</span>
-            </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" className="border-emerald-200 text-emerald-600 hover:bg-emerald-50">
-              Sign In
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* File Upload Section */}
           <div className="space-y-8">
@@ -406,7 +390,8 @@ export default function ToolPage() {
             </div>
           )}
         </div>
-      </main>
+      </div>
+    </div>
     </div>
   );
 }

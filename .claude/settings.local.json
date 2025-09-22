@@ -11,7 +11,8 @@
       "Bash(npm run build:*)",
       "Bash(npm install)",
       "mcp__browser-mcp__browser_navigate",
-      "mcp__browser-mcp__browser_screenshot"
+      "mcp__browser-mcp__browser_screenshot",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
