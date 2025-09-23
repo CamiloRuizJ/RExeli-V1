@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getToken } from 'next-auth/jwt'
 
 // Define which routes require authentication
 const protectedRoutes = [
@@ -28,9 +28,9 @@ export default async function middleware(request: NextRequest) {
 
   // Check authentication for protected routes
   if (protectedRoutes.some(route => pathname.startsWith(route))) {
-    const session = await auth()
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
 
-    if (!session) {
+    if (!token) {
       // For API routes, return unauthorized
       if (pathname.startsWith('/api/')) {
         return NextResponse.json(
@@ -48,9 +48,9 @@ export default async function middleware(request: NextRequest) {
     // Add user info to headers for API routes
     if (pathname.startsWith('/api/')) {
       const response = NextResponse.next()
-      response.headers.set('x-user-id', session.user?.id || '')
-      response.headers.set('x-user-email', session.user?.email || '')
-      response.headers.set('x-user-role', (session.user as any)?.role || 'user')
+      response.headers.set('x-user-id', (token.sub as string) || '')
+      response.headers.set('x-user-email', (token.email as string) || '')
+      response.headers.set('x-user-role', (token.role as string) || 'user')
       return response
     }
   }

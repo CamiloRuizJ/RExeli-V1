@@ -23,7 +23,9 @@
       "mcp__browser-mcp__browser_get_console_logs",
       "Bash(npm audit:*)",
       "Bash(npm run:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "mcp__browser-mcp__browser_type",
+      "mcp__browser-mcp__browser_press_key"
     ],
     "deny": [],
     "ask": []
