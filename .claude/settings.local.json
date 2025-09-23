@@ -12,7 +12,15 @@
       "Bash(npm install)",
       "mcp__browser-mcp__browser_navigate",
       "mcp__browser-mcp__browser_screenshot",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(npm run dev:*)",
+      "mcp__browser-mcp__browser_wait",
+      "mcp__browser-mcp__browser_click",
+      "Bash(node test-api-endpoints.js)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "mcp__browser-mcp__browser_snapshot",
+      "mcp__browser-mcp__browser_get_console_logs"
     ],
     "deny": [],
     "ask": []

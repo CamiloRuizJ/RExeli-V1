@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { FileUpload } from '@/components/upload/FileUpload';
 import { DocumentPreview } from '@/components/preview/DocumentPreview';
@@ -24,6 +24,22 @@ export default function ToolPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Preload PDF.js for better user experience
+  useEffect(() => {
+    // Preload PDF.js when component mounts
+    const preloadPdfjs = async () => {
+      try {
+        const { preloadPdfjs } = await import('@/lib/pdf-utils');
+        await preloadPdfjs();
+      } catch (error) {
+        console.warn('PDF.js preload failed:', error);
+        // Don't show user error for preload failure
+      }
+    };
+
+    preloadPdfjs();
+  }, []);
 
   // Initialize processing steps
   const initializeSteps = useCallback((): ProcessingStep[] => {
@@ -121,17 +137,49 @@ export default function ToolPage() {
       if (currentFile.file.type === 'application/pdf') {
         try {
           console.log('Converting PDF to image on client side...');
-          const { convertPdfToImage } = await import('@/lib/pdf-utils');
-          const { imageBase64, mimeType } = await convertPdfToImage(currentFile.file);
 
-          // Convert base64 back to File object
+          // Update step with specific PDF processing status
+          updateStep(2, 'processing', 'Converting PDF to image for AI analysis...');
+
+          // Dynamically import the PDF utilities
+          const { convertPdfToImage } = await import('@/lib/pdf-utils');
+
+          // Convert PDF to image (first page)
+          const { imageBase64, mimeType } = await convertPdfToImage(currentFile.file, 1);
+
+          // Convert base64 back to File object for API submission
           const response = await fetch(`data:${mimeType};base64,${imageBase64}`);
           const blob = await response.blob();
-          fileToClassify = new File([blob], `${currentFile.file.name}.png`, { type: mimeType });
-          console.log('PDF converted to image successfully');
+
+          // Create new file with descriptive name
+          const originalName = currentFile.file.name.replace(/\.pdf$/i, '');
+          fileToClassify = new File([blob], `${originalName}_page1.png`, { type: mimeType });
+
+          console.log(`PDF converted to image successfully: ${Math.round(blob.size / 1024)}KB PNG`);
+
+          // Update step to show successful conversion
+          updateStep(2, 'processing', 'PDF converted to image, analyzing with AI...');
+
         } catch (pdfError) {
           console.error('PDF conversion failed:', pdfError);
-          throw new Error(`PDF conversion failed: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`);
+
+          // Provide specific error handling for different PDF issues
+          let errorMessage = 'PDF conversion failed';
+          if (pdfError instanceof Error) {
+            if (pdfError.message.includes('Password')) {
+              errorMessage = 'Password-protected PDFs are not supported';
+            } else if (pdfError.message.includes('corrupted')) {
+              errorMessage = 'PDF file appears to be corrupted';
+            } else if (pdfError.message.includes('too large')) {
+              errorMessage = 'PDF file is too large (max 25MB)';
+            } else if (pdfError.message.includes('worker')) {
+              errorMessage = 'PDF processing failed - please check your internet connection';
+            } else {
+              errorMessage = `PDF conversion failed: ${pdfError.message}`;
+            }
+          }
+
+          throw new Error(errorMessage);
         }
       }
 
