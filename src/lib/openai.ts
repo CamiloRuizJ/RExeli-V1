@@ -1,23 +1,33 @@
 import OpenAI from 'openai';
-import type { 
-  DocumentType, 
-  DocumentClassification, 
+import { decryptApiKey } from './auth';
+import type {
+  DocumentType,
+  DocumentClassification,
   ExtractedData,
   RentRollData,
   OfferingMemoData,
   LeaseData,
   ComparableData,
-  FinancialData 
+  FinancialData
 } from './types';
 
-// Following OpenAI Quickstart Guide best practices
+// Get decrypted OpenAI API key
+function getOpenAIApiKey(): string {
+  const encryptedKey = process.env.ENCRYPTED_OPENAI_API_KEY;
+  if (!encryptedKey) {
+    throw new Error('ENCRYPTED_OPENAI_API_KEY environment variable is required');
+  }
+  return decryptApiKey(encryptedKey);
+}
+
+// Following OpenAI Quickstart Guide best practices with encrypted API key
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: getOpenAIApiKey(),
 });
 
 // Validate API key is present
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY environment variable is required');
+if (!process.env.ENCRYPTED_OPENAI_API_KEY) {
+  console.error('ENCRYPTED_OPENAI_API_KEY environment variable is required');
 }
 
 /**

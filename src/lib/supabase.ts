@@ -1,12 +1,27 @@
 import { createClient } from '@supabase/supabase-js';
+import { decryptApiKey } from './auth';
 import type { UploadResponse } from './types';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://dummy.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dummy-key';
+// Get decrypted Supabase configuration
+function getSupabaseConfig() {
+  const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
+  const encryptedKey = process.env.ENCRYPTED_SUPABASE_ANON_KEY;
+
+  if (!encryptedUrl || !encryptedKey) {
+    throw new Error('ENCRYPTED_SUPABASE_URL and ENCRYPTED_SUPABASE_ANON_KEY environment variables are required');
+  }
+
+  return {
+    url: decryptApiKey(encryptedUrl),
+    key: decryptApiKey(encryptedKey)
+  };
+}
+
+const { url: supabaseUrl, key: supabaseAnonKey } = getSupabaseConfig();
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Log configuration for debugging
+// Log configuration for debugging (without exposing encrypted keys)
 if (typeof window === 'undefined') {
   console.log('Supabase configured:', {
     url: supabaseUrl.substring(0, 30) + '...',

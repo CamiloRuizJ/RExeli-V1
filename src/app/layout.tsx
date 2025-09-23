@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,7 +32,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-gray-50 min-h-screen`}>
-        <div className="min-h-screen flex flex-col">
+        <SessionProvider>
+          <div className="min-h-screen flex flex-col">
           {/* Header */}
           <header className="bg-white/80 backdrop-blur-lg border-b border-gray-100 shadow-sm sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -108,8 +110,9 @@ export default function RootLayout({
               </div>
             </div>
           </footer>
-        </div>
-        <Toaster position="top-right" />
+          </div>
+          <Toaster position="top-right" />
+        </SessionProvider>
       </body>
     </html>
   );
