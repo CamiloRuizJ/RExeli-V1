@@ -10,21 +10,21 @@ export default function LandingPage() {
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-emerald-100 to-emerald-50 px-6 py-24">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+      <section className="bg-gradient-to-br from-emerald-100 to-emerald-50 px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="space-y-6 lg:space-y-8">
+            <div className="space-y-4 lg:space-y-6">
+              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-sm">
                 AI-Powered Document Processing
               </Badge>
-              <h1 className="text-5xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
                 Real Estate
                 <br />
                 <span className="text-emerald-600">Document Analysis</span>
                 <br />
                 Made Simple
               </h1>
-              <p className="text-xl text-gray-600 leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl">
                 Transform complex real estate documents into structured data with our AI-powered platform.
                 Extract insights from rent rolls, offering memos, and financial statements in seconds.
               </p>
@@ -48,9 +48,9 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center lg:justify-start">
               <Link href="/tool">
-                <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-8">
+                <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 sm:px-8 text-base sm:text-lg">
                   Try RExeli Now
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -156,83 +156,83 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white py-24 px-6">
+      <section className="bg-white py-12 sm:py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center space-y-4 mb-16">
-            <h2 className="text-3xl font-bold text-gray-900">Powerful Features for Real Estate Professionals</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <div className="text-center space-y-4 lg:space-y-6 mb-12 lg:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 px-4">Powerful Features for Real Estate Professionals</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
               Everything you need to transform complex real estate documents into actionable insights
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             <Card className="border-emerald-100 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <Brain className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">AI Document Classification</h3>
-                <p className="text-gray-600">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">AI Document Classification</h3>
+                <p className="text-sm sm:text-base text-gray-600">
                   Automatically identify rent rolls, offering memos, lease agreements, and financial statements with 99% accuracy.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-emerald-100 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <BarChart3 className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">Intelligent Data Extraction</h3>
-                <p className="text-gray-600">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Intelligent Data Extraction</h3>
+                <p className="text-sm sm:text-base text-gray-600">
                   Extract tenant information, rental rates, financial metrics, and property details with precision.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-emerald-100 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <Download className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">Professional Excel Export</h3>
-                <p className="text-gray-600">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Professional Excel Export</h3>
+                <p className="text-sm sm:text-base text-gray-600">
                   Generate formatted Excel reports with summaries, charts, and detailed analysis ready for stakeholders.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-emerald-100 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <Zap className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">Lightning Fast Processing</h3>
-                <p className="text-gray-600">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Lightning Fast Processing</h3>
+                <p className="text-sm sm:text-base text-gray-600">
                   Process documents up to 25MB in seconds with our optimized AI pipeline and real-time progress tracking.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-emerald-100 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <Shield className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">Secure & Compliant</h3>
-                <p className="text-gray-600">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Secure & Compliant</h3>
+                <p className="text-sm sm:text-base text-gray-600">
                   Enterprise-grade security with encrypted storage, secure file handling, and full compliance standards.
                 </p>
               </CardContent>
             </Card>
 
             <Card className="border-emerald-100 hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <Clock className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900">Save Hours of Work</h3>
-                <p className="text-gray-600">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Save Hours of Work</h3>
+                <p className="text-sm sm:text-base text-gray-600">
                   Eliminate manual data entry and reduce document processing time from hours to minutes.
                 </p>
               </CardContent>
@@ -242,23 +242,23 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-emerald-600 py-24 px-6">
+      <section className="bg-emerald-600 py-12 sm:py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <div className="space-y-8">
-            <h2 className="text-4xl font-bold text-white">
+          <div className="space-y-6 lg:space-y-8">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white px-4">
               Ready to Transform Your Document Processing?
             </h2>
-            <p className="text-xl text-emerald-100 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-emerald-100 max-w-3xl mx-auto px-4">
               Join real estate professionals who are already saving hours with RExeli&apos;s AI-powered document analysis.
             </p>
-            <div className="flex items-center justify-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <Link href="/tool">
-                <Button size="lg" className="bg-white text-emerald-600 hover:bg-emerald-50 px-8">
+                <Button size="lg" className="bg-white text-emerald-600 hover:bg-emerald-50 px-6 sm:px-8 w-full sm:w-auto">
                   Start Processing Documents
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-emerald-600">
+              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-emerald-600 w-full sm:w-auto">
                 Contact Sales
               </Button>
             </div>

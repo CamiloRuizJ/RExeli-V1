@@ -259,10 +259,10 @@ export default function ToolPage() {
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8 min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
       {/* Main Content with Back Navigation */}
-      <div className="px-6 py-8">
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="max-w-7xl mx-auto">
           {/* Back to Home Navigation */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <Link href="/">
               <Button variant="ghost" size="sm" className="text-gray-600 hover:text-emerald-600">
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -270,16 +270,16 @@ export default function ToolPage() {
               </Button>
             </Link>
           </div>
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {/* File Upload Section */}
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-base sm:text-lg shadow-lg">
                 1
               </div>
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">Upload Document</h2>
-                <p className="text-gray-500 mt-1">Select your real estate document to get started</p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Upload Document</h2>
+                <p className="text-sm sm:text-base text-gray-500 mt-1">Select your real estate document to get started</p>
               </div>
             </div>
             <FileUpload
@@ -294,13 +294,13 @@ export default function ToolPage() {
           {currentFile && (
             <div className="space-y-8">
               <div className="flex items-center space-x-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg ${
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-base sm:text-lg shadow-lg ${
                   currentFile ? 'bg-emerald-600 text-white' : 'bg-gray-300 text-gray-500'
                 }`}>
                   2
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Review Document</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Review Document</h2>
                   <p className="text-gray-500 mt-1">Verify your document and start AI processing</p>
                 </div>
               </div>
@@ -316,7 +316,7 @@ export default function ToolPage() {
           {processingSteps.length > 0 && (
             <div className="space-y-8">
               <div className="flex items-center space-x-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg ${
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-base sm:text-lg shadow-lg ${
                   isProcessing
                     ? 'bg-emerald-600 text-white animate-pulse'
                     : isComplete
@@ -326,7 +326,7 @@ export default function ToolPage() {
                   3
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">AI Processing</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Processing</h2>
                   <p className="text-gray-500 mt-1">
                     {isProcessing ? 'Processing your document with advanced AI...' : 'Document classification and data extraction'}
                   </p>
@@ -345,11 +345,11 @@ export default function ToolPage() {
           {extractedData && (
             <div className="space-y-8">
               <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-base sm:text-lg shadow-lg">
                   4
                 </div>
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-900">Extracted Data</h2>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Extracted Data</h2>
                   <p className="text-gray-500 mt-1">Review and export your processed data</p>
                 </div>
               </div>
@@ -364,8 +364,8 @@ export default function ToolPage() {
           {/* Instructions */}
           {!currentFile && (
             <div className="bg-emerald-50 rounded-lg p-6 mt-8">
-              <h3 className="text-lg font-semibold text-emerald-900 mb-3">How It Works</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-emerald-900 mb-3">How It Works</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 text-sm">
                 <div className="text-center">
                   <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-2 font-bold">1</div>
                   <p className="font-medium text-emerald-800">Upload Document</p>
