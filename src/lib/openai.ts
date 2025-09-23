@@ -15,6 +15,11 @@ import type {
 function getOpenAIApiKey(): string {
   const encryptedKey = process.env.ENCRYPTED_OPENAI_API_KEY;
   if (!encryptedKey) {
+    // During build time, return a dummy key to prevent build errors
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+      console.warn('ENCRYPTED_OPENAI_API_KEY not found during build - using placeholder');
+      return 'build-time-placeholder-key';
+    }
     throw new Error('ENCRYPTED_OPENAI_API_KEY environment variable is required');
   }
   return decryptApiKey(encryptedKey);
@@ -25,8 +30,8 @@ const openai = new OpenAI({
   apiKey: getOpenAIApiKey(),
 });
 
-// Validate API key is present
-if (!process.env.ENCRYPTED_OPENAI_API_KEY) {
+// Validate API key is present (with build-time handling)
+if (!process.env.ENCRYPTED_OPENAI_API_KEY && process.env.NODE_ENV === 'production' && process.env.VERCEL) {
   console.error('ENCRYPTED_OPENAI_API_KEY environment variable is required');
 }
 
