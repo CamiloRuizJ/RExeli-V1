@@ -1,6 +1,6 @@
 {
   "name": "rexeli-v1",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "AI-powered real estate document processing system for extracting structured data from rent rolls, offering memos, lease agreements, and more.",
   "keywords": [
