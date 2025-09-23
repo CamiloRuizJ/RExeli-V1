@@ -38,9 +38,21 @@ async function loadPdfjs(): Promise<typeof import('pdfjs-dist')> {
 
       // Configure worker with proper path for Next.js
       if (!pdfjs.GlobalWorkerOptions.workerSrc) {
-        // Use CDN worker for reliability across different deployment environments
-        pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-        console.log(`PDF.js worker configured: ${pdfjs.GlobalWorkerOptions.workerSrc}`);
+        // Try local worker first, then fallback to CDN
+        const workerPaths = [
+          // Local worker file we copied to public directory
+          '/pdf.worker.min.mjs',
+          // CDN fallback with correct .mjs extension
+          `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`,
+          // Secondary CDN fallback
+          `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`,
+          // Legacy .js fallback
+          `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+        ];
+
+        // Use local worker first
+        pdfjs.GlobalWorkerOptions.workerSrc = workerPaths[0];
+        console.log(`PDF.js worker configured (local): ${pdfjs.GlobalWorkerOptions.workerSrc}`);
       }
 
       pdfjsLib = pdfjs;
@@ -170,8 +182,12 @@ export async function convertPdfToImage(file: File, pageNumber: number = 1): Pro
         throw new Error('Invalid PDF file: The file appears to be corrupted or not a valid PDF');
       } else if (error.message.includes('Password')) {
         throw new Error('Password-protected PDFs are not supported');
-      } else if (error.message.includes('worker')) {
-        throw new Error('PDF.js worker failed to load. Please check your internet connection');
+      } else if (error.message.includes('worker') || error.message.includes('Worker')) {
+        throw new Error('PDF.js worker failed to load. Please try refreshing the page or check your internet connection');
+      } else if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+        throw new Error('Network error while loading PDF.js. Please check your internet connection');
+      } else if (error.message.includes('SecurityError')) {
+        throw new Error('Browser security restrictions prevented PDF processing. Please try uploading a different file');
       }
     }
 
