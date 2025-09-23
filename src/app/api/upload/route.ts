@@ -4,15 +4,6 @@ import type { ApiResponse, UploadResponse } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate environment variables
-    console.log('Upload API: Validating Supabase configuration...');
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.error('Upload API: Supabase configuration missing');
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: 'Supabase configuration missing. Please check environment variables.'
-      }, { status: 500 });
-    }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;

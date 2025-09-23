@@ -290,7 +290,8 @@ export async function classifyDocument(file: File): Promise<DocumentClassificati
     console.log('OpenAI: Starting document classification...');
     
     // Check API key availability
-    if (!process.env.OPENAI_API_KEY) {
+    const apiKey = getOpenAIApiKey();
+    if (!apiKey) {
       throw new Error('OpenAI API key not configured');
     }
     
