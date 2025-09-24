@@ -123,428 +123,1643 @@ Return JSON with this structure:
     }
   }
 }
+
+**QUALITY ASSURANCE CHECKLIST:**
+- Did you examine every visible row and column in all tables?
+- Did you extract data for ALL tenants listed, not just the first few?
+- Did you identify and extract all vacant spaces?
+- Did you capture all financial data including rent, CAM, deposits, etc?
+- Did you extract all lease terms including options, escalations, and special clauses?
+- Did you analyze the tenant mix and identify risk factors?
+- Did you calculate occupancy rates, average rents, and other summary metrics?
+- Did you extract property-level information including management and ownership?
+- Is the extracted data consistent and logical?
+- Are all monetary amounts and dates in correct formats?
+
+**IMPORTANT INSTRUCTIONS:**
+- Extract data from EVERY visible page and section
+- If information is unclear or illegible, note it in additionalNotes
+- Use "N/A" for fields where data is not available
+- Use 0 for numeric fields where data is not available
+- Provide professional analysis and insights in summary sections
+- Ensure all extracted data supports investment decision-making
   `,
 
   operating_budget: `
-You are an expert commercial real estate financial analyst extracting operating budget data for investment analysis and property management decisions. Extract comprehensive budget data with the precision required for NOI projections and cash flow modeling.
+You are a seasoned commercial real estate financial analyst and asset manager with 20+ years of experience in investment underwriting, NOI optimization, and property financial management. Your task is to perform a systematic, comprehensive extraction of ALL financial data visible in this operating budget document.
 
-Focus on extracting ALL budget line items:
-- Gross rental income
-- Vacancy allowance
-- Other income
-- Operating expenses (taxes, insurance, utilities, R&M, management fees, marketing)
-- NOI
-- CapEx forecast
+**EXTRACTION METHODOLOGY:**
+1. **COMPLETE DOCUMENT ANALYSIS**: Examine every line item, table, chart, graph, and financial detail
+2. **SYSTEMATIC PROCESSING**: Analyze document from header to footer, capturing all numerical data
+3. **BUDGET STRUCTURE RECOGNITION**: Understand budget format, categories, and calculation methods
+4. **VARIANCE ANALYSIS**: Extract actual vs. budget comparisons where available
+5. **HISTORICAL COMPARISON**: Capture multi-year data and trend analysis
+6. **PROFESSIONAL VALIDATION**: Apply real estate financial expertise to validate extracted data
+7. **COMPREHENSIVE CATEGORIZATION**: Properly classify all income and expense line items
 
-Return JSON with this structure:
+**COMPREHENSIVE FINANCIAL DATA EXTRACTION:**
+
+**PROPERTY IDENTIFICATION:**
+- Complete property name and address
+- Property type, subtype, and class
+- Property management company and contact information
+- Ownership entity and structure
+- Property size (total SF, rentable SF, units)
+- Budget period and fiscal year details
+
+**INCOME ANALYSIS (Extract ALL revenue streams):**
+- Base rental income by tenant type/category
+- Percentage rent from retail tenants
+- Rent escalations and step-ups
+- Parking income (monthly, daily, validation)
+- Storage income and miscellaneous space rental
+- Vending machine and laundry income
+- Tenant reimbursements (CAM, taxes, insurance, utilities)
+- Operating expense recoveries
+- Management fee income (if applicable)
+- Late fees and penalty income
+- Lease termination fees
+- Interest income on security deposits
+- Application and processing fees
+- Signage income
+- Roof/tower/billboard rental income
+- Utility reimbursements and chargebacks
+- Administrative service fees
+- Insurance claim recoveries
+- Contingency income and reserves
+- Vacancy allowance and loss factor
+- Bad debt allowance and collection loss
+- Effective gross income calculations
+
+**OPERATING EXPENSE ANALYSIS (Extract ALL expense categories):**
+- Real estate taxes (current and projected increases)
+- Property insurance (general liability, property, environmental)
+- Property management fees (base and incentive)
+- Payroll and benefits (on-site staff)
+- Utilities (electric, gas, water, sewer, trash, telecommunications)
+- Maintenance and repairs (preventive and reactive)
+- Cleaning and janitorial services
+- Landscaping and grounds maintenance
+- Snow removal and seasonal services
+- Security services and systems
+- Elevator maintenance and inspection
+- HVAC maintenance and service contracts
+- Fire safety and life safety systems
+- Professional fees (legal, accounting, consulting)
+- Marketing and leasing commissions
+- Advertising and promotional expenses
+- Office supplies and administrative costs
+- Travel and transportation expenses
+- Training and continuing education
+- Licenses, permits, and regulatory fees
+- Bank charges and merchant fees
+- Bad debt expense
+- General and administrative expenses
+- Tenant relations and services
+- Common area maintenance supplies
+- Building supplies and materials
+- Equipment rental and leasing
+- Technology and software expenses
+- Environmental compliance costs
+- Reserve fund contributions
+
+**CAPITAL EXPENDITURE PLANNING:**
+- Current year capital expenditure budget
+- 5-year capital expenditure forecast
+- Deferred maintenance backlog
+- Tenant improvement allowance budget
+- Leasing commission budget
+- Major building system replacements
+- Energy efficiency improvements
+- Technology and infrastructure upgrades
+- Life safety and code compliance upgrades
+- Parking lot and exterior improvements
+- Common area renovation and upgrades
+- Equipment replacement schedule
+- Emergency reserve fund
+
+**DEBT SERVICE AND FINANCING:**
+- Mortgage principal and interest payments
+- Loan terms, rates, and maturity dates
+- Debt service coverage ratios
+- Interest rate caps and floors
+- Refinancing considerations
+- Construction or renovation financing
+- Line of credit availability and usage
+
+**VARIANCE ANALYSIS (if available):**
+- Budget vs. actual performance
+- Variance explanations and causes
+- Monthly and quarterly trending
+- Year-over-year comparisons
+- Industry benchmark comparisons
+- Management commentary and analysis
+
+**BUDGET ASSUMPTIONS AND METHODOLOGY:**
+- Occupancy rate assumptions
+- Rent growth projections
+- Expense inflation factors
+- Market conditions considered
+- Lease rollover assumptions
+- Capital expenditure prioritization
+- Budget preparation methodology
+- Key performance indicators tracked
+
+**COMPREHENSIVE JSON STRUCTURE** - Extract ALL financial data into this detailed format:
 {
   "documentType": "operating_budget",
   "metadata": {
-    "propertyName": "Property Name",
-    "propertyAddress": "Full Address",
-    "extractedDate": "2025-01-15"
+    "propertyName": "Complete property name from document",
+    "propertyAddress": "Full street address, city, state, zip",
+    "propertyType": "Office/Retail/Industrial/Multifamily/Mixed-Use",
+    "propertyClass": "A/B/C",
+    "totalSquareFeet": 0,
+    "rentableSquareFeet": 0,
+    "totalUnits": 0,
+    "managementCompany": "Property management company",
+    "ownerEntity": "Property owner entity",
+    "budgetPeriod": "Fiscal year or budget period",
+    "budgetType": "Operating Budget/Pro Forma/Actual Performance",
+    "extractedDate": "2025-01-15",
+    "documentPages": "Number of pages analyzed",
+    "dataQuality": "Excellent/Good/Fair/Poor based on document clarity"
   },
   "data": {
-    "period": "2025 Budget",
+    "budgetPeriod": "2025 Operating Budget",
+    "fiscalYear": "Calendar Year/April-March/Other",
+    "budgetApprovalDate": "Date budget was approved",
+    "budgetPreparedBy": "Entity that prepared budget",
+
     "income": {
-      "grossRentalIncome": 500000,
-      "vacancyAllowance": 25000,
-      "effectiveGrossIncome": 475000,
-      "otherIncome": 15000,
-      "totalIncome": 490000
+      "rentalIncome": {
+        "baseRent": 0,
+        "percentageRent": 0,
+        "rentEscalations": 0,
+        "parkingIncome": 0,
+        "storageIncome": 0,
+        "signageIncome": 0,
+        "miscellaneousRental": 0,
+        "totalRentalIncome": 0
+      },
+      "tenantReimbursements": {
+        "camReimbursements": 0,
+        "taxReimbursements": 0,
+        "insuranceReimbursements": 0,
+        "utilityReimbursements": 0,
+        "totalReimbursements": 0
+      },
+      "otherIncome": {
+        "lateFees": 0,
+        "applicationFees": 0,
+        "leaseTerminationFees": 0,
+        "vendingIncome": 0,
+        "interestIncome": 0,
+        "insuranceRecoveries": 0,
+        "miscellaneousIncome": 0,
+        "totalOtherIncome": 0
+      },
+      "grossPotentialIncome": 0,
+      "vacancyAllowance": 0,
+      "badDebtAllowance": 0,
+      "effectiveGrossIncome": 0,
+      "occupancyRateAssumption": 0.00,
+      "averageRentPsf": 0.00
     },
-    "expenses": {
-      "propertyTaxes": 45000,
-      "insurance": 18000,
-      "utilities": 28000,
-      "maintenance": 32000,
-      "management": 25000,
-      "marketing": 8000,
-      "totalOperatingExpenses": 156000
+
+    "operatingExpenses": {
+      "fixedExpenses": {
+        "realEstateTaxes": 0,
+        "propertyInsurance": 0,
+        "totalFixedExpenses": 0
+      },
+      "variableExpenses": {
+        "utilities": {
+          "electricity": 0,
+          "gas": 0,
+          "water": 0,
+          "sewer": 0,
+          "trash": 0,
+          "telecommunications": 0,
+          "totalUtilities": 0
+        },
+        "maintenanceRepairs": {
+          "generalMaintenance": 0,
+          "preventiveMaintenance": 0,
+          "hvacMaintenance": 0,
+          "elevatorMaintenance": 0,
+          "buildingSupplies": 0,
+          "contractorServices": 0,
+          "totalMaintenanceRepairs": 0
+        },
+        "operatingServices": {
+          "janitorialCleaning": 0,
+          "landscapingGrounds": 0,
+          "snowRemoval": 0,
+          "securityServices": 0,
+          "totalOperatingServices": 0
+        },
+        "administrativeExpenses": {
+          "propertyManagement": 0,
+          "payrollBenefits": 0,
+          "professionalFees": 0,
+          "officeSupplies": 0,
+          "marketingLeasing": 0,
+          "totalAdministrative": 0
+        },
+        "otherExpenses": {
+          "licensesPermits": 0,
+          "bankCharges": 0,
+          "training": 0,
+          "travel": 0,
+          "miscellaneous": 0,
+          "totalOtherExpenses": 0
+        },
+        "totalVariableExpenses": 0
+      },
+      "totalOperatingExpenses": 0,
+      "operatingExpenseRatio": 0.00,
+      "expensePerSquareFoot": 0.00
     },
-    "noi": 334000,
-    "capexForecast": 45000,
-    "cashFlow": 289000
+
+    "netOperatingIncome": 0,
+    "noiMargin": 0.00,
+    "noiPerSquareFoot": 0.00,
+
+    "capitalExpenditures": {
+      "currentYearCapex": {
+        "tenantImprovements": 0,
+        "leasingCommissions": 0,
+        "buildingImprovements": 0,
+        "equipmentReplacement": 0,
+        "deferredMaintenance": 0,
+        "totalCurrentCapex": 0
+      },
+      "fiveYearCapexForecast": [
+        {"year": "2025", "amount": 0, "description": "Major items planned"},
+        {"year": "2026", "amount": 0, "description": "Major items planned"},
+        {"year": "2027", "amount": 0, "description": "Major items planned"},
+        {"year": "2028", "amount": 0, "description": "Major items planned"},
+        {"year": "2029", "amount": 0, "description": "Major items planned"}
+      ],
+      "reserveFunds": {
+        "replacementReserve": 0,
+        "tenantImprovementReserve": 0,
+        "operatingReserve": 0,
+        "totalReserves": 0
+      }
+    },
+
+    "debtService": {
+      "mortgagePrincipal": 0,
+      "mortgageInterest": 0,
+      "totalDebtService": 0,
+      "debtServiceCoverageRatio": 0.00,
+      "loanToValueRatio": 0.00,
+      "interestRate": 0.00,
+      "maturityDate": "Loan maturity date"
+    },
+
+    "cashFlow": {
+      "netOperatingIncome": 0,
+      "lessDebtService": 0,
+      "beforeTaxCashFlow": 0,
+      "cashOnCashReturn": 0.00,
+      "internalRateOfReturn": 0.00
+    },
+
+    "varianceAnalysis": {
+      "budgetVsActualAvailable": false,
+      "majorVariances": [
+        {
+          "category": "Category with variance",
+          "budgetAmount": 0,
+          "actualAmount": 0,
+          "variance": 0,
+          "variancePercentage": 0.00,
+          "explanation": "Reason for variance"
+        }
+      ],
+      "yearOverYearComparison": [
+        {
+          "category": "Income/Expense category",
+          "priorYear": 0,
+          "currentYear": 0,
+          "change": 0,
+          "changePercentage": 0.00
+        }
+      ]
+    },
+
+    "budgetAssumptions": {
+      "occupancyRate": 0.00,
+      "rentGrowthRate": 0.00,
+      "expenseInflationRate": 0.00,
+      "marketConditions": "Description of market assumptions",
+      "leaseRolloverAssumptions": "Assumptions about lease renewals",
+      "capitalPriorities": "Key capital expenditure priorities",
+      "riskFactors": ["List of identified risk factors"],
+      "opportunities": ["List of identified opportunities"]
+    },
+
+    "keyPerformanceIndicators": {
+      "noiPerSquareFoot": 0.00,
+      "operatingExpenseRatio": 0.00,
+      "occupancyRate": 0.00,
+      "averageRentPsf": 0.00,
+      "debtServiceCoverageRatio": 0.00,
+      "cashOnCashReturn": 0.00,
+      "capRate": 0.00,
+      "totalReturnProjection": 0.00
+    },
+
+    "additionalNotes": "Any other relevant information, assumptions, or explanations extracted from the document"
   }
 }
   `,
 
   broker_sales_comparables: `
-You are an expert commercial real estate appraiser and market analyst extracting broker sales comparable data for property valuation and investment analysis. Extract comprehensive market data with the precision required for appraisal reports and investment underwriting.
+You are a seasoned commercial real estate appraiser and market analyst with 20+ years of experience in property valuation, investment analysis, and market research. Your task is to perform a comprehensive extraction of ALL sales comparable data visible in this document for appraisal and investment underwriting purposes.
 
-Focus on extracting ALL comparable sales data:
-- Property address & type
-- Sale date
-- Sale price
-- Price per SF/unit
-- Building size & land size
-- Year built/renovated
-- Occupancy at sale
-- Cap rate/NOI at sale
-- Buyer, Seller
+**EXTRACTION METHODOLOGY:**
+1. **COMPLETE DOCUMENT SCAN**: Examine every table, chart, graph, and comparable property listed
+2. **SYSTEMATIC ANALYSIS**: Extract data for ALL comparable sales, not just the first few or most obvious
+3. **DETAILED PROPERTY PROFILING**: Capture comprehensive property characteristics for each comparable
+4. **MARKET CONTEXT ANALYSIS**: Extract market commentary, trends, and analytical insights
+5. **VALUATION METRICS CALCULATION**: Derive all pricing and cap rate metrics
+6. **PROFESSIONAL VALIDATION**: Apply appraisal expertise to assess data quality and relevance
+7. **COMPREHENSIVE CATEGORIZATION**: Organize comparables by property type, location, and quality
 
-Return JSON with this structure:
+**COMPREHENSIVE SALES COMPARABLE DATA EXTRACTION:**
+
+**DOCUMENT ANALYSIS:**
+- Report title, date, and purpose
+- Market area definition and boundaries
+- Time period of sales analyzed
+- Data sources and verification methods
+- Appraiser/analyst credentials and company
+- Subject property identification (if applicable)
+
+**INDIVIDUAL COMPARABLE ANALYSIS (Extract for EVERY property listed):**
+
+**PROPERTY IDENTIFICATION:**
+- Complete property address including street, city, state, zip code
+- Legal description and parcel number (if provided)
+- Property name or building name
+- Multiple Listing Service (MLS) number
+- Property identification numbers or codes
+
+**TRANSACTION DETAILS:**
+- Exact sale date and closing date
+- Sale price (gross and net if different)
+- Price per square foot (land and building separately if shown)
+- Price per unit (for multi-tenant properties)
+- Price per door (for multifamily)
+- Price per key (for hotels)
+- Terms of sale (cash, financed, seller financing, etc.)
+- Days on market from listing to sale
+- Original listing price and any price reductions
+- Sale-to-list price ratio
+
+**PROPERTY CHARACTERISTICS:**
+- Property type and subtype (Office: Class A/B/C, Retail: Strip/Mall/Freestanding, etc.)
+- Total building square footage (gross and net rentable)
+- Land area (acres, square feet)
+- Number of units, suites, or spaces
+- Number of stories/floors
+- Year built and year of major renovations
+- Construction type and materials
+- Architectural style and design quality
+- Building condition and quality rating
+- Parking spaces and ratio (spaces per 1,000 SF)
+- Parking type (surface, covered, garage)
+
+**FINANCIAL PERFORMANCE AT SALE:**
+- Net Operating Income (NOI) at time of sale
+- Gross rental income at sale
+- Operating expenses at sale
+- Occupancy rate at time of sale
+- Cap rate (calculated and stated)
+- Gross rent multiplier (GRM)
+- Operating expense ratio
+- Rent per square foot at sale
+
+**PHYSICAL FEATURES AND AMENITIES:**
+- HVAC systems and quality
+- Elevator service (number and condition)
+- Accessibility compliance (ADA)
+- Technology infrastructure
+- Security systems
+- Energy efficiency features
+- Environmental certifications (LEED, Energy Star)
+- Special features and amenities
+- Common areas and facilities
+- Signage opportunities and visibility
+
+**LOCATION ANALYSIS:**
+- Neighborhood classification and quality
+- Street address and frontage characteristics
+- Traffic counts and visibility
+- Proximity to major highways and transportation
+- Public transportation access
+- Proximity to complementary businesses
+- Demographics of surrounding area
+- Zoning classification and restrictions
+- Future development plans in area
+
+**MARKET CONDITIONS AND CONTEXT:**
+- Market conditions at time of sale
+- Comparable sales date relative to current market
+- Motivation of buyer and seller
+- Marketing time and exposure
+- Special circumstances affecting sale
+- Broker involvement and commission structure
+- Due diligence period and conditions
+- Financing terms and assumability
+
+**BUYER AND SELLER INFORMATION:**
+- Buyer entity name and type (individual, corporation, REIT, fund)
+- Seller entity name and type
+- Buyer's investment strategy or use intent
+- Seller's reason for selling
+- Relationship between buyer and seller (arms-length or related party)
+- Buyer's experience and portfolio
+- Geographic focus of buyer
+
+**ADJUSTMENTS AND COMPARABILITY FACTORS:**
+- Time adjustments needed for market changes
+- Location adjustments (superior/inferior location)
+- Size adjustments (economy of scale differences)
+- Condition adjustments (superior/inferior condition)
+- Financing adjustments (cash equivalent value)
+- Market conditions adjustments
+- Property rights conveyed (fee simple, leasehold, etc.)
+
+**MARKET ANALYSIS AND TRENDS:**
+- Sales volume trends in the market
+- Price appreciation or depreciation trends
+- Absorption rates and inventory levels
+- New construction activity
+- Economic factors affecting market
+- Interest rate environment impact
+- Investment demand and capital availability
+
+**COMPREHENSIVE JSON STRUCTURE** - Extract ALL comparable sales data:
 {
   "documentType": "broker_sales_comparables",
   "metadata": {
-    "extractedDate": "2025-01-15"
+    "reportTitle": "Complete report title",
+    "reportDate": "YYYY-MM-DD",
+    "marketArea": "Geographic area analyzed",
+    "timeperiodAnalyzed": "Date range of sales analyzed",
+    "dataSources": "Sources of comparable data",
+    "analystCompany": "Company that prepared analysis",
+    "analystCredentials": "Appraiser or analyst credentials",
+    "subjectProperty": "Subject property if applicable",
+    "extractedDate": "2025-01-15",
+    "documentPages": "Number of pages analyzed",
+    "dataQuality": "Excellent/Good/Fair/Poor based on document completeness"
   },
   "data": {
-    "comparables": [
+    "marketSummary": {
+      "totalSalesAnalyzed": 0,
+      "salesPeriod": "Date range of sales",
+      "marketConditions": "Description of market conditions",
+      "marketTrends": "Key trends affecting values",
+      "averageDaysOnMarket": 0,
+      "averageDiscountFromList": 0.00,
+      "salesVelocity": "Fast/Moderate/Slow",
+      "inventoryLevels": "High/Moderate/Low",
+      "buyerDemand": "Strong/Moderate/Weak"
+    },
+
+    "comparableSales": [
       {
-        "propertyAddress": "123 Main St, City, State",
-        "propertyType": "Office Building",
-        "saleDate": "2024-11-15",
-        "salePrice": 2500000,
-        "pricePerSF": 200,
-        "pricePerUnit": 125000,
-        "buildingSize": 12500,
-        "landSize": 1.2,
-        "yearBuilt": 1988,
-        "yearRenovated": 2018,
-        "occupancyAtSale": 0.92,
-        "capRate": 0.065,
-        "noiAtSale": 162500,
-        "buyer": "Investment Group LLC",
-        "seller": "Property Owner Inc"
+        "propertyId": "Unique identifier or sequence number",
+        "propertyName": "Building or property name",
+        "propertyAddress": "Complete street address",
+        "city": "City",
+        "state": "State",
+        "zipCode": "Zip code",
+        "legalDescription": "Legal description if provided",
+        "mlsNumber": "MLS number if applicable",
+
+        "transactionDetails": {
+          "saleDate": "YYYY-MM-DD",
+          "closingDate": "YYYY-MM-DD",
+          "salePrice": 0,
+          "originalListPrice": 0,
+          "priceReductions": 0,
+          "saleToListRatio": 0.00,
+          "daysOnMarket": 0,
+          "termsOfSale": "Cash/Financed/Seller financing/Other",
+          "downPayment": 0,
+          "financingTerms": "Loan terms if applicable",
+          "specialConditions": "Any special sale conditions"
+        },
+
+        "pricingMetrics": {
+          "pricePerSquareFoot": 0.00,
+          "pricePerUnit": 0.00,
+          "pricePerDoor": 0.00,
+          "pricePerKey": 0.00,
+          "landValuePerSquareFoot": 0.00,
+          "improvementValuePerSquareFoot": 0.00
+        },
+
+        "propertyCharacteristics": {
+          "propertyType": "Office/Retail/Industrial/Multifamily/Mixed-Use/Other",
+          "propertySubtype": "Detailed property subtype",
+          "buildingClass": "A/B/C/D",
+          "totalBuildingSquareFeet": 0,
+          "netRentableSquareFeet": 0,
+          "landAreaSquareFeet": 0,
+          "landAreaAcres": 0.00,
+          "numberOfUnits": 0,
+          "numberOfSuites": 0,
+          "numberOfStories": 0,
+          "yearBuilt": 0,
+          "yearRenovated": 0,
+          "constructionType": "Steel/Concrete/Wood frame/Other",
+          "architecturalStyle": "Description of architectural style",
+          "buildingCondition": "Excellent/Good/Average/Fair/Poor",
+          "qualityRating": "Institutional/High/Average/Low"
+        },
+
+        "physicalFeatures": {
+          "parkingSpaces": 0,
+          "parkingRatio": 0.00,
+          "parkingType": "Surface/Covered/Garage/Mixed",
+          "elevators": 0,
+          "hvacType": "Central/Individual/Mixed",
+          "hvacCondition": "Excellent/Good/Average/Fair/Poor",
+          "accessibilityCompliance": "Full ADA/Partial/Non-compliant",
+          "technologyInfrastructure": "Fiber/T1/Basic/None",
+          "securitySystems": "Description of security features",
+          "energyEfficiencyFeatures": "Energy efficient features",
+          "environmentalCertifications": "LEED/Energy Star/Other",
+          "specialAmenities": ["List of special features and amenities"],
+          "commonAreas": "Description of common areas",
+          "signageOpportunities": "Signage visibility and opportunities"
+        },
+
+        "locationFactors": {
+          "neighborhoodClass": "Prime/Good/Average/Below Average",
+          "streetType": "Main arterial/Secondary/Local",
+          "trafficCount": 0,
+          "visibility": "Excellent/Good/Average/Poor",
+          "proximityToHighways": "Distance to major highways",
+          "publicTransitAccess": "Transit options and distance",
+          "nearbyAmenities": ["List of nearby amenities"],
+          "demographics": "Area demographic profile",
+          "zoning": "Current zoning classification",
+          "futureDevelopment": "Known future development plans"
+        },
+
+        "financialPerformance": {
+          "noiAtSale": 0,
+          "grossRentalIncomeAtSale": 0,
+          "operatingExpensesAtSale": 0,
+          "occupancyRateAtSale": 0.00,
+          "capRateAtSale": 0.00,
+          "grossRentMultiplier": 0.00,
+          "operatingExpenseRatio": 0.00,
+          "averageRentPerSF": 0.00,
+          "effectiveGrossIncomeMultiplier": 0.00,
+          "debtServiceCoverageRatio": 0.00
+        },
+
+        "marketConditionsAtSale": {
+          "marketConditions": "Strong/Stable/Declining",
+          "interestRateEnvironment": "Rising/Stable/Declining",
+          "competitiveProperties": "Number of competing properties",
+          "absorptionRate": "Market absorption rate",
+          "constructionActivity": "New construction in area",
+          "economicFactors": "Economic conditions affecting sale"
+        },
+
+        "transactionParties": {
+          "buyerName": "Buyer entity name",
+          "buyerType": "Individual/Corporation/REIT/Fund/Other",
+          "buyerStrategy": "Owner-user/Investor/Developer/Other",
+          "buyerExperience": "Experienced/New to market",
+          "sellerName": "Seller entity name",
+          "sellerType": "Individual/Corporation/REIT/Fund/Other",
+          "sellerMotivation": "Retirement/1031 exchange/Portfolio optimization/Financial distress/Other",
+          "relationshipType": "Arms-length/Related party",
+          "brokerInvolvement": "Listing broker and buyer broker information",
+          "commissionRate": 0.00
+        },
+
+        "comparabilityFactors": {
+          "timeAdjustmentNeeded": 0.00,
+          "locationAdjustment": "Superior/Inferior/Similar",
+          "sizeAdjustment": "Larger/Smaller/Similar",
+          "conditionAdjustment": "Better/Worse/Similar",
+          "ageAdjustment": "Newer/Older/Similar",
+          "amenityAdjustment": "Superior/Inferior/Similar",
+          "overallComparability": "Excellent/Good/Fair/Poor",
+          "adjustmentsSummary": "Summary of adjustments needed"
+        },
+
+        "additionalNotes": "Any additional relevant information about this comparable sale"
       }
     ],
-    "summary": {
-      "averagePricePerSF": 195,
-      "averageCapRate": 0.068,
-      "priceRange": {
-        "min": 1800000,
-        "max": 3200000
+
+    "marketAnalysis": {
+      "salesVolumeAnalysis": {
+        "totalDollarVolume": 0,
+        "numberOfTransactions": 0,
+        "averageTransactionSize": 0,
+        "medianTransactionSize": 0,
+        "volumeComparisonPriorPeriod": 0.00,
+        "marketShare": {
+          "byPropertyType": [
+            {"type": "Property type", "percentage": 0.00, "volume": 0}
+          ],
+          "byBuyerType": [
+            {"type": "Buyer type", "percentage": 0.00, "volume": 0}
+          ]
+        }
+      },
+
+      "pricingAnalysis": {
+        "averagePricePerSF": 0.00,
+        "medianPricePerSF": 0.00,
+        "pricePerSFRange": {"min": 0.00, "max": 0.00},
+        "priceAppreciation": {
+          "quarterOverQuarter": 0.00,
+          "yearOverYear": 0.00,
+          "threeYearTrend": 0.00
+        },
+        "priceByPropertyType": [
+          {"type": "Property type", "averagePricePerSF": 0.00, "salesCount": 0}
+        ],
+        "priceByLocation": [
+          {"area": "Market subarea", "averagePricePerSF": 0.00, "salesCount": 0}
+        ]
+      },
+
+      "capRateAnalysis": {
+        "averageCapRate": 0.00,
+        "medianCapRate": 0.00,
+        "capRateRange": {"min": 0.00, "max": 0.00},
+        "capRateByPropertyType": [
+          {"type": "Property type", "averageCapRate": 0.00, "salesCount": 0}
+        ],
+        "capRateBySize": [
+          {"sizeRange": "Size category", "averageCapRate": 0.00, "salesCount": 0}
+        ],
+        "capRateTrends": "Description of cap rate trends"
+      },
+
+      "marketTrends": {
+        "overallMarketDirection": "Strengthening/Stable/Weakening",
+        "priceTrajectory": "Rising/Stable/Declining",
+        "demandFactors": ["List of factors driving demand"],
+        "supplyFactors": ["List of factors affecting supply"],
+        "economicdrivers": ["Key economic drivers"],
+        "riskFactors": ["Market risk factors identified"],
+        "opportunities": ["Market opportunities identified"],
+        "forecast": "Near-term market outlook"
       }
-    }
+    },
+
+    "qualityMetrics": {
+      "dataReliability": "High/Medium/Low",
+      "sourceVerification": "All verified/Partially verified/Unverified",
+      "timeAdjustmentRequired": true,
+      "comparabilityScore": "Excellent/Good/Fair/Poor",
+      "marketCoverageCompleteness": 0.00,
+      "recommendedUse": "Direct comparison/Trend analysis/General market reference"
+    },
+
+    "additionalNotes": "Any other relevant market information, analyst commentary, or methodology notes"
   }
 }
   `,
 
   broker_lease_comparables: `
-You are an expert commercial real estate leasing professional extracting broker lease comparable data for market analysis and rental rate determination. Extract comprehensive leasing data with the precision required for leasing strategies and market positioning.
+You are a seasoned commercial real estate leasing expert with 20+ years of experience in market analysis, lease negotiations, and rental rate determination. Your task is to perform comprehensive extraction of ALL lease comparable data for market positioning and leasing strategy development.
 
-Focus on extracting ALL lease comparable data:
-- Property address & type
-- Lease commencement date
-- Tenant industry
-- Lease term
-- Square footage
-- Base rent
-- Rent escalations
-- Lease type
-- Concessions
-- Effective rent
+**EXTRACTION METHODOLOGY:**
+1. **COMPLETE LEASE DATABASE SCAN**: Extract ALL lease comparables, not just selected examples
+2. **SYSTEMATIC LEASE ANALYSIS**: Capture every lease term, concession, and financial detail
+3. **MARKET CONTEXT CAPTURE**: Extract market commentary and leasing trends
+4. **EFFECTIVE RENT CALCULATIONS**: Calculate and verify effective rents with all concessions
+5. **TENANT PROFILE ANALYSIS**: Classify tenants by industry, size, and creditworthiness
+6. **COMPARABLE QUALITY ASSESSMENT**: Evaluate relevance and reliability of each comparable
 
-Return JSON with this structure:
+**COMPREHENSIVE LEASE COMPARABLE DATA EXTRACTION:**
+
+**DOCUMENT METADATA:**
+- Market survey title and date
+- Geographic market area covered
+- Leasing period analyzed
+- Data sources and collection methods
+- Broker/analyst company and credentials
+
+**INDIVIDUAL LEASE ANALYSIS (Extract for EVERY comparable):**
+
+**PROPERTY AND LOCATION:**
+- Complete property address and cross streets
+- Building name and class (A/B/C)
+- Property type and specific use classification
+- Neighborhood quality and location rating
+- Transportation access and parking availability
+- Building amenities and common areas
+- Property management quality and reputation
+
+**LEASE TRANSACTION DETAILS:**
+- Lease execution date and commencement date
+- Lease term (months/years) and expiration date
+- Renewal options and extension terms
+- Early termination clauses and penalties
+- Assignment and subletting rights
+- Lease guarantees and credit enhancement
+
+**TENANT PROFILE:**
+- Tenant name and business type
+- Industry classification (NAICS code if available)
+- Company size (employees, revenue if known)
+- Credit quality assessment
+- Local/regional/national tenant classification
+- Tenant's business model and space requirements
+- Previous leasing history in market
+
+**SPACE CHARACTERISTICS:**
+- Rentable square footage leased
+- Usable square footage
+- Floor location and suite configuration
+- Window line exposure and views
+- Ceiling heights and layout flexibility
+- Condition of space at lease inception
+- Special features or premium locations
+
+**FINANCIAL TERMS:**
+- Starting base rent per square foot
+- Rent escalation schedule and methodology
+- Operating expense structure (NNN, Gross, Modified Gross)
+- CAM charges and expense passthroughs
+- Utility arrangements and costs
+- Parking charges (if applicable)
+- Percentage rent clauses (retail)
+- Additional rent and fees
+
+**CONCESSIONS AND INCENTIVES:**
+- Free rent periods (months and timing)
+- Tenant improvement allowances (per SF)
+- Moving allowances and expenses
+- Broker commission structures
+- Signage allowances and restrictions
+- Reduced security deposits
+- Other financial incentives
+
+**EFFECTIVE RENT ANALYSIS:**
+- Gross effective rent calculation
+- Net effective rent after all concessions
+- Present value of lease payments
+- Equivalent level payment analysis
+- Comparison to asking rents
+
+Return comprehensive JSON with ALL lease data:
 {
   "documentType": "broker_lease_comparables",
   "metadata": {
-    "extractedDate": "2025-01-15"
+    "surveyTitle": "Market survey title",
+    "surveyDate": "YYYY-MM-DD",
+    "marketArea": "Geographic area surveyed",
+    "leasingPeriod": "Period of leases analyzed",
+    "dataSources": "Sources of lease data",
+    "analystCompany": "Surveying company",
+    "extractedDate": "2025-01-15",
+    "totalComparables": 0
   },
   "data": {
+    "marketOverview": {
+      "averageAskingRent": 0.00,
+      "averageEffectiveRent": 0.00,
+      "concessionLevel": "High/Moderate/Low",
+      "marketConditions": "Tenant/Landlord favorable",
+      "vacancyRate": 0.00,
+      "availableSpace": 0,
+      "constructionActivity": "High/Moderate/Low",
+      "marketTrends": "Strengthening/Stable/Weakening"
+    },
     "comparables": [
       {
-        "propertyAddress": "456 Business Blvd, City, State",
-        "propertyType": "Office",
-        "leaseCommencementDate": "2024-06-01",
-        "tenantIndustry": "Professional Services",
-        "leaseTerm": 60,
-        "squareFootage": 3200,
-        "baseRent": 28,
-        "rentEscalations": "3% annually",
-        "leaseType": "Modified Gross",
-        "concessions": "4 months free rent, $20 TI",
-        "effectiveRent": 24.50
+        "propertyName": "Building name",
+        "propertyAddress": "Complete address",
+        "propertyType": "Office/Retail/Industrial/Other",
+        "buildingClass": "A/B/C",
+        "neighborhoodQuality": "Prime/Good/Average/Below Average",
+        "transportation": "Transportation access quality",
+        "buildingAmenities": ["List all amenities"],
+        "leaseDetails": {
+          "leaseExecutionDate": "YYYY-MM-DD",
+          "leaseCommencementDate": "YYYY-MM-DD",
+          "leaseTerm": 0,
+          "leaseExpiration": "YYYY-MM-DD",
+          "renewalOptions": "Details of renewal terms",
+          "earlyTermination": "Early termination provisions"
+        },
+        "tenantProfile": {
+          "tenantName": "Tenant name",
+          "industry": "Specific industry classification",
+          "businessType": "Professional/Medical/Tech/Retail/etc",
+          "companySize": "Large/Medium/Small",
+          "creditQuality": "Strong/Average/Weak",
+          "tenantClass": "National/Regional/Local",
+          "spaceRequirements": "Specific space needs"
+        },
+        "spaceCharacteristics": {
+          "rentableSquareFeet": 0,
+          "usableSquareFeet": 0,
+          "floorLocation": "Floor number/location",
+          "suiteConfiguration": "Layout description",
+          "windowExposure": "Exposure direction and quality",
+          "ceilingHeight": 0.00,
+          "layoutFlexibility": "Open/Private offices/Mixed",
+          "conditionAtLease": "New/Renovated/As-is",
+          "specialFeatures": ["Premium location features"]
+        },
+        "financialTerms": {
+          "startingBaseRent": 0.00,
+          "currentBaseRent": 0.00,
+          "rentEscalations": "Detailed escalation schedule",
+          "leaseStructure": "Triple Net/Gross/Modified Gross/Full Service",
+          "camCharges": 0.00,
+          "operatingExpenses": 0.00,
+          "utilityArrangement": "Tenant/Landlord responsibility",
+          "parkingCharges": 0.00,
+          "percentageRent": "Details if applicable",
+          "additionalCharges": 0.00
+        },
+        "concessionsIncentives": {
+          "freeRentMonths": 0,
+          "freeRentTiming": "Front-loaded/Back-loaded/Spread",
+          "tenantImprovementAllowance": 0.00,
+          "movingAllowance": 0.00,
+          "brokerCommission": "Commission structure",
+          "signageAllowance": 0.00,
+          "securityDepositReduction": 0.00,
+          "otherIncentives": ["List other incentives"]
+        },
+        "effectiveRentAnalysis": {
+          "grossEffectiveRent": 0.00,
+          "netEffectiveRent": 0.00,
+          "effectiveRentPsf": 0.00,
+          "presentValueLease": 0,
+          "levelPaymentEquivalent": 0.00,
+          "comparisonToAsking": 0.00,
+          "totalConcessionValue": 0.00
+        },
+        "marketFactors": {
+          "competitivePosition": "Superior/Average/Inferior",
+          "timeOnMarket": 0,
+          "marketingStrategy": "Aggressive/Standard/Limited",
+          "landlordMotivation": "High/Moderate/Low",
+          "tenantOptions": "Limited/Moderate/Extensive",
+          "marketTiming": "Peak/Average/Soft market"
+        },
+        "additionalNotes": "Relevant lease terms or market conditions"
       }
     ],
-    "summary": {
-      "averageBaseRent": 26.75,
-      "averageEffectiveRent": 24.25,
-      "rentRange": {
-        "min": 22,
-        "max": 32
+    "marketAnalysis": {
+      "rentTrends": {
+        "askingRentTrend": "Rising/Stable/Declining",
+        "effectiveRentTrend": "Rising/Stable/Declining",
+        "rentGrowthRate": 0.00,
+        "rentProjection": "Near-term rent outlook"
+      },
+      "concessionAnalysis": {
+        "averageFreeRent": 0.00,
+        "averageTIAllowance": 0.00,
+        "concessionTrends": "Increasing/Stable/Decreasing",
+        "concessionsBySize": [
+          {"sizeRange": "0-2,500 SF", "averageConcession": 0.00},
+          {"sizeRange": "2,501-5,000 SF", "averageConcession": 0.00},
+          {"sizeRange": "5,001-10,000 SF", "averageConcession": 0.00},
+          {"sizeRange": "10,000+ SF", "averageConcession": 0.00}
+        ]
+      },
+      "leaseTermAnalysis": {
+        "averageLeaseTerm": 0,
+        "preferredTerms": "Landlord/tenant preferred terms",
+        "termTrends": "Lengthening/Stable/Shortening",
+        "renewalActivity": "High/Moderate/Low"
+      },
+      "tenantDemandAnalysis": {
+        "overallDemand": "Strong/Moderate/Weak",
+        "demandByIndustry": [
+          {"industry": "Industry name", "demandLevel": "High/Medium/Low"}
+        ],
+        "tenantRequirements": "Common space requirements",
+        "expansionActivity": "High/Moderate/Low"
       }
+    },
+    "summary": {
+      "averageAskingRent": 0.00,
+      "averageEffectiveRent": 0.00,
+      "askingRentRange": {"min": 0.00, "max": 0.00},
+      "effectiveRentRange": {"min": 0.00, "max": 0.00},
+      "averageLeaseTermMonths": 0,
+      "averageFreeRentMonths": 0.00,
+      "averageTIAllowancePsf": 0.00,
+      "marketRecommendations": "Key leasing strategy recommendations"
     }
   }
 }
   `,
 
   broker_listing: `
-You are an expert commercial real estate broker analyzing a listing agreement for brokerage and commission tracking. Extract comprehensive listing data with the precision required for transaction management and commission calculations.
+You are a seasoned commercial real estate broker with 20+ years of experience in property marketing, transaction management, and commission negotiations. Extract comprehensive listing agreement data for complete transaction tracking and commission management.
 
-Focus on extracting ALL listing agreement data:
-- Property owner
-- Broker/brokerage firm
-- Listing price/asking rent
-- Listing type
-- Commission structure
-- Term of listing
-- Property details
-- Broker duties
-- Termination provisions
+**EXTRACTION METHODOLOGY:**
+1. **COMPLETE AGREEMENT ANALYSIS**: Extract ALL terms, conditions, and obligations from the entire document
+2. **SYSTEMATIC DATA CAPTURE**: Process every section including fine print and addendums
+3. **LEGAL TERM IDENTIFICATION**: Capture all legal provisions, rights, and responsibilities
+4. **FINANCIAL DETAIL EXTRACTION**: Extract all commission structures, fees, and financial obligations
+5. **PROFESSIONAL EXPERTISE**: Apply brokerage knowledge to understand complex terms and relationships
 
-Return JSON with this structure:
+**COMPREHENSIVE LISTING AGREEMENT EXTRACTION:**
+
+**PARTIES AND REPRESENTATION:**
+- Complete property owner information (individual/entity name, address, contact details)
+- Authorized signatories and decision-makers
+- Brokerage firm name, license information, and contact details
+- Individual broker/agent names, licenses, and specializations
+- Property attorney information if involved
+- Property manager or representative if different from owner
+
+**PROPERTY IDENTIFICATION:**
+- Complete legal property description and parcel numbers
+- Property address and cross-street references
+- Property type, subtype, and use classification
+- Building and land square footage/acreage
+- Zoning classification and permitted uses
+- Assessment and tax information
+- Environmental status and compliance issues
+
+**LISTING DETAILS:**
+- Listing type (exclusive right to sell/lease, exclusive agency, open listing)
+- Listing commencement date and expiration date
+- Marketing strategy and approved marketing methods
+- Asking price for sales or rent for leasing
+- Price/rent adjustment authority and procedures
+- Minimum acceptable terms and conditions
+- Showing instructions and access procedures
+
+**COMMISSION AND COMPENSATION:**
+- Complete commission structure (percentage, flat fee, sliding scale)
+- Commission splits between listing and selling brokers
+- Bonus structures and performance incentives
+- Commission payment timing and conditions
+- Circumstances triggering commission obligations
+- Protected list provisions and holdover periods
+- Commission due on renewals, extensions, or expansions
+
+**MARKETING AUTHORIZATION:**
+- Approved marketing materials and channels
+- MLS listing authorization and terms
+- Signage rights and placement approval
+- Advertising budget and responsibility
+- Online marketing and social media permissions
+- Photography and videography rights
+- Showing procedures and security requirements
+
+Return comprehensive JSON structure with ALL extracted data:
 {
   "documentType": "broker_listing",
   "metadata": {
+    "listingType": "Sale/Lease/Both",
+    "agreementDate": "YYYY-MM-DD",
     "extractedDate": "2025-01-15"
   },
   "data": {
-    "listingDetails": {
-      "propertyOwner": "ABC Properties LLC",
-      "brokerFirm": "Commercial Realty Group",
-      "brokerName": "John Smith",
-      "listingPrice": 2500000,
-      "askingRent": 28,
-      "listingType": "sale",
-      "commissionStructure": "6% of sale price",
-      "listingTerm": "180 days",
-      "listingDate": "2025-01-01",
-      "expirationDate": "2025-06-30"
+    "parties": {
+      "propertyOwner": "Complete owner entity name",
+      "ownerContact": "Contact information",
+      "authorizedSignatory": "Authorized person",
+      "brokerageFirm": "Brokerage company name",
+      "brokerLicense": "License number",
+      "listingAgent": "Primary agent name",
+      "agentContact": "Agent contact information"
     },
-    "propertyDetails": {
-      "address": "789 Commerce Way, City, State",
-      "propertyType": "Industrial",
-      "squareFootage": 25000,
-      "lotSize": 3.5,
-      "yearBuilt": 1995,
-      "parking": "50 spaces",
-      "zoning": "M-1"
+    "property": {
+      "legalDescription": "Complete legal description",
+      "address": "Full property address",
+      "propertyType": "Detailed property type",
+      "buildingSize": 0,
+      "landSize": 0.00,
+      "zoning": "Zoning classification",
+      "currentUse": "Current property use"
     },
-    "brokerDuties": [
-      "Market the property",
-      "Screen potential buyers",
-      "Negotiate terms",
-      "Coordinate due diligence"
-    ],
-    "terminationProvisions": [
-      "Either party may terminate with 30 days notice",
-      "Commission due if sale closes within 90 days after termination"
-    ]
+    "listingTerms": {
+      "listingPrice": 0,
+      "askingRent": 0.00,
+      "commissionRate": 0.00,
+      "listingPeriod": "Term length",
+      "startDate": "YYYY-MM-DD",
+      "expirationDate": "YYYY-MM-DD"
+    },
+    "brokerObligations": ["Complete list of broker duties"],
+    "ownerObligations": ["Complete list of owner duties"],
+    "terminationClauses": ["All termination provisions"]
   }
 }
   `,
 
   offering_memo: `
-You are an expert commercial real estate investment analyst reviewing an offering memorandum for potential acquisition. Extract comprehensive property and financial data with the precision required for investment committee presentations and due diligence processes.
+You are a seasoned commercial real estate investment professional with 20+ years of experience in acquisitions, underwriting, and investment analysis. Extract comprehensive investment-grade data from this offering memorandum for institutional investment decision-making.
 
-Focus on extracting ALL offering memo components:
-- Property overview
-- Investment highlights
-- Market overview
-- Rent roll summary
-- Operating statement
-- Lease terms
-- Comparables
-- Photos/plans
-- Cap rate/pricing
-- Location data
+**EXTRACTION METHODOLOGY:**
+1. **COMPLETE DOCUMENT ANALYSIS**: Extract ALL sections including executive summary, financial data, market analysis, and appendices
+2. **INVESTMENT FOCUS**: Capture all data points required for investment committee approval
+3. **RISK ASSESSMENT**: Extract all risk factors, assumptions, and market conditions
+4. **FINANCIAL MODELING**: Capture all data needed for DCF analysis and return projections
+5. **DUE DILIGENCE SUPPORT**: Extract information to support comprehensive due diligence
 
-Return JSON with this structure:
+**COMPREHENSIVE OFFERING MEMO EXTRACTION:**
+
+**EXECUTIVE SUMMARY AND INVESTMENT THESIS**
+**PROPERTY OVERVIEW AND DESCRIPTION**
+**FINANCIAL PERFORMANCE AND PROJECTIONS**
+**MARKET ANALYSIS AND POSITIONING**
+**TENANT AND LEASE ANALYSIS**
+**PHYSICAL PROPERTY ASSESSMENT**
+**LOCATION AND DEMOGRAPHICS**
+**INVESTMENT RETURNS AND PRICING**
+**RISK FACTORS AND OPPORTUNITIES**
+**TRANSACTION STRUCTURE**
+
 {
   "documentType": "offering_memo",
   "metadata": {
-    "propertyName": "Property Name",
-    "propertyAddress": "Full Address",
+    "propertyName": "Complete property name",
+    "propertyAddress": "Full address",
+    "offeringPrice": 0,
+    "brokerageFirm": "Listing brokerage",
+    "preparedBy": "Document preparer",
+    "dateIssued": "YYYY-MM-DD",
     "extractedDate": "2025-01-15"
   },
   "data": {
-    "propertyOverview": {
-      "name": "Professional Center",
-      "address": "123 Main St, City, State",
-      "propertyType": "Office",
-      "yearBuilt": 1995,
-      "totalSquareFeet": 25000,
-      "lotSize": 2.5
-    },
-    "investmentHighlights": [
-      "Prime location with excellent visibility",
-      "Recently renovated common areas",
-      "Strong tenant mix with credit tenants",
-      "Below-market rents with upside potential"
-    ],
-    "marketOverview": "Strong suburban office market with growing demand",
-    "rentRollSummary": {
-      "totalUnits": 15,
-      "occupancyRate": 0.92,
-      "averageRent": 28
-    },
-    "operatingStatement": {
-      "grossIncome": 500000,
-      "operatingExpenses": 175000,
-      "noi": 325000
-    },
-    "leaseTerms": [
-      "Average lease term: 5 years",
-      "Triple net lease structure",
-      "Annual escalations: 3%"
-    ],
-    "comparables": [
-      {
-        "address": "456 Business Park Dr",
-        "salePrice": 4800000,
-        "capRate": 0.068
+    "executiveSummary": {
+      "investmentThesis": "Primary investment opportunity description",
+      "keyInvestmentHighlights": ["All major selling points"],
+      "financialSummary": {
+        "askingPrice": 0,
+        "capRate": 0.00,
+        "noi": 0,
+        "pricePerSF": 0.00,
+        "projectedReturns": "Return projections"
       }
-    ],
-    "pricing": {
-      "askingPrice": 5000000,
-      "capRate": 0.065,
-      "pricePerSF": 200
     },
-    "locationData": {
-      "neighborhood": "Central Business District",
-      "demographics": "High-income professional area",
-      "transportation": "Easy highway access, public transit"
+    "propertyOverview": {
+      "propertyName": "Building name",
+      "address": "Complete address",
+      "propertyType": "Detailed property classification",
+      "buildingClass": "A/B/C",
+      "totalSquareFeet": 0,
+      "landArea": 0.00,
+      "yearBuilt": 0,
+      "lastRenovated": 0,
+      "numberOfUnits": 0,
+      "parkingSpaces": 0,
+      "occupancyRate": 0.00
+    },
+    "financialPerformance": {
+      "currentYearActual": {
+        "grossIncome": 0,
+        "operatingExpenses": 0,
+        "noi": 0,
+        "capRate": 0.00
+      },
+      "projections": [
+        {"year": "2025", "noi": 0, "capRate": 0.00},
+        {"year": "2026", "noi": 0, "capRate": 0.00}
+      ],
+      "assumptions": ["Key financial assumptions"]
+    },
+    "tenantAnalysis": {
+      "majorTenants": [
+        {
+          "tenantName": "Tenant name",
+          "squareFeet": 0,
+          "percentOfIncome": 0.00,
+          "leaseExpiration": "YYYY-MM-DD",
+          "creditRating": "Credit assessment"
+        }
+      ],
+      "tenantDiversification": "Analysis of tenant mix",
+      "leaseExpirationSchedule": "Rollover analysis"
+    },
+    "marketAnalysis": {
+      "marketOverview": "Market conditions and trends",
+      "competitivePosition": "Property's market position",
+      "demographics": "Area demographics",
+      "economicDrivers": ["Key economic factors"],
+      "futureOutlook": "Market projections"
+    },
+    "investmentAnalysis": {
+      "valuationSummary": "Valuation methodology",
+      "comparableSales": [
+        {
+          "address": "Comparable property address",
+          "salePrice": 0,
+          "capRate": 0.00,
+          "pricePerSF": 0.00
+        }
+      ],
+      "returnProjections": {
+        "year1CashOnCash": 0.00,
+        "averageAnnualReturn": 0.00,
+        "totalReturn": 0.00,
+        "irr": 0.00
+      }
+    },
+    "riskFactors": ["All identified risks"],
+    "opportunities": ["Value-add opportunities"],
+    "transactionStructure": {
+      "askingPrice": 0,
+      "dueDigiencePeriod": "Due diligence timeline",
+      "closingTimeline": "Expected closing schedule",
+      "brokerCommission": 0.00
     }
   }
 }
   `,
 
   lease_agreement: `
-You are an expert commercial real estate attorney and leasing professional analyzing a lease agreement for portfolio management and cash flow projections. Extract comprehensive lease terms with the detail required for lease administration and investment analysis.
+You are a seasoned commercial real estate attorney and lease administrator with 20+ years of experience in lease drafting, negotiation, and portfolio management. Extract comprehensive legal and financial terms from this lease agreement for complete lease administration and investment analysis.
 
-Focus on extracting ALL lease agreement components:
-- Parties
-- Premises description
-- Lease term
-- Rent schedule
-- Operating expense responsibilities
-- Security deposit
-- Renewal options
-- Maintenance obligations
-- Assignment provisions
-- Default remedies
-- Insurance requirements
+**EXTRACTION METHODOLOGY:**
+1. **COMPLETE LEGAL DOCUMENT ANALYSIS**: Extract ALL clauses, terms, conditions, and legal provisions
+2. **SYSTEMATIC CLAUSE PROCESSING**: Analyze every section including exhibits, addendums, and amendments
+3. **LEGAL TERMINOLOGY RECOGNITION**: Properly interpret complex legal language and commercial lease terms
+4. **FINANCIAL OBLIGATION MAPPING**: Capture all financial responsibilities and payment obligations
+5. **RISK ASSESSMENT**: Identify default provisions, remedies, and risk allocation between parties
 
-Return JSON with this structure:
+**COMPREHENSIVE LEASE AGREEMENT EXTRACTION:**
+
+**PARTIES AND LEGAL STRUCTURE**
+**PREMISES AND PROPERTY DESCRIPTION**
+**LEASE TERM AND RENEWAL PROVISIONS**
+**RENT AND FINANCIAL OBLIGATIONS**
+**OPERATING EXPENSES AND COST ALLOCATION**
+**USE CLAUSES AND RESTRICTIONS**
+**MAINTENANCE AND REPAIR OBLIGATIONS**
+**INSURANCE AND LIABILITY PROVISIONS**
+**DEFAULT AND REMEDIES**
+**ASSIGNMENT AND TRANSFER RIGHTS**
+**SPECIAL PROVISIONS AND ADDENDUMS**
+
+Return comprehensive JSON structure:
 {
   "documentType": "lease_agreement",
   "metadata": {
-    "propertyAddress": "Suite 200, 123 Business Blvd",
+    "propertyAddress": "Complete property address",
+    "leaseDate": "YYYY-MM-DD",
     "extractedDate": "2025-01-15"
   },
   "data": {
     "parties": {
-      "tenant": "XYZ Corporation",
-      "landlord": "Property Management LLC"
+      "landlord": {
+        "name": "Complete landlord entity name",
+        "address": "Landlord address",
+        "legalType": "Corporation/LLC/Individual/Partnership",
+        "authorizedRepresentative": "Signatory name"
+      },
+      "tenant": {
+        "name": "Complete tenant entity name",
+        "address": "Tenant address",
+        "legalType": "Corporation/LLC/Individual/Partnership",
+        "guarantor": "Guarantor information if applicable"
+      }
     },
     "premises": {
-      "propertyAddress": "Suite 200, 123 Business Blvd",
-      "squareFeet": 3200,
-      "description": "Second floor office suite with reception area"
+      "propertyAddress": "Complete address and legal description",
+      "suiteUnit": "Specific suite/unit designation",
+      "rentableSquareFeet": 0,
+      "usableSquareFeet": 0,
+      "commonAreaFactor": 0.00,
+      "floorLocation": "Floor number and location",
+      "description": "Detailed premises description",
+      "includedAmenities": ["Parking spaces", "Storage", "Other included items"],
+      "permittedUse": "Specific permitted use language",
+      "exclusiveUseRights": "Any exclusive use provisions"
     },
     "leaseTerm": {
-      "startDate": "2024-06-01",
-      "endDate": "2029-05-31",
-      "termMonths": 60
+      "commencement": "YYYY-MM-DD",
+      "expiration": "YYYY-MM-DD",
+      "termInMonths": 0,
+      "rentCommencementDate": "YYYY-MM-DD",
+      "possessionDate": "YYYY-MM-DD",
+      "renewalOptions": [
+        {
+          "optionNumber": 1,
+          "termLength": "Length of renewal term",
+          "rentDetermination": "Method for determining renewal rent",
+          "noticeRequired": "Notice period required",
+          "conditions": "Conditions for exercise"
+        }
+      ],
+      "earlyTerminationRights": "Early termination provisions",
+      "holdoverProvisions": "Holdover rent and terms"
     },
-    "rentSchedule": {
-      "baseRent": 8500,
-      "rentEscalations": "3% annually starting year 2",
-      "rentPerSqFt": 31.88
+    "rentStructure": {
+      "baseRent": {
+        "monthlyAmount": 0,
+        "annualAmount": 0,
+        "perSquareFootRate": 0.00,
+        "escalationSchedule": [
+          {"effectiveDate": "YYYY-MM-DD", "monthlyRent": 0, "increase": "Amount/percentage"}
+        ],
+        "escalationType": "Fixed/CPI/Market/Percentage",
+        "escalationFrequency": "Annual/Biennial/Other"
+      },
+      "percentageRent": {
+        "applicable": false,
+        "percentageRate": 0.00,
+        "breakpoint": 0,
+        "reportingRequirements": "Sales reporting obligations"
+      },
+      "additionalRent": {
+        "parkingCharges": 0,
+        "storageCharges": 0,
+        "signageCharges": 0,
+        "otherCharges": "Other recurring charges"
+      }
     },
     "operatingExpenses": {
-      "responsibilityType": "Modified Gross",
-      "camCharges": 850,
-      "utilities": "Tenant responsibility",
-      "taxes": "Included in base rent",
-      "insurance": "Landlord carries building insurance"
+      "structure": "Triple Net/Gross/Modified Gross/Full Service",
+      "camCharges": {
+        "estimatedAnnual": 0,
+        "reconciliationFrequency": "Annual/Monthly",
+        "includedServices": ["Services included in CAM"],
+        "excludedItems": ["Items excluded from CAM"]
+      },
+      "realEstateTaxes": {
+        "responsibility": "Tenant/Landlord/Shared",
+        "baseYear": "Tax base year if applicable",
+        "assessmentAppeal": "Rights to contest assessments"
+      },
+      "insurance": {
+        "responsibility": "Tenant/Landlord/Shared",
+        "landlordCoverage": "Insurance carried by landlord",
+        "tenantRequirements": ["Required tenant insurance coverage"]
+      },
+      "utilities": {
+        "electricity": "Tenant/Landlord responsibility",
+        "gas": "Tenant/Landlord responsibility",
+        "water": "Tenant/Landlord responsibility",
+        "hvac": "HVAC service responsibility",
+        "janitorial": "Cleaning service responsibility"
+      }
     },
-    "securityDeposit": 17000,
-    "renewalOptions": [
-      "One 5-year option at market rates",
-      "120-day notice required"
-    ],
-    "maintenanceObligations": {
-      "landlord": [
-        "Structural repairs",
-        "HVAC maintenance",
-        "Common area maintenance"
-      ],
-      "tenant": [
-        "Interior maintenance",
-        "Janitorial services",
-        "Minor repairs"
-      ]
+    "securityDeposit": {
+      "amount": 0,
+      "form": "Cash/Letter of Credit/Other",
+      "interestEarning": false,
+      "returnConditions": "Conditions for return",
+      "reductionProvisions": "Ability to reduce over time"
     },
-    "assignmentProvisions": "Assignment permitted with landlord consent",
-    "defaultRemedies": [
-      "30-day cure period for rent default",
-      "Landlord may terminate and re-enter",
-      "Tenant liable for accelerated rent"
-    ],
-    "insuranceRequirements": [
-      "General liability: $2M per occurrence",
-      "Property insurance on tenant improvements",
-      "Workers compensation as required by law"
-    ]
+    "tenantImprovements": {
+      "allowance": 0,
+      "allowancePerSF": 0.00,
+      "approvalProcess": "TI approval requirements",
+      "ownershipAtExpiration": "Who owns improvements at lease end",
+      "restorationRequirements": "Requirements to restore premises"
+    },
+    "useAndOccupancy": {
+      "permittedUse": "Specific permitted use language",
+      "restrictedUses": ["Prohibited uses"],
+      "exclusiveUse": "Any exclusive use rights granted",
+      "operatingHours": "Required or permitted operating hours",
+      "continuousOperation": "Continuous operation requirements",
+      "coTenancy": "Co-tenancy requirements or benefits"
+    },
+    "maintenanceRepair": {
+      "landlordObligations": ["Landlord maintenance responsibilities"],
+      "tenantObligations": ["Tenant maintenance responsibilities"],
+      "capitalImprovements": "Who pays for capital improvements",
+      "hvacMaintenance": "HVAC maintenance responsibility",
+      "structuralRepairs": "Structural repair responsibility"
+    },
+    "alterationsImprovements": {
+      "consentRequired": "Landlord consent requirements",
+      "approvalProcess": "Process for approving alterations",
+      "constructionStandards": "Standards for tenant work",
+      "removalRequirements": "Requirements to remove at lease end",
+      "ownershipOfImprovements": "Who owns improvements"
+    },
+    "assignmentSubletting": {
+      "assignmentRights": "Rights to assign lease",
+      "sublettingRights": "Rights to sublet space",
+      "landlordConsent": "Landlord consent requirements",
+      "profitSharing": "Sharing of sublease profits",
+      "recapture": "Landlord recapture rights"
+    },
+    "defaultRemedies": {
+      "monetaryDefaults": {
+        "curePeriod": "Days to cure monetary default",
+        "remedies": ["Available remedies for monetary default"]
+      },
+      "nonMonetaryDefaults": {
+        "cureperiod": "Days to cure non-monetary default",
+        "remedies": ["Available remedies for non-monetary default"]
+      },
+      "landlordRemedies": ["All landlord remedies upon default"],
+      "tenantRemedies": ["Tenant remedies for landlord default"],
+      "damages": "Damages calculation methodology",
+      "acceleration": "Rent acceleration provisions"
+    },
+    "insurance": {
+      "generalLiability": {
+        "minimumCoverage": 0,
+        "additionalInsured": "Landlord as additional insured",
+        "primaryNonContributory": "Primary and non-contributory language"
+      },
+      "propertyInsurance": {
+        "coverage": "Required property insurance coverage",
+        "replacementCost": "Replacement cost requirements"
+      },
+      "workersCompensation": "Workers compensation requirements",
+      "businessInterruption": "Business interruption insurance",
+      "certificateRequirements": "Insurance certificate delivery requirements"
+    },
+    "casualtyCondemnation": {
+      "casualtyProvisions": "What happens if property is damaged",
+      "repairObligations": "Repair obligations after casualty",
+      "terminationRights": "Rights to terminate after casualty",
+      "condemnationProvisions": "Condemnation/eminent domain provisions",
+      "awardAllocation": "How condemnation awards are allocated"
+    },
+    "specialProvisions": {
+      "signageRights": "Tenant signage rights and restrictions",
+      "parkingAllocation": "Parking space allocation and terms",
+      "quietEnjoyment": "Quiet enjoyment provisions",
+      "accessRights": "24/7 access or restricted access",
+      "environmentalProvisions": "Environmental compliance obligations",
+      "hazardousMaterials": "Hazardous materials restrictions",
+      "subordination": "Subordination to mortgages",
+      "estoppelRequirements": "Estoppel certificate obligations"
+    },
+    "generalProvisions": {
+      "governingLaw": "Governing state law",
+      "attorneysFees": "Attorneys fees provisions",
+      "notices": "How notices must be delivered",
+      "severability": "Severability clause",
+      "entireAgreement": "Integration/entire agreement clause",
+      "amendments": "How lease can be amended",
+      "brokerCommissions": "Broker commission obligations"
+    },
+    "exhibits": ["List of all exhibits and addendums"],
+    "additionalNotes": "Any other significant lease terms or unusual provisions"
   }
 }
   `,
 
   financial_statements: `
-You are an expert commercial real estate financial analyst extracting historical financial performance data for investment analysis and asset management decisions. Extract comprehensive financial data with the precision required for NOI trend analysis, budget variance analysis, and investor reporting.
+You are a seasoned commercial real estate financial analyst and asset manager with 20+ years of experience in property financial management, NOI optimization, and investment reporting. Extract comprehensive financial performance data for complete investment analysis and asset management decisions.
 
-Focus on extracting ALL financial statement components:
-- Historical operating income
-- Rental income
-- Other income
-- Operating expenses
-- NOI
-- Debt service
-- Cash flow
-- Balance sheet
-- CapEx
+**EXTRACTION METHODOLOGY:**
+1. **COMPLETE FINANCIAL STATEMENT ANALYSIS**: Extract ALL line items from income statement, balance sheet, and cash flow statement
+2. **MULTI-PERIOD DATA CAPTURE**: Extract historical trends and comparative period data where available
+3. **DETAILED CATEGORIZATION**: Properly classify all income and expense items by category and nature
+4. **VARIANCE ANALYSIS**: Capture actual vs. budget comparisons and explanations
+5. **RATIO CALCULATION**: Calculate and extract all relevant financial ratios and metrics
+6. **PROFESSIONAL VALIDATION**: Apply real estate financial expertise to validate data consistency
 
-Return JSON with this structure:
+**COMPREHENSIVE FINANCIAL STATEMENT EXTRACTION:**
+
+**INCOME STATEMENT COMPONENTS**
+**BALANCE SHEET ELEMENTS**
+**CASH FLOW STATEMENT DATA**
+**FINANCIAL RATIOS AND METRICS**
+**BUDGET VARIANCE ANALYSIS**
+**TREND ANALYSIS AND HISTORICAL DATA**
+**CAPITAL EXPENDITURE TRACKING**
+**DEBT ANALYSIS AND COVERAGE RATIOS**
+
+Return comprehensive JSON structure:
 {
   "documentType": "financial_statements",
   "metadata": {
-    "propertyName": "Property Name",
-    "propertyAddress": "Full Address",
+    "propertyName": "Complete property name",
+    "propertyAddress": "Full property address",
+    "reportingPeriod": "Period covered by statements",
+    "reportType": "Annual/Quarterly/Monthly/T-12",
+    "auditedUnaudited": "Audited/Unaudited/Reviewed",
+    "preparedBy": "CPA firm or internal",
     "extractedDate": "2025-01-15"
   },
   "data": {
-    "period": "Year Ending December 31, 2024",
-    "operatingIncome": {
-      "rentalIncome": 480000,
-      "otherIncome": 25000,
-      "totalIncome": 505000,
-      "vacancyLoss": 20000,
-      "effectiveGrossIncome": 485000
+    "incomeStatement": {
+      "reportingPeriod": "Period ending YYYY-MM-DD",
+      "revenues": {
+        "rentalIncome": {
+          "baseRent": 0,
+          "percentageRent": 0,
+          "parkingIncome": 0,
+          "storageIncome": 0,
+          "otherRentalIncome": 0,
+          "totalRentalIncome": 0
+        },
+        "tenantReimbursements": {
+          "camReimbursements": 0,
+          "realEstateTaxReimbursements": 0,
+          "insuranceReimbursements": 0,
+          "utilityReimbursements": 0,
+          "totalReimbursements": 0
+        },
+        "otherIncome": {
+          "lateFees": 0,
+          "applicationFees": 0,
+          "forfeiture": 0,
+          "vending": 0,
+          "interest": 0,
+          "miscellaneous": 0,
+          "totalOtherIncome": 0
+        },
+        "grossPotentialRevenue": 0,
+        "vacancyCreditLoss": 0,
+        "effectiveGrossIncome": 0
+      },
+      "operatingExpenses": {
+        "propertyOperations": {
+          "propertyManagement": 0,
+          "payrollAndBenefits": 0,
+          "repairsAndMaintenance": 0,
+          "contractServices": 0,
+          "supplies": 0,
+          "totalPropertyOperations": 0
+        },
+        "utilitiesServices": {
+          "electricity": 0,
+          "gas": 0,
+          "water": 0,
+          "sewer": 0,
+          "trash": 0,
+          "telephone": 0,
+          "cable": 0,
+          "totalUtilities": 0
+        },
+        "administrativeExpenses": {
+          "accounting": 0,
+          "legal": 0,
+          "audit": 0,
+          "consulting": 0,
+          "bankCharges": 0,
+          "officeExpenses": 0,
+          "totalAdministrative": 0
+        },
+        "marketingLeasing": {
+          "advertising": 0,
+          "leasingCommissions": 0,
+          "leasingCosts": 0,
+          "totalMarketingLeasing": 0
+        },
+        "fixedExpenses": {
+          "realEstateTaxes": 0,
+          "propertyInsurance": 0,
+          "totalFixed": 0
+        },
+        "otherExpenses": {
+          "badDebt": 0,
+          "miscellaneous": 0,
+          "totalOther": 0
+        },
+        "totalOperatingExpenses": 0
+      },
+      "netOperatingIncome": 0,
+      "nonOperatingItems": {
+        "interestIncome": 0,
+        "interestExpense": 0,
+        "depreciationAmortization": 0,
+        "gainLossOnSale": 0,
+        "otherIncome": 0,
+        "totalNonOperating": 0
+      },
+      "netIncome": 0
     },
-    "operatingExpenses": {
-      "propertyTaxes": 45000,
-      "insurance": 18000,
-      "utilities": 28000,
-      "maintenance": 32000,
-      "management": 25000,
-      "professionalFees": 8000,
-      "otherExpenses": 12000,
-      "totalExpenses": 168000
-    },
-    "noi": 317000,
-    "debtService": 180000,
-    "cashFlow": 137000,
     "balanceSheet": {
+      "asOfDate": "YYYY-MM-DD",
       "assets": {
-        "realEstate": 4500000,
-        "cash": 125000,
-        "otherAssets": 75000,
-        "totalAssets": 4700000
+        "currentAssets": {
+          "cash": 0,
+          "accountsReceivable": 0,
+          "prepaidExpenses": 0,
+          "securityDepositsHeld": 0,
+          "otherCurrentAssets": 0,
+          "totalCurrentAssets": 0
+        },
+        "fixedAssets": {
+          "landAtCost": 0,
+          "buildingAtCost": 0,
+          "furnitureFixtures": 0,
+          "accumulatedDepreciation": 0,
+          "netFixedAssets": 0
+        },
+        "otherAssets": {
+          "deposits": 0,
+          "deferredCharges": 0,
+          "other": 0,
+          "totalOtherAssets": 0
+        },
+        "totalAssets": 0
       },
-      "liabilities": {
-        "mortgage": 2800000,
-        "otherLiabilities": 45000,
-        "totalLiabilities": 2845000
-      },
-      "equity": 1855000
+      "liabilitiesEquity": {
+        "currentLiabilities": {
+          "accountsPayable": 0,
+          "accruedExpenses": 0,
+          "securityDeposits": 0,
+          "currentPortionDebt": 0,
+          "otherCurrentLiabilities": 0,
+          "totalCurrentLiabilities": 0
+        },
+        "longTermLiabilities": {
+          "mortgagePayable": 0,
+          "notesPayable": 0,
+          "otherLongTerm": 0,
+          "totalLongTermLiabilities": 0
+        },
+        "totalLiabilities": 0,
+        "equity": {
+          "ownersEquity": 0,
+          "retainedEarnings": 0,
+          "totalEquity": 0
+        },
+        "totalLiabilitiesEquity": 0
+      }
     },
-    "capex": {
-      "currentYear": 85000,
-      "forecast": [65000, 45000, 95000, 35000, 125000]
-    }
+    "cashFlowStatement": {
+      "operatingActivities": {
+        "netIncome": 0,
+        "depreciation": 0,
+        "changeInReceivables": 0,
+        "changeInPayables": 0,
+        "otherOperatingChanges": 0,
+        "netCashFromOperations": 0
+      },
+      "investingActivities": {
+        "capitalExpenditures": 0,
+        "acquisitions": 0,
+        "dispositions": 0,
+        "netCashFromInvesting": 0
+      },
+      "financingActivities": {
+        "debtProceeds": 0,
+        "debtPayments": 0,
+        "distributions": 0,
+        "netCashFromFinancing": 0
+      },
+      "netChangeInCash": 0,
+      "beginningCash": 0,
+      "endingCash": 0
+    },
+    "financialRatios": {
+      "profitabilityRatios": {
+        "noiMargin": 0.00,
+        "operatingMargin": 0.00,
+        "returnOnAssets": 0.00,
+        "returnOnEquity": 0.00
+      },
+      "efficiencyRatios": {
+        "operatingExpenseRatio": 0.00,
+        "noiPerSquareFoot": 0.00,
+        "revenuePerSquareFoot": 0.00,
+        "expensePerSquareFoot": 0.00
+      },
+      "leverageRatios": {
+        "debtToAssetRatio": 0.00,
+        "debtToEquityRatio": 0.00,
+        "loanToValueRatio": 0.00,
+        "debtServiceCoverageRatio": 0.00
+      },
+      "liquidityRatios": {
+        "currentRatio": 0.00,
+        "quickRatio": 0.00,
+        "cashRatio": 0.00
+      }
+    },
+    "capitalExpenditures": {
+      "currentPeriod": {
+        "buildingImprovements": 0,
+        "tenantImprovements": 0,
+        "leasingCosts": 0,
+        "equipmentReplacements": 0,
+        "other": 0,
+        "totalCapex": 0
+      },
+      "futureCommitments": {
+        "contractedWork": 0,
+        "plannedImprovements": 0,
+        "reserveRequirements": 0,
+        "totalCommitments": 0
+      }
+    },
+    "additionalNotes": "Management commentary, significant events, or other relevant information"
   }
 }
   `,
@@ -770,7 +1985,7 @@ export async function extractDocumentData(
               type: "image_url",
               image_url: {
                 url: `data:${mimeType};base64,${imageBase64}`,
-                detail: "low" // Use low detail to reduce token usage
+                detail: "high" // Use high detail for better extraction accuracy
               },
             },
           ],
@@ -778,6 +1993,7 @@ export async function extractDocumentData(
       ],
       max_tokens: 2000,
       temperature: 0.1,
+      response_format: { type: "json_object" }, // Ensure JSON response
     });
 
     console.log('OpenAI: Extraction response received');
