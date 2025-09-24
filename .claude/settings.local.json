@@ -27,7 +27,8 @@
       "mcp__browser-mcp__browser_type",
       "mcp__browser-mcp__browser_press_key",
       "Bash(npx vercel:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
