@@ -1,12 +1,5 @@
 {
   "version": 2,
-  "name": "rexeli-v1",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "env": {
     "ENCRYPTED_OPENAI_API_KEY": "@encrypted-openai-api-key",
     "ENCRYPTED_SUPABASE_URL": "@encrypted-supabase-url",
