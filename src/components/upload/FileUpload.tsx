@@ -40,18 +40,35 @@ export function FileUpload({
     onFileUpload(documentFile);
 
     try {
-      // Create FormData for upload
-      const formData = new FormData();
-      formData.append('file', file);
+      // Step 1: Get signed upload URL from our API
+      const urlResponse = await fetch('/api/upload-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+        }),
+      });
 
-      // Upload with progress tracking
+      if (!urlResponse.ok) {
+        const errorData = await urlResponse.json();
+        throw new Error(errorData.error || 'Failed to get upload URL');
+      }
+
+      const { data: urlData } = await urlResponse.json();
+      const { uploadUrl, publicUrl } = urlData;
+
+      // Step 2: Upload directly to Supabase using signed URL
       const xhr = new XMLHttpRequest();
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
           const progress = Math.round((event.loaded / event.total) * 100);
           const updatedFile = { ...documentFile, uploadProgress: progress };
-          
+
           setUploadingFiles(prev => {
             const newMap = new Map(prev);
             newMap.set(fileId, updatedFile);
@@ -61,26 +78,21 @@ export function FileUpload({
       };
 
       xhr.onload = () => {
-        if (xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-          if (response.success) {
-            const completedFile: DocumentFile = {
-              ...documentFile,
-              status: 'uploaded',
-              uploadProgress: 100,
-              supabaseUrl: response.data.url
-            };
-            
-            setUploadingFiles(prev => {
-              const newMap = new Map(prev);
-              newMap.set(fileId, completedFile);
-              return newMap;
-            });
-            
-            onUploadComplete(completedFile);
-          } else {
-            throw new Error(response.error || 'Upload failed');
-          }
+        if (xhr.status === 200 || xhr.status === 201) {
+          const completedFile: DocumentFile = {
+            ...documentFile,
+            status: 'uploaded',
+            uploadProgress: 100,
+            supabaseUrl: publicUrl
+          };
+
+          setUploadingFiles(prev => {
+            const newMap = new Map(prev);
+            newMap.set(fileId, completedFile);
+            return newMap;
+          });
+
+          onUploadComplete(completedFile);
         } else {
           throw new Error(`Upload failed with status ${xhr.status}`);
         }
@@ -96,8 +108,10 @@ export function FileUpload({
         onUploadError('Upload failed due to network error');
       };
 
-      xhr.open('POST', '/api/upload');
-      xhr.send(formData);
+      // Upload directly to Supabase using signed URL
+      xhr.open('POST', uploadUrl);
+      xhr.setRequestHeader('Content-Type', file.type);
+      xhr.send(file);
 
     } catch (error) {
       const errorFile = { ...documentFile, status: 'error' as const };
@@ -106,7 +120,7 @@ export function FileUpload({
         newMap.set(fileId, errorFile);
         return newMap;
       });
-      
+
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
       onUploadError(errorMessage);
     }
