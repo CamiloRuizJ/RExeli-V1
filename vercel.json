@@ -1,16 +1,9 @@
 {
   "version": 2,
-  "env": {
-    "ENCRYPTED_OPENAI_API_KEY": "@encrypted-openai-api-key",
-    "ENCRYPTED_SUPABASE_URL": "@encrypted-supabase-url",
-    "ENCRYPTED_SUPABASE_ANON_KEY": "@encrypted-supabase-anon-key",
-    "NEXTAUTH_SECRET": "@nextauth-secret",
-    "NEXTAUTH_URL": "@nextauth-url",
-    "ENCRYPTION_KEY": "@encryption-key"
-  },
   "functions": {
     "src/app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     }
   },
   "headers": [

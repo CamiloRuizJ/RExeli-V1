@@ -25,7 +25,8 @@
       "Bash(npm run:*)",
       "Bash(npm install:*)",
       "mcp__browser-mcp__browser_type",
-      "mcp__browser-mcp__browser_press_key"
+      "mcp__browser-mcp__browser_press_key",
+      "Bash(npx vercel:*)"
     ],
     "deny": [],
     "ask": []

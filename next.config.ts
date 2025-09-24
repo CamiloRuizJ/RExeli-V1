@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 
+
   // Compress images
   images: {
     domains: ['lddwbkefiucimrkfskzt.supabase.co'],
