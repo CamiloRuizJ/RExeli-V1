@@ -4,60 +4,32 @@ import type { ApiResponse, ClassificationResponse } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
   try {
+    console.warn('DEPRECATED: /api/classify endpoint is deprecated. The application now uses manual document type selection instead of automatic classification.');
 
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-
-    if (!file) {
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: 'No file provided'
-      }, { status: 400 });
-    }
-
-    // Classify document using OpenAI Vision (handles PDF conversion automatically)
-    console.log(`Processing file: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
-    console.log('Starting document classification...');
-    const classification = await classifyDocument(file);
-    console.log('Classification completed:', classification);
-
-    const response: ApiResponse<ClassificationResponse> = {
-      success: true,
-      data: {
-        classification,
-        extractionPrompt: `Document classified as ${classification.type} with ${(classification.confidence * 100).toFixed(1)}% confidence`
-      },
-      message: 'Document classified successfully'
+    // Return deprecation notice with helpful information
+    const response: ApiResponse = {
+      success: false,
+      error: 'This endpoint has been deprecated. Please use manual document type selection with the /api/extract endpoint.',
+      message: 'Auto-classification has been replaced with manual document type selection for improved accuracy and user control. Supported document types: rent_roll, operating_budget, broker_sales_comparables, broker_lease_comparables, broker_listing, offering_memo, lease_agreement, financial_statements.'
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      status: 410, // Gone - indicates the resource is no longer available
+      headers: {
+        'X-API-Deprecated': 'true',
+        'X-Deprecation-Date': '2025-01-15',
+        'X-Replacement-Endpoint': '/api/extract',
+        'X-Supported-Document-Types': 'rent_roll,operating_budget,broker_sales_comparables,broker_lease_comparables,broker_listing,offering_memo,lease_agreement,financial_statements'
+      }
+    });
 
   } catch (error) {
-    console.error('Classification API error:', error);
-    
-    // Provide more detailed error messages based on error type
-    let errorMessage = 'Classification failed';
-    let statusCode = 500;
-    
-    if (error instanceof Error) {
-      errorMessage = error.message;
-      // Handle specific OpenAI errors
-      if (error.message.includes('401') || error.message.includes('invalid_api_key')) {
-        errorMessage = 'Invalid OpenAI API key. Please check your API key configuration.';
-        statusCode = 401;
-      } else if (error.message.includes('429')) {
-        errorMessage = 'OpenAI API rate limit exceeded. Please try again later.';
-        statusCode = 429;
-      } else if (error.message.includes('insufficient_quota')) {
-        errorMessage = 'OpenAI API quota exceeded. Please check your billing details.';
-        statusCode = 402;
-      }
-    }
-    
+    console.error('Classification API accessed (deprecated):', error);
+
     return NextResponse.json<ApiResponse>({
       success: false,
-      error: errorMessage
-    }, { status: statusCode });
+      error: 'Classification endpoint is deprecated. Use manual document type selection with /api/extract instead.'
+    }, { status: 410 });
   }
 }
 

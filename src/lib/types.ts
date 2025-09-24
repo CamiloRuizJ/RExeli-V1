@@ -25,10 +25,16 @@ export interface DocumentClassification {
   reasoning: string;
 }
 
-export type DocumentType = 
+export type DocumentType =
   | 'rent_roll'
-  | 'offering_memo' 
+  | 'operating_budget'
+  | 'broker_sales_comparables'
+  | 'broker_lease_comparables'
+  | 'broker_listing'
+  | 'offering_memo'
   | 'lease_agreement'
+  | 'financial_statements'
+  // Legacy types for backward compatibility
   | 'comparable_sales'
   | 'financial_statement'
   | 'unknown';
@@ -42,17 +48,24 @@ export interface ExtractedData {
     totalUnits?: number;
     extractedDate: string;
   };
-  data: RentRollData | OfferingMemoData | LeaseData | ComparableData | FinancialData;
+  data: RentRollData | OperatingBudgetData | BrokerSalesComparablesData | BrokerLeaseComparablesData | BrokerListingData | OfferingMemoData | LeaseData | FinancialStatementsData | ComparableData | FinancialData;
 }
 
 export interface RentRollData {
-  properties: {
-    unitNumber: string;
-    tenant: string;
-    squareFeet: number;
-    monthlyRent: number;
+  tenants: {
+    tenantName: string;
+    suiteUnit: string;
     leaseStart: string;
     leaseEnd: string;
+    rentCommencementDate?: string;
+    baseRent: number;
+    rentEscalations?: string;
+    leaseType: 'NNN' | 'Gross' | 'Modified Gross';
+    camReimbursements?: number;
+    securityDeposit?: number;
+    renewalOptions?: string;
+    freeRentConcessions?: string;
+    squareFootage: number;
     occupancyStatus: 'occupied' | 'vacant' | 'notice';
   }[];
   summary: {
@@ -60,11 +73,13 @@ export interface RentRollData {
     occupancyRate: number;
     totalSquareFeet: number;
     averageRentPsf: number;
+    totalUnits: number;
+    vacantUnits: number;
   };
 }
 
 export interface OfferingMemoData {
-  propertyDetails: {
+  propertyOverview: {
     name: string;
     address: string;
     propertyType: string;
@@ -72,29 +87,219 @@ export interface OfferingMemoData {
     totalSquareFeet: number;
     lotSize?: number;
   };
-  financials: {
+  investmentHighlights: string[];
+  marketOverview: string;
+  rentRollSummary: {
+    totalUnits: number;
+    occupancyRate: number;
+    averageRent: number;
+  };
+  operatingStatement: {
+    grossIncome: number;
+    operatingExpenses: number;
+    noi: number;
+  };
+  leaseTerms: string[];
+  comparables: {
+    address: string;
+    salePrice: number;
+    capRate: number;
+  }[];
+  pricing: {
     askingPrice: number;
     capRate?: number;
-    noi?: number;
-    grossRent?: number;
-    expenses?: number;
+    pricePerSF?: number;
   };
-  highlights: string[];
+  locationData: {
+    neighborhood: string;
+    demographics?: string;
+    transportation?: string;
+  };
 }
 
 export interface LeaseData {
-  tenant: string;
-  landlord: string;
-  propertyAddress: string;
-  leaseStart: string;
-  leaseEnd: string;
-  monthlyRent: number;
-  squareFeet: number;
-  rentPerSqFt: number;
+  parties: {
+    tenant: string;
+    landlord: string;
+  };
+  premises: {
+    propertyAddress: string;
+    squareFeet: number;
+    description: string;
+  };
+  leaseTerm: {
+    startDate: string;
+    endDate: string;
+    termMonths: number;
+  };
+  rentSchedule: {
+    baseRent: number;
+    rentEscalations?: string;
+    rentPerSqFt: number;
+  };
+  operatingExpenses: {
+    responsibilityType: 'NNN' | 'Gross' | 'Modified Gross';
+    camCharges?: number;
+    utilities?: string;
+    taxes?: string;
+    insurance?: string;
+  };
   securityDeposit?: number;
-  terms: string[];
+  renewalOptions?: string[];
+  maintenanceObligations: {
+    landlord: string[];
+    tenant: string[];
+  };
+  assignmentProvisions?: string;
+  defaultRemedies: string[];
+  insuranceRequirements: string[];
 }
 
+// New specialized document type interfaces
+export interface OperatingBudgetData {
+  period: string;
+  income: {
+    grossRentalIncome: number;
+    vacancyAllowance: number;
+    effectiveGrossIncome: number;
+    otherIncome: number;
+    totalIncome: number;
+  };
+  expenses: {
+    propertyTaxes: number;
+    insurance: number;
+    utilities: number;
+    maintenance: number;
+    management: number;
+    marketing: number;
+    totalOperatingExpenses: number;
+  };
+  noi: number;
+  capexForecast: number;
+  cashFlow: number;
+}
+
+export interface BrokerSalesComparablesData {
+  comparables: {
+    propertyAddress: string;
+    propertyType: string;
+    saleDate: string;
+    salePrice: number;
+    pricePerSF: number;
+    pricePerUnit?: number;
+    buildingSize: number;
+    landSize?: number;
+    yearBuilt?: number;
+    yearRenovated?: number;
+    occupancyAtSale: number;
+    capRate?: number;
+    noiAtSale?: number;
+    buyer?: string;
+    seller?: string;
+  }[];
+  summary: {
+    averagePricePerSF: number;
+    averageCapRate?: number;
+    priceRange: {
+      min: number;
+      max: number;
+    };
+  };
+}
+
+export interface BrokerLeaseComparablesData {
+  comparables: {
+    propertyAddress: string;
+    propertyType: string;
+    leaseCommencementDate: string;
+    tenantIndustry: string;
+    leaseTerm: number; // in months
+    squareFootage: number;
+    baseRent: number;
+    rentEscalations?: string;
+    leaseType: 'NNN' | 'Gross' | 'Modified Gross';
+    concessions?: string;
+    effectiveRent: number;
+  }[];
+  summary: {
+    averageBaseRent: number;
+    averageEffectiveRent: number;
+    rentRange: {
+      min: number;
+      max: number;
+    };
+  };
+}
+
+export interface BrokerListingData {
+  listingDetails: {
+    propertyOwner: string;
+    brokerFirm: string;
+    brokerName?: string;
+    listingPrice?: number;
+    askingRent?: number;
+    listingType: 'sale' | 'lease';
+    commissionStructure: string;
+    listingTerm: string;
+    listingDate?: string;
+    expirationDate?: string;
+  };
+  propertyDetails: {
+    address: string;
+    propertyType: string;
+    squareFootage: number;
+    lotSize?: number;
+    yearBuilt?: number;
+    parking?: string;
+    zoning?: string;
+  };
+  brokerDuties: string[];
+  terminationProvisions: string[];
+}
+
+export interface FinancialStatementsData {
+  period: string;
+  operatingIncome: {
+    rentalIncome: number;
+    otherIncome: number;
+    totalIncome: number;
+    vacancyLoss: number;
+    effectiveGrossIncome: number;
+  };
+  operatingExpenses: {
+    propertyTaxes: number;
+    insurance: number;
+    utilities: number;
+    maintenance: number;
+    management: number;
+    professionalFees: number;
+    otherExpenses: number;
+    totalExpenses: number;
+  };
+  noi: number;
+  debtService?: number;
+  cashFlow?: number;
+  balanceSheet?: {
+    assets: {
+      realEstate: number;
+      cash: number;
+      otherAssets: number;
+      totalAssets: number;
+    };
+    liabilities: {
+      mortgage: number;
+      otherLiabilities: number;
+      totalLiabilities: number;
+    };
+    equity: number;
+  };
+  capex?: {
+    currentYear: number;
+    forecast: number[];
+  };
+}
+
+// Legacy types for backward compatibility
 export interface ComparableData {
   properties: {
     address: string;

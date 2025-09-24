@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractDocumentData } from '@/lib/openai';
-import type { ApiResponse, ExtractionResponse, DocumentType } from '@/lib/types';
+import type { ApiResponse, ExtractionResponse, DocumentType, ExtractedData } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,11 +23,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate document type
+    // Validate document type - now supports all 8 document types for manual selection
     const validTypes: DocumentType[] = [
       'rent_roll',
+      'operating_budget',
+      'broker_sales_comparables',
+      'broker_lease_comparables',
+      'broker_listing',
       'offering_memo',
       'lease_agreement',
+      'financial_statements',
+      // Legacy types for backward compatibility
       'comparable_sales',
       'financial_statement'
     ];
@@ -42,10 +48,37 @@ export async function POST(request: NextRequest) {
     // Extract structured data using OpenAI Vision (handles PDF conversion automatically)
     const startTime = Date.now();
     console.log(`Processing file for extraction: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
-    console.log(`Starting data extraction for document type: ${documentType}`);
-    const extractedData = await extractDocumentData(file, documentType);
-    console.log('Data extraction completed:', extractedData);
-    
+    console.log(`Starting data extraction for manually selected document type: ${documentType}`);
+
+    let extractedData;
+    let partialSuccess = false;
+    let warnings: string[] = [];
+
+    try {
+      extractedData = await extractDocumentData(file, documentType);
+      console.log('Data extraction completed successfully:', extractedData);
+    } catch (extractionError) {
+      console.error('Extraction error, attempting partial recovery:', extractionError);
+
+      // Try to provide partial results if extraction fails
+      if (extractionError instanceof Error && extractionError.message.includes('Invalid JSON')) {
+        partialSuccess = true;
+        warnings.push('Some data may be incomplete due to parsing errors');
+        // Return a minimal structure for the selected document type with type assertion
+        extractedData = {
+          documentType,
+          metadata: {
+            extractedDate: new Date().toISOString().split('T')[0],
+            propertyName: 'Unable to extract',
+            propertyAddress: 'Unable to extract'
+          },
+          data: {} as any // Empty data object with type assertion - client should handle gracefully
+        } as ExtractedData;
+      } else {
+        throw extractionError; // Re-throw if not a parsing error
+      }
+    }
+
     const processingTime = Date.now() - startTime;
 
     const response: ApiResponse<ExtractionResponse> = {
@@ -54,7 +87,10 @@ export async function POST(request: NextRequest) {
         extractedData,
         processingTime
       },
-      message: 'Data extraction completed successfully'
+      message: partialSuccess
+        ? `Data extraction completed with partial results for ${documentType.replace('_', ' ')}`
+        : `Data extraction completed successfully for ${documentType.replace('_', ' ')}`,
+      ...(warnings.length > 0 && { warnings })
     };
 
     return NextResponse.json(response);

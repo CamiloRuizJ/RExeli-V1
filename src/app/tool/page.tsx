@@ -12,12 +12,13 @@ import Link from "next/link";
 import type {
   DocumentFile,
   ProcessingStep,
-  DocumentClassification,
+  DocumentType,
   ExtractedData
 } from '@/lib/types';
 
 export default function ToolPage() {
   const [currentFile, setCurrentFile] = useState<DocumentFile | null>(null);
+  const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType | null>(null);
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -41,35 +42,33 @@ export default function ToolPage() {
     preloadPdfjs();
   }, []);
 
-  // Initialize processing steps
-  const initializeSteps = useCallback((): ProcessingStep[] => {
+  // Initialize processing steps (removed auto-classification)
+  const initializeSteps = useCallback((documentType: string): ProcessingStep[] => {
+    const docTypeLabel = documentType.split('_').map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+
     return [
       {
         id: 1,
-        name: "Document Upload Verification",
-        description: "Verifying document upload and preparing for AI processing",
+        name: "Document Preparation",
+        description: `Preparing ${docTypeLabel} document for AI processing`,
         status: 'pending'
       },
       {
         id: 2,
-        name: "AI Document Classification",
-        description: "Using OpenAI Vision to identify document type (rent roll, offering memo, etc.)",
+        name: "Data Extraction",
+        description: `Extracting structured ${docTypeLabel.toLowerCase()} data using AI`,
         status: 'pending'
       },
       {
         id: 3,
-        name: "Data Extraction",
-        description: "Extracting structured data from the classified document",
-        status: 'pending'
-      },
-      {
-        id: 4,
         name: "Data Validation",
         description: "Validating extracted data for accuracy and completeness",
         status: 'pending'
       },
       {
-        id: 5,
+        id: 4,
         name: "Results Preparation",
         description: "Preparing extracted data for display and Excel export",
         status: 'pending'
@@ -80,6 +79,7 @@ export default function ToolPage() {
   // Handle file upload
   const handleFileUpload = useCallback((file: DocumentFile) => {
     setCurrentFile(file);
+    setSelectedDocumentType(null);
     setProcessingSteps([]);
     setCurrentStep(0);
     setIsProcessing(false);
@@ -87,10 +87,11 @@ export default function ToolPage() {
     setExtractedData(null);
   }, []);
 
-  // Handle upload completion
-  const handleUploadComplete = useCallback((file: DocumentFile) => {
+  // Handle upload completion with document type
+  const handleUploadComplete = useCallback((file: DocumentFile, documentType: DocumentType) => {
     setCurrentFile(file);
-    toast.success('File uploaded successfully! Ready for AI processing.');
+    setSelectedDocumentType(documentType);
+    toast.success(`Document uploaded and classified as ${documentType.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}! Ready for AI processing.`);
   }, []);
 
   // Handle upload error
@@ -109,37 +110,32 @@ export default function ToolPage() {
     );
   }, []);
 
-  // Start AI processing
+  // Start AI processing (now skips classification)
   const startProcessing = useCallback(async () => {
-    if (!currentFile) return;
+    if (!currentFile || !selectedDocumentType) return;
 
     setIsProcessing(true);
     setIsComplete(false);
     setExtractedData(null);
 
-    const steps = initializeSteps();
+    const steps = initializeSteps(selectedDocumentType);
     setProcessingSteps(steps);
     setCurrentStep(1);
 
     try {
-      // Step 1: Document Upload Verification
+      // Step 1: Document Preparation
       updateStep(1, 'processing');
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate processing
-      updateStep(1, 'completed', 'Document verified and ready for AI processing');
-      setCurrentStep(2);
 
-      // Step 2: AI Document Classification
-      updateStep(2, 'processing');
+      let fileToProcess = currentFile.file;
 
-      let fileToClassify = currentFile.file;
-
-      // Handle PDF conversion on client side
+      // Handle PDF conversion on client side if needed
       if (currentFile.file.type === 'application/pdf') {
         try {
           console.log('Converting PDF to image on client side...');
 
           // Update step with specific PDF processing status
-          updateStep(2, 'processing', 'Converting PDF to image for AI analysis...');
+          updateStep(1, 'processing', 'Converting PDF to image for AI analysis...');
 
           // Dynamically import the PDF utilities
           const { convertPdfToImage } = await import('@/lib/pdf-utils');
@@ -153,12 +149,9 @@ export default function ToolPage() {
 
           // Create new file with descriptive name
           const originalName = currentFile.file.name.replace(/\.pdf$/i, '');
-          fileToClassify = new File([blob], `${originalName}_page1.png`, { type: mimeType });
+          fileToProcess = new File([blob], `${originalName}_page1.png`, { type: mimeType });
 
           console.log(`PDF converted to image successfully: ${Math.round(blob.size / 1024)}KB PNG`);
-
-          // Update step to show successful conversion
-          updateStep(2, 'processing', 'PDF converted to image, analyzing with AI...');
 
         } catch (pdfError) {
           console.error('PDF conversion failed:', pdfError);
@@ -183,33 +176,15 @@ export default function ToolPage() {
         }
       }
 
-      const classificationFormData = new FormData();
-      classificationFormData.append('file', fileToClassify);
+      updateStep(1, 'completed', 'Document prepared for processing');
+      setCurrentStep(2);
 
-      const classifyResponse = await fetch('/api/classify', {
-        method: 'POST',
-        body: classificationFormData,
-      });
-
-      if (!classifyResponse.ok) {
-        throw new Error('Classification failed');
-      }
-
-      const classifyResult = await classifyResponse.json();
-      if (!classifyResult.success) {
-        throw new Error(classifyResult.error || 'Classification failed');
-      }
-
-      const classification: DocumentClassification = classifyResult.data.classification;
-      updateStep(2, 'completed', classification);
-      setCurrentStep(3);
-
-      // Step 3: Data Extraction
-      updateStep(3, 'processing');
+      // Step 2: Data Extraction (skip classification, use selected document type)
+      updateStep(2, 'processing');
 
       const extractionFormData = new FormData();
-      extractionFormData.append('file', fileToClassify); // Use the same file (converted if it was PDF)
-      extractionFormData.append('documentType', classification.type);
+      extractionFormData.append('file', fileToProcess);
+      extractionFormData.append('documentType', selectedDocumentType);
 
       const extractResponse = await fetch('/api/extract', {
         method: 'POST',
@@ -226,20 +201,20 @@ export default function ToolPage() {
       }
 
       const extracted: ExtractedData = extractResult.data.extractedData;
-      updateStep(3, 'completed', `Extracted ${Object.keys(extracted.data).length} data fields`);
+      updateStep(2, 'completed', `Extracted ${Object.keys(extracted.data || {}).length} data fields`);
+      setCurrentStep(3);
+
+      // Step 3: Data Validation
+      updateStep(3, 'processing');
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate validation
+      updateStep(3, 'completed', 'Data validation completed successfully');
       setCurrentStep(4);
 
-      // Step 4: Data Validation
+      // Step 4: Results Preparation
       updateStep(4, 'processing');
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate validation
-      updateStep(4, 'completed', 'Data validation completed successfully');
-      setCurrentStep(5);
-
-      // Step 5: Results Preparation
-      updateStep(5, 'processing');
       setExtractedData(extracted);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      updateStep(5, 'completed', 'Results prepared for display and export');
+      updateStep(4, 'completed', 'Results prepared for display and export');
 
       setIsComplete(true);
       setIsProcessing(false);
@@ -256,7 +231,7 @@ export default function ToolPage() {
       setIsProcessing(false);
       toast.error(`Processing failed: ${errorMessage}`);
     }
-  }, [currentFile, initializeSteps, updateStep, currentStep]);
+  }, [currentFile, selectedDocumentType, initializeSteps, updateStep, currentStep]);
 
   // Export to Excel
   const handleExportExcel = useCallback(async () => {
@@ -421,8 +396,8 @@ export default function ToolPage() {
                 </div>
                 <div className="text-center">
                   <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-2 font-bold">2</div>
-                  <p className="font-medium text-emerald-800">AI Classification</p>
-                  <p className="text-emerald-600">Identify document type automatically</p>
+                  <p className="font-medium text-emerald-800">Document Selection</p>
+                  <p className="text-emerald-600">Choose your document type manually</p>
                 </div>
                 <div className="text-center">
                   <div className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-2 font-bold">3</div>

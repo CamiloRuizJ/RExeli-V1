@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ExcelJS from 'exceljs';
-import type { 
-  ApiResponse, 
-  ExportResponse, 
-  ExtractedData, 
-  RentRollData, 
+import type {
+  ApiResponse,
+  ExportResponse,
+  ExtractedData,
+  RentRollData,
+  OperatingBudgetData,
+  BrokerSalesComparablesData,
+  BrokerLeaseComparablesData,
+  BrokerListingData,
   OfferingMemoData,
   LeaseData,
+  FinancialStatementsData,
   ComparableData,
-  FinancialData 
+  FinancialData
 } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -110,12 +115,28 @@ async function generateExcelByType(
     case 'rent_roll':
       await generateRentRollExcel(workbook, extractedData);
       break;
+    case 'operating_budget':
+      await generateOperatingBudgetExcel(workbook, extractedData);
+      break;
+    case 'broker_sales_comparables':
+      await generateBrokerSalesComparablesExcel(workbook, extractedData);
+      break;
+    case 'broker_lease_comparables':
+      await generateBrokerLeaseComparablesExcel(workbook, extractedData);
+      break;
+    case 'broker_listing':
+      await generateBrokerListingExcel(workbook, extractedData);
+      break;
     case 'offering_memo':
       await generateOfferingMemoExcel(workbook, extractedData);
       break;
     case 'lease_agreement':
       await generateLeaseExcel(workbook, extractedData);
       break;
+    case 'financial_statements':
+      await generateFinancialStatementsExcel(workbook, extractedData);
+      break;
+    // Legacy cases for backward compatibility
     case 'comparable_sales':
       await generateComparableExcel(workbook, extractedData);
       break;
@@ -123,6 +144,7 @@ async function generateExcelByType(
       await generateFinancialExcel(workbook, extractedData);
       break;
     default:
+      // Handle unknown document types with generic export
       await generateGenericExcel(workbook, extractedData);
   }
 }
@@ -141,12 +163,14 @@ async function generateRentRollExcel(workbook: ExcelJS.Workbook, data: Extracted
   
   summarySheet.addRow(['Financial Summary']);
   summarySheet.addRow(['Total Monthly Rent', rentRollData.summary.totalRent]);
+  summarySheet.addRow(['Total Units', rentRollData.summary.totalUnits]);
+  summarySheet.addRow(['Vacant Units', rentRollData.summary.vacantUnits]);
   summarySheet.addRow(['Occupancy Rate', `${(rentRollData.summary.occupancyRate * 100).toFixed(1)}%`]);
   summarySheet.addRow(['Average Rent PSF', `$${rentRollData.summary.averageRentPsf.toFixed(2)}`]);
   
   // Rent Roll Detail Sheet
   const detailSheet = workbook.addWorksheet('Rent Roll Details');
-  const headers = ['Unit Number', 'Tenant', 'Square Feet', 'Monthly Rent', 'Lease Start', 'Lease End', 'Status'];
+  const headers = ['Suite/Unit', 'Tenant Name', 'Square Feet', 'Base Rent', 'Lease Start', 'Lease End', 'Status'];
   detailSheet.addRow(headers);
   
   // Style headers
@@ -155,15 +179,15 @@ async function generateRentRollExcel(workbook: ExcelJS.Workbook, data: Extracted
   headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6F3FF' } };
   
   // Add data rows
-  rentRollData.properties.forEach(property => {
+  rentRollData.tenants.forEach(tenant => {
     detailSheet.addRow([
-      property.unitNumber,
-      property.tenant,
-      property.squareFeet,
-      property.monthlyRent,
-      property.leaseStart,
-      property.leaseEnd,
-      property.occupancyStatus
+      tenant.suiteUnit,
+      tenant.tenantName,
+      tenant.squareFootage,
+      tenant.baseRent,
+      tenant.leaseStart,
+      tenant.leaseEnd,
+      tenant.occupancyStatus
     ]);
   });
   
@@ -175,61 +199,129 @@ async function generateRentRollExcel(workbook: ExcelJS.Workbook, data: Extracted
 
 async function generateOfferingMemoExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const offeringData = data.data as OfferingMemoData;
-  
+
   const sheet = workbook.addWorksheet('Offering Memo');
-  
-  sheet.addRow(['Property Details']);
-  sheet.addRow(['Name', offeringData.propertyDetails.name]);
-  sheet.addRow(['Address', offeringData.propertyDetails.address]);
-  sheet.addRow(['Property Type', offeringData.propertyDetails.propertyType]);
-  sheet.addRow(['Year Built', offeringData.propertyDetails.yearBuilt || 'N/A']);
-  sheet.addRow(['Total Square Feet', offeringData.propertyDetails.totalSquareFeet]);
-  sheet.addRow(['Lot Size (Acres)', offeringData.propertyDetails.lotSize || 'N/A']);
+
+  sheet.addRow(['Property Overview']);
+  sheet.addRow(['Name', offeringData.propertyOverview.name]);
+  sheet.addRow(['Address', offeringData.propertyOverview.address]);
+  sheet.addRow(['Property Type', offeringData.propertyOverview.propertyType]);
+  sheet.addRow(['Year Built', offeringData.propertyOverview.yearBuilt || 'N/A']);
+  sheet.addRow(['Total Square Feet', offeringData.propertyOverview.totalSquareFeet]);
+  sheet.addRow(['Lot Size (Acres)', offeringData.propertyOverview.lotSize || 'N/A']);
   sheet.addRow([]);
-  
-  sheet.addRow(['Financial Information']);
-  sheet.addRow(['Asking Price', offeringData.financials.askingPrice]);
-  sheet.addRow(['Cap Rate', offeringData.financials.capRate ? `${(offeringData.financials.capRate * 100).toFixed(2)}%` : 'N/A']);
-  sheet.addRow(['NOI', offeringData.financials.noi || 'N/A']);
-  sheet.addRow(['Gross Rent', offeringData.financials.grossRent || 'N/A']);
-  sheet.addRow(['Expenses', offeringData.financials.expenses || 'N/A']);
-  sheet.addRow([]);
-  
-  sheet.addRow(['Property Highlights']);
-  offeringData.highlights.forEach(highlight => {
+
+  sheet.addRow(['Investment Highlights']);
+  offeringData.investmentHighlights.forEach(highlight => {
     sheet.addRow(['', highlight]);
   });
-  
+  sheet.addRow([]);
+
+  sheet.addRow(['Market Overview']);
+  sheet.addRow(['', offeringData.marketOverview]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Rent Roll Summary']);
+  sheet.addRow(['Total Units', offeringData.rentRollSummary.totalUnits]);
+  sheet.addRow(['Occupancy Rate', `${(offeringData.rentRollSummary.occupancyRate * 100).toFixed(1)}%`]);
+  sheet.addRow(['Average Rent', `$${offeringData.rentRollSummary.averageRent}`]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Operating Statement']);
+  sheet.addRow(['Gross Income', offeringData.operatingStatement.grossIncome]);
+  sheet.addRow(['Operating Expenses', offeringData.operatingStatement.operatingExpenses]);
+  sheet.addRow(['NOI', offeringData.operatingStatement.noi]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Pricing Information']);
+  sheet.addRow(['Asking Price', offeringData.pricing.askingPrice]);
+  sheet.addRow(['Cap Rate', offeringData.pricing.capRate ? `${(offeringData.pricing.capRate * 100).toFixed(2)}%` : 'N/A']);
+  sheet.addRow(['Price per SF', offeringData.pricing.pricePerSF ? `$${offeringData.pricing.pricePerSF}` : 'N/A']);
+  sheet.addRow([]);
+
+  sheet.addRow(['Location Data']);
+  sheet.addRow(['Neighborhood', offeringData.locationData.neighborhood]);
+  sheet.addRow(['Demographics', offeringData.locationData.demographics || 'N/A']);
+  sheet.addRow(['Transportation', offeringData.locationData.transportation || 'N/A']);
+  sheet.addRow([]);
+
+  if (offeringData.comparables && offeringData.comparables.length > 0) {
+    sheet.addRow(['Comparable Sales']);
+    sheet.addRow(['Address', 'Sale Price', 'Cap Rate']);
+    offeringData.comparables.forEach(comp => {
+      sheet.addRow([comp.address, comp.salePrice, `${(comp.capRate * 100).toFixed(2)}%`]);
+    });
+  }
+
   // Auto-fit columns
   sheet.columns.forEach(column => {
-    column.width = 20;
+    column.width = 25;
   });
 }
 
 async function generateLeaseExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const leaseData = data.data as LeaseData;
-  
+
   const sheet = workbook.addWorksheet('Lease Agreement');
-  
-  sheet.addRow(['Lease Information']);
-  sheet.addRow(['Tenant', leaseData.tenant]);
-  sheet.addRow(['Landlord', leaseData.landlord]);
-  sheet.addRow(['Property Address', leaseData.propertyAddress]);
-  sheet.addRow(['Lease Start', leaseData.leaseStart]);
-  sheet.addRow(['Lease End', leaseData.leaseEnd]);
-  sheet.addRow(['Monthly Rent', leaseData.monthlyRent]);
-  sheet.addRow(['Square Feet', leaseData.squareFeet]);
-  sheet.addRow(['Rent Per Sq Ft', leaseData.rentPerSqFt]);
-  sheet.addRow(['Security Deposit', leaseData.securityDeposit || 'N/A']);
+
+  sheet.addRow(['Parties']);
+  sheet.addRow(['Tenant', leaseData.parties.tenant]);
+  sheet.addRow(['Landlord', leaseData.parties.landlord]);
   sheet.addRow([]);
-  
-  sheet.addRow(['Lease Terms']);
-  leaseData.terms.forEach(term => {
-    sheet.addRow(['', term]);
-  });
-  
+
+  sheet.addRow(['Premises']);
+  sheet.addRow(['Property Address', leaseData.premises.propertyAddress]);
+  sheet.addRow(['Square Feet', leaseData.premises.squareFeet]);
+  sheet.addRow(['Description', leaseData.premises.description]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Lease Term']);
+  sheet.addRow(['Start Date', leaseData.leaseTerm.startDate]);
+  sheet.addRow(['End Date', leaseData.leaseTerm.endDate]);
+  sheet.addRow(['Term (Months)', leaseData.leaseTerm.termMonths]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Rent Schedule']);
+  sheet.addRow(['Base Rent', leaseData.rentSchedule.baseRent]);
+  sheet.addRow(['Rent per Sq Ft', leaseData.rentSchedule.rentPerSqFt]);
+  sheet.addRow(['Rent Escalations', leaseData.rentSchedule.rentEscalations || 'None']);
+  sheet.addRow([]);
+
+  sheet.addRow(['Operating Expenses']);
+  sheet.addRow(['Responsibility Type', leaseData.operatingExpenses.responsibilityType]);
+  sheet.addRow(['CAM Charges', leaseData.operatingExpenses.camCharges || 'N/A']);
+  sheet.addRow(['Utilities', leaseData.operatingExpenses.utilities || 'N/A']);
+  sheet.addRow(['Taxes', leaseData.operatingExpenses.taxes || 'N/A']);
+  sheet.addRow(['Insurance', leaseData.operatingExpenses.insurance || 'N/A']);
+  sheet.addRow([]);
+
+  sheet.addRow(['Other Terms']);
+  sheet.addRow(['Security Deposit', leaseData.securityDeposit || 'N/A']);
+  sheet.addRow(['Assignment Provisions', leaseData.assignmentProvisions || 'N/A']);
+  sheet.addRow([]);
+
+  if (leaseData.renewalOptions && leaseData.renewalOptions.length > 0) {
+    sheet.addRow(['Renewal Options']);
+    leaseData.renewalOptions.forEach(option => {
+      sheet.addRow(['', option]);
+    });
+    sheet.addRow([]);
+  }
+
+  if (leaseData.maintenanceObligations) {
+    sheet.addRow(['Maintenance Obligations']);
+    sheet.addRow(['Landlord Responsibilities']);
+    leaseData.maintenanceObligations.landlord.forEach(obligation => {
+      sheet.addRow(['', obligation]);
+    });
+    sheet.addRow(['Tenant Responsibilities']);
+    leaseData.maintenanceObligations.tenant.forEach(obligation => {
+      sheet.addRow(['', obligation]);
+    });
+  }
+
   sheet.columns.forEach(column => {
-    column.width = 25;
+    column.width = 30;
   });
 }
 
@@ -295,16 +387,183 @@ async function generateFinancialExcel(workbook: ExcelJS.Workbook, data: Extracte
   });
 }
 
+// New specialized Excel generators - using generic template for now
+async function generateOperatingBudgetExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
+  const sheet = workbook.addWorksheet('Operating Budget');
+  const budgetData = data.data as OperatingBudgetData;
+
+  sheet.addRow(['Operating Budget - ' + (data.metadata.propertyName || 'Unknown Property')]);
+  sheet.addRow(['Period', budgetData.period]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Income']);
+  sheet.addRow(['Gross Rental Income', budgetData.income.grossRentalIncome]);
+  sheet.addRow(['Vacancy Allowance', budgetData.income.vacancyAllowance]);
+  sheet.addRow(['Effective Gross Income', budgetData.income.effectiveGrossIncome]);
+  sheet.addRow(['Other Income', budgetData.income.otherIncome]);
+  sheet.addRow(['Total Income', budgetData.income.totalIncome]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Expenses']);
+  sheet.addRow(['Property Taxes', budgetData.expenses.propertyTaxes]);
+  sheet.addRow(['Insurance', budgetData.expenses.insurance]);
+  sheet.addRow(['Utilities', budgetData.expenses.utilities]);
+  sheet.addRow(['Maintenance', budgetData.expenses.maintenance]);
+  sheet.addRow(['Management', budgetData.expenses.management]);
+  sheet.addRow(['Marketing', budgetData.expenses.marketing]);
+  sheet.addRow(['Total Operating Expenses', budgetData.expenses.totalOperatingExpenses]);
+  sheet.addRow([]);
+
+  sheet.addRow(['NOI', budgetData.noi]);
+  sheet.addRow(['CapEx Forecast', budgetData.capexForecast]);
+  sheet.addRow(['Cash Flow', budgetData.cashFlow]);
+
+  sheet.columns.forEach(column => { column.width = 25; });
+}
+
+async function generateBrokerSalesComparablesExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
+  const sheet = workbook.addWorksheet('Sales Comparables');
+  const compData = data.data as BrokerSalesComparablesData;
+
+  // Headers
+  sheet.addRow(['Property Address', 'Property Type', 'Sale Date', 'Sale Price', 'Price per SF', 'Building Size', 'Cap Rate']);
+
+  compData.comparables.forEach(comp => {
+    sheet.addRow([
+      comp.propertyAddress,
+      comp.propertyType,
+      comp.saleDate,
+      comp.salePrice,
+      comp.pricePerSF,
+      comp.buildingSize,
+      comp.capRate
+    ]);
+  });
+
+  sheet.addRow([]);
+  sheet.addRow(['Summary']);
+  sheet.addRow(['Average Price per SF', compData.summary.averagePricePerSF]);
+  sheet.addRow(['Average Cap Rate', compData.summary.averageCapRate]);
+  sheet.addRow(['Price Range Min', compData.summary.priceRange.min]);
+  sheet.addRow(['Price Range Max', compData.summary.priceRange.max]);
+
+  sheet.columns.forEach(column => { column.width = 20; });
+}
+
+async function generateBrokerLeaseComparablesExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
+  const sheet = workbook.addWorksheet('Lease Comparables');
+  const compData = data.data as BrokerLeaseComparablesData;
+
+  // Headers
+  sheet.addRow(['Property Address', 'Property Type', 'Lease Date', 'Tenant Industry', 'Square Footage', 'Base Rent', 'Lease Type', 'Effective Rent']);
+
+  compData.comparables.forEach(comp => {
+    sheet.addRow([
+      comp.propertyAddress,
+      comp.propertyType,
+      comp.leaseCommencementDate,
+      comp.tenantIndustry,
+      comp.squareFootage,
+      comp.baseRent,
+      comp.leaseType,
+      comp.effectiveRent
+    ]);
+  });
+
+  sheet.addRow([]);
+  sheet.addRow(['Summary']);
+  sheet.addRow(['Average Base Rent', compData.summary.averageBaseRent]);
+  sheet.addRow(['Average Effective Rent', compData.summary.averageEffectiveRent]);
+  sheet.addRow(['Rent Range Min', compData.summary.rentRange.min]);
+  sheet.addRow(['Rent Range Max', compData.summary.rentRange.max]);
+
+  sheet.columns.forEach(column => { column.width = 20; });
+}
+
+async function generateBrokerListingExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
+  const sheet = workbook.addWorksheet('Broker Listing');
+  const listingData = data.data as BrokerListingData;
+
+  sheet.addRow(['Broker Listing Details']);
+  sheet.addRow([]);
+
+  sheet.addRow(['Listing Information']);
+  sheet.addRow(['Property Owner', listingData.listingDetails.propertyOwner]);
+  sheet.addRow(['Broker Firm', listingData.listingDetails.brokerFirm]);
+  sheet.addRow(['Broker Name', listingData.listingDetails.brokerName || 'N/A']);
+  sheet.addRow(['Listing Type', listingData.listingDetails.listingType]);
+  sheet.addRow(['Listing Price', listingData.listingDetails.listingPrice || 'N/A']);
+  sheet.addRow(['Asking Rent', listingData.listingDetails.askingRent || 'N/A']);
+  sheet.addRow(['Commission Structure', listingData.listingDetails.commissionStructure]);
+  sheet.addRow(['Listing Term', listingData.listingDetails.listingTerm]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Property Details']);
+  sheet.addRow(['Address', listingData.propertyDetails.address]);
+  sheet.addRow(['Property Type', listingData.propertyDetails.propertyType]);
+  sheet.addRow(['Square Footage', listingData.propertyDetails.squareFootage]);
+  sheet.addRow(['Lot Size', listingData.propertyDetails.lotSize || 'N/A']);
+  sheet.addRow(['Year Built', listingData.propertyDetails.yearBuilt || 'N/A']);
+  sheet.addRow([]);
+
+  sheet.addRow(['Broker Duties']);
+  listingData.brokerDuties.forEach(duty => sheet.addRow([duty]));
+
+  sheet.columns.forEach(column => { column.width = 30; });
+}
+
+async function generateFinancialStatementsExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
+  const sheet = workbook.addWorksheet('Financial Statements');
+  const finData = data.data as FinancialStatementsData;
+
+  sheet.addRow(['Financial Statements - ' + (data.metadata.propertyName || 'Unknown Property')]);
+  sheet.addRow(['Period', finData.period]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Operating Income']);
+  sheet.addRow(['Rental Income', finData.operatingIncome.rentalIncome]);
+  sheet.addRow(['Other Income', finData.operatingIncome.otherIncome]);
+  sheet.addRow(['Total Income', finData.operatingIncome.totalIncome]);
+  sheet.addRow(['Vacancy Loss', finData.operatingIncome.vacancyLoss]);
+  sheet.addRow(['Effective Gross Income', finData.operatingIncome.effectiveGrossIncome]);
+  sheet.addRow([]);
+
+  sheet.addRow(['Operating Expenses']);
+  sheet.addRow(['Property Taxes', finData.operatingExpenses.propertyTaxes]);
+  sheet.addRow(['Insurance', finData.operatingExpenses.insurance]);
+  sheet.addRow(['Utilities', finData.operatingExpenses.utilities]);
+  sheet.addRow(['Maintenance', finData.operatingExpenses.maintenance]);
+  sheet.addRow(['Management', finData.operatingExpenses.management]);
+  sheet.addRow(['Professional Fees', finData.operatingExpenses.professionalFees]);
+  sheet.addRow(['Other Expenses', finData.operatingExpenses.otherExpenses]);
+  sheet.addRow(['Total Expenses', finData.operatingExpenses.totalExpenses]);
+  sheet.addRow([]);
+
+  sheet.addRow(['NOI', finData.noi]);
+  sheet.addRow(['Debt Service', finData.debtService || 'N/A']);
+  sheet.addRow(['Cash Flow', finData.cashFlow || 'N/A']);
+
+  if (finData.balanceSheet) {
+    sheet.addRow([]);
+    sheet.addRow(['Balance Sheet']);
+    sheet.addRow(['Total Assets', finData.balanceSheet.assets.totalAssets]);
+    sheet.addRow(['Total Liabilities', finData.balanceSheet.liabilities.totalLiabilities]);
+    sheet.addRow(['Equity', finData.balanceSheet.equity]);
+  }
+
+  sheet.columns.forEach(column => { column.width = 25; });
+}
+
 async function generateGenericExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const sheet = workbook.addWorksheet('Extracted Data');
-  
+
   sheet.addRow(['Document Type', data.documentType]);
   sheet.addRow(['Extraction Date', data.metadata.extractedDate]);
   sheet.addRow([]);
-  
+
   sheet.addRow(['Raw Data']);
   sheet.addRow([JSON.stringify(data.data, null, 2)]);
-  
+
   sheet.columns.forEach(column => {
     column.width = 30;
   });

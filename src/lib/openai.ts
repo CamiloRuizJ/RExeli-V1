@@ -5,8 +5,13 @@ import type {
   DocumentClassification,
   ExtractedData,
   RentRollData,
+  OperatingBudgetData,
+  BrokerSalesComparablesData,
+  BrokerLeaseComparablesData,
+  BrokerListingData,
   OfferingMemoData,
   LeaseData,
+  FinancialStatementsData,
   ComparableData,
   FinancialData
 } from './types';
@@ -67,16 +72,17 @@ const EXTRACTION_PROMPTS = {
 You are an expert commercial real estate professional analyzing a rent roll for investment analysis and property management decisions. Extract comprehensive rent roll data with the precision required for NOI calculations and investment underwriting.
 
 Focus on extracting ALL relevant data points that real estate professionals need:
-- Unit/suite numbers and floor locations
-- Tenant names (company names, or "VACANT" for empty units)
-- Square footage per unit (rentable and usable SF)
-- Monthly rent amounts (base rent)
-- Lease start/end dates and remaining lease terms
-- Occupancy status and lease type (NNN, Modified Gross, Full Service)
-- Annual rent escalations and CAM charges
-- Security deposits and tenant improvements
-- Lease expiration rollover schedule
-- Tenant credit ratings if available
+- Tenant name & suite/unit number
+- Lease start & expiration dates
+- Rent commencement date
+- Base rent (current & escalations)
+- Lease type (NNN, Gross, Modified Gross)
+- CAM / Operating expense reimbursements
+- Security deposit
+- Renewal/extension options
+- Free rent or concessions
+- Square footage leased
+- Occupancy status
 
 Return JSON with this structure:
 {
@@ -89,14 +95,21 @@ Return JSON with this structure:
     "extractedDate": "2025-01-15"
   },
   "data": {
-    "properties": [
+    "tenants": [
       {
-        "unitNumber": "101",
-        "tenant": "ABC Company",
-        "squareFeet": 2000,
-        "monthlyRent": 4000,
+        "tenantName": "ABC Company",
+        "suiteUnit": "Suite 101",
         "leaseStart": "2024-01-01",
         "leaseEnd": "2026-12-31",
+        "rentCommencementDate": "2024-02-01",
+        "baseRent": 4000,
+        "rentEscalations": "3% annually",
+        "leaseType": "NNN",
+        "camReimbursements": 500,
+        "securityDeposit": 8000,
+        "renewalOptions": "Two 5-year options",
+        "freeRentConcessions": "2 months free",
+        "squareFootage": 2000,
         "occupancyStatus": "occupied"
       }
     ],
@@ -104,8 +117,211 @@ Return JSON with this structure:
       "totalRent": 100000,
       "occupancyRate": 0.92,
       "totalSquareFeet": 50000,
-      "averageRentPsf": 24.00
+      "averageRentPsf": 24.00,
+      "totalUnits": 25,
+      "vacantUnits": 2
     }
+  }
+}
+  `,
+
+  operating_budget: `
+You are an expert commercial real estate financial analyst extracting operating budget data for investment analysis and property management decisions. Extract comprehensive budget data with the precision required for NOI projections and cash flow modeling.
+
+Focus on extracting ALL budget line items:
+- Gross rental income
+- Vacancy allowance
+- Other income
+- Operating expenses (taxes, insurance, utilities, R&M, management fees, marketing)
+- NOI
+- CapEx forecast
+
+Return JSON with this structure:
+{
+  "documentType": "operating_budget",
+  "metadata": {
+    "propertyName": "Property Name",
+    "propertyAddress": "Full Address",
+    "extractedDate": "2025-01-15"
+  },
+  "data": {
+    "period": "2025 Budget",
+    "income": {
+      "grossRentalIncome": 500000,
+      "vacancyAllowance": 25000,
+      "effectiveGrossIncome": 475000,
+      "otherIncome": 15000,
+      "totalIncome": 490000
+    },
+    "expenses": {
+      "propertyTaxes": 45000,
+      "insurance": 18000,
+      "utilities": 28000,
+      "maintenance": 32000,
+      "management": 25000,
+      "marketing": 8000,
+      "totalOperatingExpenses": 156000
+    },
+    "noi": 334000,
+    "capexForecast": 45000,
+    "cashFlow": 289000
+  }
+}
+  `,
+
+  broker_sales_comparables: `
+You are an expert commercial real estate appraiser and market analyst extracting broker sales comparable data for property valuation and investment analysis. Extract comprehensive market data with the precision required for appraisal reports and investment underwriting.
+
+Focus on extracting ALL comparable sales data:
+- Property address & type
+- Sale date
+- Sale price
+- Price per SF/unit
+- Building size & land size
+- Year built/renovated
+- Occupancy at sale
+- Cap rate/NOI at sale
+- Buyer, Seller
+
+Return JSON with this structure:
+{
+  "documentType": "broker_sales_comparables",
+  "metadata": {
+    "extractedDate": "2025-01-15"
+  },
+  "data": {
+    "comparables": [
+      {
+        "propertyAddress": "123 Main St, City, State",
+        "propertyType": "Office Building",
+        "saleDate": "2024-11-15",
+        "salePrice": 2500000,
+        "pricePerSF": 200,
+        "pricePerUnit": 125000,
+        "buildingSize": 12500,
+        "landSize": 1.2,
+        "yearBuilt": 1988,
+        "yearRenovated": 2018,
+        "occupancyAtSale": 0.92,
+        "capRate": 0.065,
+        "noiAtSale": 162500,
+        "buyer": "Investment Group LLC",
+        "seller": "Property Owner Inc"
+      }
+    ],
+    "summary": {
+      "averagePricePerSF": 195,
+      "averageCapRate": 0.068,
+      "priceRange": {
+        "min": 1800000,
+        "max": 3200000
+      }
+    }
+  }
+}
+  `,
+
+  broker_lease_comparables: `
+You are an expert commercial real estate leasing professional extracting broker lease comparable data for market analysis and rental rate determination. Extract comprehensive leasing data with the precision required for leasing strategies and market positioning.
+
+Focus on extracting ALL lease comparable data:
+- Property address & type
+- Lease commencement date
+- Tenant industry
+- Lease term
+- Square footage
+- Base rent
+- Rent escalations
+- Lease type
+- Concessions
+- Effective rent
+
+Return JSON with this structure:
+{
+  "documentType": "broker_lease_comparables",
+  "metadata": {
+    "extractedDate": "2025-01-15"
+  },
+  "data": {
+    "comparables": [
+      {
+        "propertyAddress": "456 Business Blvd, City, State",
+        "propertyType": "Office",
+        "leaseCommencementDate": "2024-06-01",
+        "tenantIndustry": "Professional Services",
+        "leaseTerm": 60,
+        "squareFootage": 3200,
+        "baseRent": 28,
+        "rentEscalations": "3% annually",
+        "leaseType": "Modified Gross",
+        "concessions": "4 months free rent, $20 TI",
+        "effectiveRent": 24.50
+      }
+    ],
+    "summary": {
+      "averageBaseRent": 26.75,
+      "averageEffectiveRent": 24.25,
+      "rentRange": {
+        "min": 22,
+        "max": 32
+      }
+    }
+  }
+}
+  `,
+
+  broker_listing: `
+You are an expert commercial real estate broker analyzing a listing agreement for brokerage and commission tracking. Extract comprehensive listing data with the precision required for transaction management and commission calculations.
+
+Focus on extracting ALL listing agreement data:
+- Property owner
+- Broker/brokerage firm
+- Listing price/asking rent
+- Listing type
+- Commission structure
+- Term of listing
+- Property details
+- Broker duties
+- Termination provisions
+
+Return JSON with this structure:
+{
+  "documentType": "broker_listing",
+  "metadata": {
+    "extractedDate": "2025-01-15"
+  },
+  "data": {
+    "listingDetails": {
+      "propertyOwner": "ABC Properties LLC",
+      "brokerFirm": "Commercial Realty Group",
+      "brokerName": "John Smith",
+      "listingPrice": 2500000,
+      "askingRent": 28,
+      "listingType": "sale",
+      "commissionStructure": "6% of sale price",
+      "listingTerm": "180 days",
+      "listingDate": "2025-01-01",
+      "expirationDate": "2025-06-30"
+    },
+    "propertyDetails": {
+      "address": "789 Commerce Way, City, State",
+      "propertyType": "Industrial",
+      "squareFootage": 25000,
+      "lotSize": 3.5,
+      "yearBuilt": 1995,
+      "parking": "50 spaces",
+      "zoning": "M-1"
+    },
+    "brokerDuties": [
+      "Market the property",
+      "Screen potential buyers",
+      "Negotiate terms",
+      "Coordinate due diligence"
+    ],
+    "terminationProvisions": [
+      "Either party may terminate with 30 days notice",
+      "Commission due if sale closes within 90 days after termination"
+    ]
   }
 }
   `,
@@ -113,16 +329,17 @@ Return JSON with this structure:
   offering_memo: `
 You are an expert commercial real estate investment analyst reviewing an offering memorandum for potential acquisition. Extract comprehensive property and financial data with the precision required for investment committee presentations and due diligence processes.
 
-Focus on extracting critical investment metrics and property details:
-- Property fundamentals (name, address, property type, year built, recent renovations)
-- Financial performance (asking price, cap rate, NOI, cash-on-cash returns)
-- Investment highlights and value-add opportunities
-- Market positioning and competitive advantages
-- Tenant mix and credit quality
-- Physical property characteristics (building size, parking, amenities)
-- Location attributes (demographics, traffic counts, nearby anchors)
-- Investment thesis and growth projections
-- Capital improvement requirements
+Focus on extracting ALL offering memo components:
+- Property overview
+- Investment highlights
+- Market overview
+- Rent roll summary
+- Operating statement
+- Lease terms
+- Comparables
+- Photos/plans
+- Cap rate/pricing
+- Location data
 
 Return JSON with this structure:
 {
@@ -133,7 +350,7 @@ Return JSON with this structure:
     "extractedDate": "2025-01-15"
   },
   "data": {
-    "propertyDetails": {
+    "propertyOverview": {
       "name": "Professional Center",
       "address": "123 Main St, City, State",
       "propertyType": "Office",
@@ -141,18 +358,45 @@ Return JSON with this structure:
       "totalSquareFeet": 25000,
       "lotSize": 2.5
     },
-    "financials": {
+    "investmentHighlights": [
+      "Prime location with excellent visibility",
+      "Recently renovated common areas",
+      "Strong tenant mix with credit tenants",
+      "Below-market rents with upside potential"
+    ],
+    "marketOverview": "Strong suburban office market with growing demand",
+    "rentRollSummary": {
+      "totalUnits": 15,
+      "occupancyRate": 0.92,
+      "averageRent": 28
+    },
+    "operatingStatement": {
+      "grossIncome": 500000,
+      "operatingExpenses": 175000,
+      "noi": 325000
+    },
+    "leaseTerms": [
+      "Average lease term: 5 years",
+      "Triple net lease structure",
+      "Annual escalations: 3%"
+    ],
+    "comparables": [
+      {
+        "address": "456 Business Park Dr",
+        "salePrice": 4800000,
+        "capRate": 0.068
+      }
+    ],
+    "pricing": {
       "askingPrice": 5000000,
       "capRate": 0.065,
-      "noi": 325000,
-      "grossRent": 500000,
-      "expenses": 175000
+      "pricePerSF": 200
     },
-    "highlights": [
-      "Prime location",
-      "Recently renovated",
-      "Strong tenant mix"
-    ]
+    "locationData": {
+      "neighborhood": "Central Business District",
+      "demographics": "High-income professional area",
+      "transportation": "Easy highway access, public transit"
+    }
   }
 }
   `,
@@ -160,18 +404,18 @@ Return JSON with this structure:
   lease_agreement: `
 You are an expert commercial real estate attorney and leasing professional analyzing a lease agreement for portfolio management and cash flow projections. Extract comprehensive lease terms with the detail required for lease administration and investment analysis.
 
-Focus on extracting all financially relevant lease provisions:
-- Tenant and landlord legal entities and contact information
-- Leased premises description (suite number, square footage, common areas)
-- Lease term (commencement, expiration, renewal options)
-- Rental structure (base rent, escalations, percentage rent if applicable)
-- Additional charges (CAM, taxes, insurance, utilities)
-- Security deposit and personal guarantees
-- Tenant improvement allowances and landlord work
-- Assignment and subletting rights
-- Default provisions and cure periods
-- Early termination options and penalties
-- Special clauses affecting cash flow
+Focus on extracting ALL lease agreement components:
+- Parties
+- Premises description
+- Lease term
+- Rent schedule
+- Operating expense responsibilities
+- Security deposit
+- Renewal options
+- Maintenance obligations
+- Assignment provisions
+- Default remedies
+- Insurance requirements
 
 Return JSON with this structure:
 {
@@ -181,24 +425,131 @@ Return JSON with this structure:
     "extractedDate": "2025-01-15"
   },
   "data": {
-    "tenant": "XYZ Corporation",
-    "landlord": "Property Management LLC",
-    "propertyAddress": "Suite 200, 123 Business Blvd",
-    "leaseStart": "2024-06-01",
-    "leaseEnd": "2029-05-31",
-    "monthlyRent": 8500,
-    "squareFeet": 3200,
-    "rentPerSqFt": 31.88,
+    "parties": {
+      "tenant": "XYZ Corporation",
+      "landlord": "Property Management LLC"
+    },
+    "premises": {
+      "propertyAddress": "Suite 200, 123 Business Blvd",
+      "squareFeet": 3200,
+      "description": "Second floor office suite with reception area"
+    },
+    "leaseTerm": {
+      "startDate": "2024-06-01",
+      "endDate": "2029-05-31",
+      "termMonths": 60
+    },
+    "rentSchedule": {
+      "baseRent": 8500,
+      "rentEscalations": "3% annually starting year 2",
+      "rentPerSqFt": 31.88
+    },
+    "operatingExpenses": {
+      "responsibilityType": "Modified Gross",
+      "camCharges": 850,
+      "utilities": "Tenant responsibility",
+      "taxes": "Included in base rent",
+      "insurance": "Landlord carries building insurance"
+    },
     "securityDeposit": 17000,
-    "terms": [
-      "5-year initial term",
-      "3% annual escalations",
-      "CAM charges additional"
+    "renewalOptions": [
+      "One 5-year option at market rates",
+      "120-day notice required"
+    ],
+    "maintenanceObligations": {
+      "landlord": [
+        "Structural repairs",
+        "HVAC maintenance",
+        "Common area maintenance"
+      ],
+      "tenant": [
+        "Interior maintenance",
+        "Janitorial services",
+        "Minor repairs"
+      ]
+    },
+    "assignmentProvisions": "Assignment permitted with landlord consent",
+    "defaultRemedies": [
+      "30-day cure period for rent default",
+      "Landlord may terminate and re-enter",
+      "Tenant liable for accelerated rent"
+    ],
+    "insuranceRequirements": [
+      "General liability: $2M per occurrence",
+      "Property insurance on tenant improvements",
+      "Workers compensation as required by law"
     ]
   }
 }
   `,
 
+  financial_statements: `
+You are an expert commercial real estate financial analyst extracting historical financial performance data for investment analysis and asset management decisions. Extract comprehensive financial data with the precision required for NOI trend analysis, budget variance analysis, and investor reporting.
+
+Focus on extracting ALL financial statement components:
+- Historical operating income
+- Rental income
+- Other income
+- Operating expenses
+- NOI
+- Debt service
+- Cash flow
+- Balance sheet
+- CapEx
+
+Return JSON with this structure:
+{
+  "documentType": "financial_statements",
+  "metadata": {
+    "propertyName": "Property Name",
+    "propertyAddress": "Full Address",
+    "extractedDate": "2025-01-15"
+  },
+  "data": {
+    "period": "Year Ending December 31, 2024",
+    "operatingIncome": {
+      "rentalIncome": 480000,
+      "otherIncome": 25000,
+      "totalIncome": 505000,
+      "vacancyLoss": 20000,
+      "effectiveGrossIncome": 485000
+    },
+    "operatingExpenses": {
+      "propertyTaxes": 45000,
+      "insurance": 18000,
+      "utilities": 28000,
+      "maintenance": 32000,
+      "management": 25000,
+      "professionalFees": 8000,
+      "otherExpenses": 12000,
+      "totalExpenses": 168000
+    },
+    "noi": 317000,
+    "debtService": 180000,
+    "cashFlow": 137000,
+    "balanceSheet": {
+      "assets": {
+        "realEstate": 4500000,
+        "cash": 125000,
+        "otherAssets": 75000,
+        "totalAssets": 4700000
+      },
+      "liabilities": {
+        "mortgage": 2800000,
+        "otherLiabilities": 45000,
+        "totalLiabilities": 2845000
+      },
+      "equity": 1855000
+    },
+    "capex": {
+      "currentYear": 85000,
+      "forecast": [65000, 45000, 95000, 35000, 125000]
+    }
+  }
+}
+  `,
+
+  // Legacy prompts kept for backward compatibility
   comparable_sales: `
 You are an expert commercial real estate appraiser and market analyst extracting comparable sales data for property valuation and investment analysis. Extract comprehensive market data with the precision required for appraisal reports and investment underwriting.
 
@@ -207,13 +558,6 @@ Focus on extracting all relevant valuation metrics:
 - Sale prices and closing dates
 - Property characteristics (SF, year built, property type, condition)
 - Financial metrics (price per SF, cap rates, NOI at sale)
-- Market conditions at time of sale
-- Buyer and seller information (if available)
-- Financing terms and assumptions
-- Property improvements and renovations
-- Occupancy levels at time of sale
-- Special circumstances affecting the sale
-- Days on market and marketing approach
 
 Return JSON with this structure:
 {
@@ -243,14 +587,6 @@ You are an expert commercial real estate financial analyst extracting operating 
 Focus on extracting all revenue and expense line items:
 - Revenue streams (base rent, percentage rent, reimbursements, parking, other income)
 - Operating expenses by detailed category (management, maintenance, utilities, insurance, taxes, professional fees)
-- Capital expenditures and tenant improvements
-- Net operating income and cash flow calculations
-- Occupancy rates and rental rate trends
-- Budget vs actual variance analysis
-- Year-over-year performance comparisons
-- Expense ratios and benchmarking data
-- Reserve fund allocations
-- Debt service and capital structure (if shown)
 
 Return JSON with this structure:
 {

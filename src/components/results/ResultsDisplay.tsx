@@ -92,27 +92,27 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
                 </tr>
               </thead>
               <tbody>
-                {data.properties.slice(0, 10).map((property, index) => (
+                {data.tenants.slice(0, 10).map((tenant, index) => (
                   <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="p-2 font-medium">{property.unitNumber}</td>
-                    <td className="p-2">{property.tenant}</td>
-                    <td className="p-2 text-right">{formatNumber(property.squareFeet)}</td>
-                    <td className="p-2 text-right">{formatCurrency(property.monthlyRent)}</td>
-                    <td className="p-2">{property.leaseEnd}</td>
+                    <td className="p-2 font-medium">{tenant.suiteUnit}</td>
+                    <td className="p-2">{tenant.tenantName}</td>
+                    <td className="p-2 text-right">{formatNumber(tenant.squareFootage)}</td>
+                    <td className="p-2 text-right">{formatCurrency(tenant.baseRent)}</td>
+                    <td className="p-2">{tenant.leaseEnd}</td>
                     <td className="p-2">
                       <span className={`px-2 py-1 text-xs rounded-full ${
-                        property.occupancyStatus === 'occupied' ? 'bg-green-100 text-green-800' :
-                        property.occupancyStatus === 'vacant' ? 'bg-red-100 text-red-800' :
+                        tenant.occupancyStatus === 'occupied' ? 'bg-green-100 text-green-800' :
+                        tenant.occupancyStatus === 'vacant' ? 'bg-red-100 text-red-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {property.occupancyStatus}
+                        {tenant.occupancyStatus}
                       </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {data.properties.length > 10 && (
+            {data.tenants.length > 10 && (
               <p className="text-sm text-gray-500 mt-2 text-center">
                 Showing first 10 units. Full data available in Excel export.
               </p>
@@ -134,23 +134,23 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
           <CardContent className="space-y-3">
             <div>
               <label className="text-sm font-medium text-gray-500">Property Name</label>
-              <p className="text-sm text-gray-900">{data.propertyDetails.name}</p>
+              <p className="text-sm text-gray-900">{data.propertyOverview.name}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Address</label>
-              <p className="text-sm text-gray-900">{data.propertyDetails.address}</p>
+              <p className="text-sm text-gray-900">{data.propertyOverview.address}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Property Type</label>
-              <p className="text-sm text-gray-900">{data.propertyDetails.propertyType}</p>
+              <p className="text-sm text-gray-900">{data.propertyOverview.propertyType}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Year Built</label>
-              <p className="text-sm text-gray-900">{data.propertyDetails.yearBuilt || 'N/A'}</p>
+              <p className="text-sm text-gray-900">{data.propertyOverview.yearBuilt || 'N/A'}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Total Square Feet</label>
-              <p className="text-sm text-gray-900">{formatNumber(data.propertyDetails.totalSquareFeet)}</p>
+              <p className="text-sm text-gray-900">{formatNumber(data.propertyOverview.totalSquareFeet)}</p>
             </div>
           </CardContent>
         </Card>
@@ -163,38 +163,38 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
           <CardContent className="space-y-3">
             <div>
               <label className="text-sm font-medium text-gray-500">Asking Price</label>
-              <p className="text-lg font-bold text-green-600">{formatCurrency(data.financials.askingPrice)}</p>
+              <p className="text-lg font-bold text-green-600">{formatCurrency(data.pricing.askingPrice)}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">Cap Rate</label>
               <p className="text-sm text-gray-900">
-                {data.financials.capRate ? formatPercentage(data.financials.capRate) : 'N/A'}
+                {data.pricing.capRate ? formatPercentage(data.pricing.capRate) : 'N/A'}
               </p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-500">NOI</label>
               <p className="text-sm text-gray-900">
-                {data.financials.noi ? formatCurrency(data.financials.noi) : 'N/A'}
+                {data.operatingStatement.noi ? formatCurrency(data.operatingStatement.noi) : 'N/A'}
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Gross Rent</label>
+              <label className="text-sm font-medium text-gray-500">Gross Income</label>
               <p className="text-sm text-gray-900">
-                {data.financials.grossRent ? formatCurrency(data.financials.grossRent) : 'N/A'}
+                {data.operatingStatement.grossIncome ? formatCurrency(data.operatingStatement.grossIncome) : 'N/A'}
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Property Highlights */}
+      {/* Investment Highlights */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Property Highlights</CardTitle>
+          <CardTitle className="text-lg">Investment Highlights</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="space-y-2">
-            {data.highlights.map((highlight, index) => (
+            {data.investmentHighlights.map((highlight, index) => (
               <li key={index} className="flex items-start space-x-2">
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                 <span className="text-sm text-gray-700">{highlight}</span>
