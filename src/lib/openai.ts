@@ -343,19 +343,28 @@ export async function classifyDocument(file: File): Promise<DocumentClassificati
 
     // Parse JSON response with OpenAI quickstart error handling pattern
     try {
-      const classification = JSON.parse(content);
-      
+      let jsonContent = content;
+
+      // Extract JSON from markdown code blocks if present
+      const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonBlockMatch) {
+        jsonContent = jsonBlockMatch[1].trim();
+        console.log('Extracted JSON from markdown code block');
+      }
+
+      const classification = JSON.parse(jsonContent);
+
       // Validate required fields per OpenAI best practices
       if (!classification.type || classification.confidence === undefined || !classification.reasoning) {
         throw new Error('Invalid classification response structure');
       }
-      
+
       console.log('Classification successful:', classification);
       return classification;
     } catch (jsonError) {
       console.error('Failed to parse classification JSON:', jsonError);
       console.error('Raw response:', content);
-      throw new Error(`Invalid JSON response from OpenAI: ${content}`);
+      throw new Error(`Invalid JSON response from OpenAI: ${content.substring(0, 500)}...`);
     }
   } catch (error: unknown) {
     console.error('Document classification error:', error);
@@ -445,19 +454,28 @@ export async function extractDocumentData(
 
     // Parse JSON response with better error handling
     try {
-      const extractedData = JSON.parse(content);
-      
+      let jsonContent = content;
+
+      // Extract JSON from markdown code blocks if present
+      const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonBlockMatch) {
+        jsonContent = jsonBlockMatch[1].trim();
+        console.log('Extracted JSON from markdown code block');
+      }
+
+      const extractedData = JSON.parse(jsonContent);
+
       // Validate the response structure
       if (!extractedData.documentType || !extractedData.data) {
         throw new Error('Invalid extraction response structure - missing documentType or data');
       }
-      
+
       console.log('Extraction successful:', extractedData);
       return extractedData;
     } catch (jsonError) {
       console.error('Failed to parse extraction JSON:', jsonError);
       console.error('Raw response:', content);
-      throw new Error(`Invalid JSON response from OpenAI: ${content}`);
+      throw new Error(`Invalid JSON response from OpenAI: ${content.substring(0, 500)}...`);
     }
   } catch (error) {
     console.error('Document extraction error:', error);
