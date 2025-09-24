@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
     // Create signed upload URL - expires in 1 hour
     const { data, error } = await supabase.storage
       .from('documents')
-      .createSignedUploadUrl(filePath);
+      .createSignedUploadUrl(filePath, {
+        upsert: false
+      });
 
     if (error) {
       console.error('Supabase signed URL error:', error);

@@ -108,8 +108,8 @@ export function FileUpload({
         onUploadError('Upload failed due to network error');
       };
 
-      // Upload directly to Supabase using signed URL
-      xhr.open('POST', uploadUrl);
+      // Upload directly to Supabase using signed URL (PUT method required)
+      xhr.open('PUT', uploadUrl);
       xhr.setRequestHeader('Content-Type', file.type);
       xhr.send(file);
 
