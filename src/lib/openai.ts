@@ -43,16 +43,31 @@ if (!process.env.ENCRYPTED_OPENAI_API_KEY && process.env.NODE_ENV === 'productio
 /**
  * Helper function to attempt fixing truncated JSON responses
  */
-function attemptJSONFix(truncatedJson: string): string | null {
+function attemptJSONFix(malformedJson: string): string | null {
   try {
+    console.log('Attempting to fix malformed JSON...');
+
+    // Clean up common character corruption issues
+    let fixedJson = malformedJson
+      // Fix common character corruption patterns
+      .replace(/ngExpenseR/g, 'operatingExpenseR')
+      .replace(/operatiatio/g, 'operatingExpenseRatio')
+      // Remove any invalid characters that aren't valid JSON
+      .replace(/[^\x20-\x7E\s]/g, '')
+      // Fix incomplete property names
+      .replace(/"[^"]*[^a-zA-Z0-9_]":/g, (match) => {
+        const cleanName = match.replace(/[^a-zA-Z0-9_":]/g, '');
+        return cleanName.endsWith(':') ? cleanName : cleanName + ':';
+      });
+
     // Count open braces, brackets, and quotes to determine what needs closing
     let braceCount = 0;
     let bracketCount = 0;
     let inString = false;
     let lastChar = '';
 
-    for (let i = 0; i < truncatedJson.length; i++) {
-      const char = truncatedJson[i];
+    for (let i = 0; i < fixedJson.length; i++) {
+      const char = fixedJson[i];
 
       if (char === '"' && lastChar !== '\\') {
         inString = !inString;
@@ -65,9 +80,6 @@ function attemptJSONFix(truncatedJson: string): string | null {
 
       lastChar = char;
     }
-
-    // Build closing characters
-    let fixedJson = truncatedJson.trim();
 
     // Remove any trailing comma or incomplete property
     fixedJson = fixedJson.replace(/,\s*$/, '');
@@ -87,9 +99,14 @@ function attemptJSONFix(truncatedJson: string): string | null {
       fixedJson += '}';
     }
 
+    console.log('JSON fix attempted, testing parse...');
+    // Test if the fixed JSON is valid
+    JSON.parse(fixedJson);
+    console.log('JSON fix successful!');
+
     return fixedJson;
   } catch (error) {
-    console.error('Failed to fix truncated JSON:', error);
+    console.error('Failed to fix malformed JSON:', error);
     return null;
   }
 }
@@ -2074,13 +2091,24 @@ export async function extractDocumentData(
       try {
         extractedData = JSON.parse(jsonContent);
       } catch (parseError) {
-        // If JSON is truncated, try to fix it by closing open structures
-        console.log('JSON parse failed, attempting to fix truncated JSON...');
+        // If JSON is malformed, try to fix it by cleaning corruption and closing structures
+        console.log('JSON parse failed, attempting to fix malformed JSON...', {
+          errorMessage: parseError.message,
+          jsonLength: jsonContent.length,
+          jsonPreview: jsonContent.substring(0, 200) + '...'
+        });
+
         const fixedJson = attemptJSONFix(jsonContent);
         if (fixedJson) {
-          extractedData = JSON.parse(fixedJson);
-          console.log('Successfully recovered from truncated JSON');
+          try {
+            extractedData = JSON.parse(fixedJson);
+            console.log('Successfully recovered from malformed JSON');
+          } catch (secondError) {
+            console.error('Fixed JSON still invalid:', secondError);
+            throw parseError;
+          }
         } else {
+          console.error('Could not fix malformed JSON');
           throw parseError;
         }
       }
