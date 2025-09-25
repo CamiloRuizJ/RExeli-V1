@@ -2128,7 +2128,7 @@ export async function extractDocumentData(
           ],
         },
       ],
-      max_tokens: 8000,
+      max_tokens: 15000,
       temperature: 0.1,
       response_format: { type: "json_object" }, // Ensure JSON response
     });
