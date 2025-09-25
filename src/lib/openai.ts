@@ -46,31 +46,66 @@ if (!process.env.ENCRYPTED_OPENAI_API_KEY && process.env.NODE_ENV === 'productio
 function attemptJSONFix(malformedJson: string): string | null {
   try {
     console.log('Attempting to fix malformed JSON...');
+    console.log('Original JSON length:', malformedJson.length);
 
-    // Clean up common character corruption issues
+    // Stage 1: Fix character corruption and encoding issues
     let fixedJson = malformedJson
-      // Fix common character corruption patterns
-      .replace(/ngExpenseR/g, 'operatingExpenseR')
+      // Fix common property name corruptions
       .replace(/operatiatio/g, 'operatingExpenseRatio')
-      // Remove any invalid characters that aren't valid JSON
-      .replace(/[^\x20-\x7E\s]/g, '')
-      // Fix incomplete property names
-      .replace(/"[^"]*[^a-zA-Z0-9_]":/g, (match) => {
-        const cleanName = match.replace(/[^a-zA-Z0-9_":]/g, '');
-        return cleanName.endsWith(':') ? cleanName : cleanName + ':';
-      });
+      .replace(/ngExpenseR/g, 'operatingExpenseR')
+      .replace(/averageRentPs/g, 'averageRentPsf')
+      .replace(/totalReturnProjectio/g, 'totalReturnProjection')
+      .replace(/debtServiceCoverageRati/g, 'debtServiceCoverageRatio')
+      .replace(/cashOnCashRetur/g, 'cashOnCashReturn')
+      .replace(/occupancyRat/g, 'occupancyRate')
+      .replace(/noiPerSquareFoo/g, 'noiPerSquareFoot')
+      // Fix truncated common property names
+      .replace(/"[a-zA-Z0-9_]+atio":/g, (match) => {
+        if (match.includes('operatio')) return '"operatingExpenseRatio":';
+        if (match.includes('ratio')) return match.replace('atio', 'ratio');
+        return match;
+      })
+      .replace(/"[a-zA-Z0-9_]+Rate":/g, (match) => {
+        if (match.includes('occupanc')) return '"occupancyRate":';
+        if (match.includes('rent')) return '"rentGrowthRate":';
+        return match;
+      })
+      .replace(/"[a-zA-Z0-9_]+Return":/g, (match) => {
+        if (match.includes('cash')) return '"cashOnCashReturn":';
+        if (match.includes('total')) return '"totalReturnProjection":';
+        return match;
+      })
+      // Remove invalid control characters but keep valid whitespace
+      .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+      // Fix broken Unicode sequences
+      .replace(/\\u[0-9a-fA-F]{0,3}(?![0-9a-fA-F])/g, '');
 
-    // Count open braces, brackets, and quotes to determine what needs closing
+    // Stage 2: Fix structural JSON issues
+    // Find and fix unquoted property names
+    fixedJson = fixedJson.replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":');
+
+    // Fix property names with invalid characters
+    fixedJson = fixedJson.replace(/"([^"]*[^a-zA-Z0-9_][^"]*)":/g, (match, propName) => {
+      const cleanName = propName.replace(/[^a-zA-Z0-9_]/g, '');
+      return `"${cleanName}":`;
+    });
+
+    // Fix trailing commas in objects and arrays
+    fixedJson = fixedJson.replace(/,(\s*[}\]])/g, '$1');
+
+    // Stage 3: Handle truncated JSON
     let braceCount = 0;
     let bracketCount = 0;
     let inString = false;
     let lastChar = '';
+    let quoteCount = 0;
 
     for (let i = 0; i < fixedJson.length; i++) {
       const char = fixedJson[i];
 
       if (char === '"' && lastChar !== '\\') {
         inString = !inString;
+        quoteCount++;
       } else if (!inString) {
         if (char === '{') braceCount++;
         else if (char === '}') braceCount--;
@@ -81,17 +116,20 @@ function attemptJSONFix(malformedJson: string): string | null {
       lastChar = char;
     }
 
-    // Remove any trailing comma or incomplete property
-    fixedJson = fixedJson.replace(/,\s*$/, '');
+    console.log(`Structural analysis: braces=${braceCount}, brackets=${bracketCount}, inString=${inString}, quotes=${quoteCount}`);
+
+    // Remove incomplete trailing content
     fixedJson = fixedJson.replace(/,\s*"[^"]*"\s*:\s*$/, '');
     fixedJson = fixedJson.replace(/,\s*"[^"]*"$/, '');
+    fixedJson = fixedJson.replace(/,\s*$/, '');
+    fixedJson = fixedJson.replace(/:\s*$/, ': null');
 
-    // Close any unclosed strings
-    if (inString) {
+    // Close unclosed strings
+    if (inString && quoteCount % 2 === 1) {
       fixedJson += '"';
     }
 
-    // Close brackets and braces
+    // Close unclosed structures
     for (let i = 0; i < bracketCount; i++) {
       fixedJson += ']';
     }
@@ -99,14 +137,18 @@ function attemptJSONFix(malformedJson: string): string | null {
       fixedJson += '}';
     }
 
-    console.log('JSON fix attempted, testing parse...');
+    console.log('Fixed JSON length:', fixedJson.length);
+    console.log('Testing JSON validity...');
+
     // Test if the fixed JSON is valid
-    JSON.parse(fixedJson);
+    const parsed = JSON.parse(fixedJson);
     console.log('JSON fix successful!');
+    console.log('Parsed object keys:', Object.keys(parsed));
 
     return fixedJson;
   } catch (error) {
     console.error('Failed to fix malformed JSON:', error);
+    console.log('Attempted fix preview:', malformedJson.substring(0, 500) + '...');
     return null;
   }
 }
