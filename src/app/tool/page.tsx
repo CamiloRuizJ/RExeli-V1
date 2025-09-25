@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { FileUpload } from '@/components/upload/FileUpload';
 import { DocumentPreview } from '@/components/preview/DocumentPreview';
@@ -25,6 +25,25 @@ export default function ToolPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Refs for auto-scrolling
+  const documentPreviewRef = useRef<HTMLDivElement>(null);
+  const processingWorkflowRef = useRef<HTMLDivElement>(null);
+  const resultsDisplayRef = useRef<HTMLDivElement>(null);
+
+  // Smooth scroll function with offset for better visibility
+  const scrollToElement = useCallback((elementRef: React.RefObject<HTMLDivElement | null>, offset = 80) => {
+    if (elementRef.current) {
+      const element = elementRef.current;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  }, []);
 
   // Preload PDF.js for better user experience
   useEffect(() => {
@@ -92,7 +111,12 @@ export default function ToolPage() {
     setCurrentFile(file);
     setSelectedDocumentType(documentType);
     toast.success(`Document uploaded and classified as ${documentType.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}! Ready for AI processing.`);
-  }, []);
+
+    // Auto-scroll to document preview section after a brief delay
+    setTimeout(() => {
+      scrollToElement(documentPreviewRef, 100);
+    }, 500);
+  }, [scrollToElement]);
 
   // Handle upload error
   const handleUploadError = useCallback((error: string) => {
@@ -121,6 +145,11 @@ export default function ToolPage() {
     const steps = initializeSteps(selectedDocumentType);
     setProcessingSteps(steps);
     setCurrentStep(1);
+
+    // Auto-scroll to processing section when processing starts
+    setTimeout(() => {
+      scrollToElement(processingWorkflowRef, 100);
+    }, 300);
 
     try {
       // Step 1: Document Preparation
@@ -182,6 +211,11 @@ export default function ToolPage() {
       // Step 2: Data Extraction (skip classification, use selected document type)
       updateStep(2, 'processing');
 
+      // Auto-scroll to keep processing section visible during step 2
+      setTimeout(() => {
+        scrollToElement(processingWorkflowRef, 80);
+      }, 200);
+
       const extractionFormData = new FormData();
       extractionFormData.append('file', fileToProcess);
       extractionFormData.append('documentType', selectedDocumentType);
@@ -206,12 +240,22 @@ export default function ToolPage() {
 
       // Step 3: Data Validation
       updateStep(3, 'processing');
+
+      // Auto-scroll to keep processing section visible during step 3
+      setTimeout(() => {
+        scrollToElement(processingWorkflowRef, 80);
+      }, 200);
       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate validation
       updateStep(3, 'completed', 'Data validation completed successfully');
       setCurrentStep(4);
 
       // Step 4: Results Preparation
       updateStep(4, 'processing');
+
+      // Auto-scroll to keep processing section visible during step 4
+      setTimeout(() => {
+        scrollToElement(processingWorkflowRef, 80);
+      }, 200);
       setExtractedData(extracted);
       await new Promise(resolve => setTimeout(resolve, 1000));
       updateStep(4, 'completed', 'Results prepared for display and export');
@@ -219,6 +263,11 @@ export default function ToolPage() {
       setIsComplete(true);
       setIsProcessing(false);
       toast.success('AI processing completed successfully! Your data is ready.');
+
+      // Auto-scroll to results section when processing completes
+      setTimeout(() => {
+        scrollToElement(resultsDisplayRef, 100);
+      }, 800);
 
     } catch (error) {
       console.error('Processing error:', error);
@@ -231,7 +280,7 @@ export default function ToolPage() {
       setIsProcessing(false);
       toast.error(`Processing failed: ${errorMessage}`);
     }
-  }, [currentFile, selectedDocumentType, initializeSteps, updateStep, currentStep]);
+  }, [currentFile, selectedDocumentType, initializeSteps, updateStep, currentStep, scrollToElement]);
 
   // Export to Excel
   const handleExportExcel = useCallback(async () => {
@@ -315,7 +364,7 @@ export default function ToolPage() {
 
           {/* Document Preview Section */}
           {currentFile && (
-            <div className="space-y-8">
+            <div ref={documentPreviewRef} className="space-y-8">
               <div className="flex items-center space-x-4">
                 <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-base sm:text-lg shadow-lg ${
                   currentFile ? 'bg-emerald-600 text-white' : 'bg-gray-300 text-gray-500'
@@ -337,7 +386,7 @@ export default function ToolPage() {
 
           {/* Processing Workflow Section */}
           {processingSteps.length > 0 && (
-            <div className="space-y-8">
+            <div ref={processingWorkflowRef} className="space-y-8">
               <div className="flex items-center space-x-4">
                 <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-base sm:text-lg shadow-lg ${
                   isProcessing
@@ -366,7 +415,7 @@ export default function ToolPage() {
 
           {/* Results Section */}
           {extractedData && (
-            <div className="space-y-8">
+            <div ref={resultsDisplayRef} className="space-y-8">
               <div className="flex items-center space-x-4">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-base sm:text-lg shadow-lg">
                   4
