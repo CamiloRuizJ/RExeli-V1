@@ -41,6 +41,60 @@ if (!process.env.ENCRYPTED_OPENAI_API_KEY && process.env.NODE_ENV === 'productio
 }
 
 /**
+ * Helper function to attempt fixing truncated JSON responses
+ */
+function attemptJSONFix(truncatedJson: string): string | null {
+  try {
+    // Count open braces, brackets, and quotes to determine what needs closing
+    let braceCount = 0;
+    let bracketCount = 0;
+    let inString = false;
+    let lastChar = '';
+
+    for (let i = 0; i < truncatedJson.length; i++) {
+      const char = truncatedJson[i];
+
+      if (char === '"' && lastChar !== '\\') {
+        inString = !inString;
+      } else if (!inString) {
+        if (char === '{') braceCount++;
+        else if (char === '}') braceCount--;
+        else if (char === '[') bracketCount++;
+        else if (char === ']') bracketCount--;
+      }
+
+      lastChar = char;
+    }
+
+    // Build closing characters
+    let fixedJson = truncatedJson.trim();
+
+    // Remove any trailing comma or incomplete property
+    fixedJson = fixedJson.replace(/,\s*$/, '');
+    fixedJson = fixedJson.replace(/,\s*"[^"]*"\s*:\s*$/, '');
+    fixedJson = fixedJson.replace(/,\s*"[^"]*"$/, '');
+
+    // Close any unclosed strings
+    if (inString) {
+      fixedJson += '"';
+    }
+
+    // Close brackets and braces
+    for (let i = 0; i < bracketCount; i++) {
+      fixedJson += ']';
+    }
+    for (let i = 0; i < braceCount; i++) {
+      fixedJson += '}';
+    }
+
+    return fixedJson;
+  } catch (error) {
+    console.error('Failed to fix truncated JSON:', error);
+    return null;
+  }
+}
+
+/**
  * Enhanced Real Estate Professional Document Classification Prompts
  */
 const CLASSIFICATION_PROMPT = `
@@ -1991,7 +2045,7 @@ export async function extractDocumentData(
           ],
         },
       ],
-      max_tokens: 2000,
+      max_tokens: 4000,
       temperature: 0.1,
       response_format: { type: "json_object" }, // Ensure JSON response
     });
@@ -2015,7 +2069,21 @@ export async function extractDocumentData(
         console.log('Extracted JSON from markdown code block');
       }
 
-      const extractedData = JSON.parse(jsonContent);
+      // Attempt to parse JSON, with fallback for truncated responses
+      let extractedData;
+      try {
+        extractedData = JSON.parse(jsonContent);
+      } catch (parseError) {
+        // If JSON is truncated, try to fix it by closing open structures
+        console.log('JSON parse failed, attempting to fix truncated JSON...');
+        const fixedJson = attemptJSONFix(jsonContent);
+        if (fixedJson) {
+          extractedData = JSON.parse(fixedJson);
+          console.log('Successfully recovered from truncated JSON');
+        } else {
+          throw parseError;
+        }
+      }
 
       // Validate the response structure
       if (!extractedData.documentType || !extractedData.data) {
