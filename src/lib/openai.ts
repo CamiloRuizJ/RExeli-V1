@@ -118,11 +118,35 @@ function attemptJSONFix(malformedJson: string): string | null {
 
     console.log(`Structural analysis: braces=${braceCount}, brackets=${bracketCount}, inString=${inString}, quotes=${quoteCount}`);
 
-    // Remove incomplete trailing content
+    // Remove incomplete trailing content - more comprehensive cleanup
+    // Handle incomplete property names like "market (without closing quote)
+    fixedJson = fixedJson.replace(/,\s*"[^"]*$/, '');
+    // Handle incomplete property definitions like "prop":
     fixedJson = fixedJson.replace(/,\s*"[^"]*"\s*:\s*$/, '');
-    fixedJson = fixedJson.replace(/,\s*"[^"]*"$/, '');
-    fixedJson = fixedJson.replace(/,\s*$/, '');
+    // Handle incomplete quoted strings that aren't property names
+    fixedJson = fixedJson.replace(/:\s*"[^"]*$/, ': "incomplete"');
+    // Handle trailing colons
     fixedJson = fixedJson.replace(/:\s*$/, ': null');
+    // Handle trailing commas
+    fixedJson = fixedJson.replace(/,\s*$/, '');
+
+    // Special handling for truncated sections - look for common patterns
+    if (fixedJson.includes('"qualityMetrics"') && !fixedJson.includes('"qualityMetrics": {')) {
+      // If qualityMetrics section is incomplete, remove it entirely
+      fixedJson = fixedJson.replace(/,?\s*"qualityMetrics"[^}]*$/, '');
+    }
+
+    // Remove any incomplete object that doesn't have proper closing
+    const lastOpenBrace = fixedJson.lastIndexOf('{');
+    const lastCloseBrace = fixedJson.lastIndexOf('}');
+    if (lastOpenBrace > lastCloseBrace) {
+      // There's an unclosed object, find its start and remove it
+      const beforeLastObject = fixedJson.substring(0, lastOpenBrace);
+      const lastCommaBeforeObject = beforeLastObject.lastIndexOf(',');
+      if (lastCommaBeforeObject > -1) {
+        fixedJson = fixedJson.substring(0, lastCommaBeforeObject);
+      }
+    }
 
     // Close unclosed strings
     if (inString && quoteCount % 2 === 1) {
@@ -2104,7 +2128,7 @@ export async function extractDocumentData(
           ],
         },
       ],
-      max_tokens: 4000,
+      max_tokens: 8000,
       temperature: 0.1,
       response_format: { type: "json_object" }, // Ensure JSON response
     });
