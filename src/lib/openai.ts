@@ -615,16 +615,16 @@ You are a seasoned commercial real estate financial analyst and asset manager wi
   `,
 
   broker_sales_comparables: `
-You are a seasoned commercial real estate appraiser and market analyst with 20+ years of experience in property valuation, investment analysis, and market research. Your task is to perform a comprehensive extraction of ALL sales comparable data visible in this document for appraisal and investment underwriting purposes.
+You are a data extraction specialist focused on capturing ALL sales comparable information from real estate documents. Your primary task is to systematically extract every data point visible in the document FIRST, then organize and analyze it.
 
-**EXTRACTION METHODOLOGY:**
-1. **COMPLETE DOCUMENT SCAN**: Examine every table, chart, graph, and comparable property listed
-2. **SYSTEMATIC ANALYSIS**: Extract data for ALL comparable sales, not just the first few or most obvious
-3. **DETAILED PROPERTY PROFILING**: Capture comprehensive property characteristics for each comparable
-4. **MARKET CONTEXT ANALYSIS**: Extract market commentary, trends, and analytical insights
-5. **VALUATION METRICS CALCULATION**: Derive all pricing and cap rate metrics
-6. **PROFESSIONAL VALIDATION**: Apply appraisal expertise to assess data quality and relevance
-7. **COMPREHENSIVE CATEGORIZATION**: Organize comparables by property type, location, and quality
+**EXTRACTION APPROACH:**
+1. **EXTRACT ALL RAW DATA**: Capture every number, date, address, and text field visible in the document
+2. **SYSTEMATIC DOCUMENTATION**: Record data for ALL comparable sales shown, not just the first few
+3. **COMPLETE PROPERTY DETAILS**: Extract every characteristic, measurement, and attribute listed
+4. **TRANSACTION INFORMATION**: Record all sale details, pricing, and terms exactly as shown
+5. **RAW MARKET DATA**: Capture market commentary and trends without interpretation
+6. **DATA ORGANIZATION**: Structure extracted data in standardized format
+7. **ANALYSIS LAST**: Apply professional analysis only after all data extraction is complete
 
 **COMPREHENSIVE SALES COMPARABLE DATA EXTRACTION:**
 
@@ -973,6 +973,30 @@ You are a seasoned commercial real estate appraiser and market analyst with 20+ 
     "additionalNotes": "Any other relevant market information, analyst commentary, or methodology notes"
   }
 }
+
+**CRITICAL EXTRACTION INSTRUCTIONS:**
+
+**PHASE 1 - RAW DATA EXTRACTION (Complete this FIRST):**
+- Extract EVERY property address, name, and detail shown in the document
+- Record ALL sale dates, prices, and transaction terms exactly as displayed
+- Capture ALL building measurements, square footages, and unit counts
+- Document ALL buyer information, broker details, and transaction parties
+- Note ALL pricing metrics (price per SF, cap rates, etc.) as shown
+- Record ALL property characteristics, ages, and physical features
+- Extract ALL market commentary and trend text without interpretation
+
+**PHASE 2 - DATA ORGANIZATION (Do this SECOND):**
+- Structure all extracted data into the JSON format
+- Organize comparable sales by property ID
+- Group related transaction details together
+- Populate market analysis sections with extracted data points
+
+**PHASE 3 - ANALYSIS (Only after all data is extracted):**
+- Calculate averages, medians, and ranges from extracted data
+- Determine market trends based on extracted commentary
+- Apply professional insights to quality metrics
+
+**REMEMBER:** Extract ALL data points first, analyze second. Do not skip properties or data points during extraction.
   `,
 
   broker_lease_comparables: `

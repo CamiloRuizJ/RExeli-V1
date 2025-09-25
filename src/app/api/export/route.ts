@@ -423,29 +423,76 @@ async function generateOperatingBudgetExcel(workbook: ExcelJS.Workbook, data: Ex
 
 async function generateBrokerSalesComparablesExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const sheet = workbook.addWorksheet('Sales Comparables');
-  const compData = data.data as BrokerSalesComparablesData;
+  const compData = data.data as any; // Use any type to handle the new structure
 
-  // Headers
-  sheet.addRow(['Property Address', 'Property Type', 'Sale Date', 'Sale Price', 'Price per SF', 'Building Size', 'Cap Rate']);
+  // Add metadata sheet
+  if (data.metadata) {
+    sheet.addRow(['Document Information']);
+    sheet.addRow(['Report Title', data.metadata.reportTitle || 'N/A']);
+    sheet.addRow(['Market Area', data.metadata.marketArea || 'N/A']);
+    sheet.addRow(['Report Date', data.metadata.reportDate || 'N/A']);
+    sheet.addRow([]);
+  }
 
-  compData.comparables.forEach(comp => {
-    sheet.addRow([
-      comp.propertyAddress,
-      comp.propertyType,
-      comp.saleDate,
-      comp.salePrice,
-      comp.pricePerSF,
-      comp.buildingSize,
-      comp.capRate
-    ]);
-  });
+  // Market Summary
+  if (compData.marketSummary) {
+    sheet.addRow(['Market Summary']);
+    sheet.addRow(['Total Sales Analyzed', compData.marketSummary.totalSalesAnalyzed || 'N/A']);
+    sheet.addRow(['Market Conditions', compData.marketSummary.marketConditions || 'N/A']);
+    sheet.addRow(['Sales Velocity', compData.marketSummary.salesVelocity || 'N/A']);
+    sheet.addRow(['Buyer Demand', compData.marketSummary.buyerDemand || 'N/A']);
+    sheet.addRow([]);
+  }
 
-  sheet.addRow([]);
-  sheet.addRow(['Summary']);
-  sheet.addRow(['Average Price per SF', compData.summary.averagePricePerSF]);
-  sheet.addRow(['Average Cap Rate', compData.summary.averageCapRate]);
-  sheet.addRow(['Price Range Min', compData.summary.priceRange.min]);
-  sheet.addRow(['Price Range Max', compData.summary.priceRange.max]);
+  // Comparable Sales Details
+  if (compData.comparableSales && Array.isArray(compData.comparableSales)) {
+    sheet.addRow(['Comparable Sales']);
+    sheet.addRow(['Property Name', 'Address', 'Sale Date', 'Sale Price', 'Price per SF', 'Building SF', 'Units', 'Year Built', 'Buyer']);
+
+    compData.comparableSales.forEach((comp: any) => {
+      sheet.addRow([
+        comp.propertyName || 'N/A',
+        comp.propertyAddress || 'N/A',
+        comp.transactionDetails?.saleDate || 'N/A',
+        comp.transactionDetails?.salePrice || 0,
+        comp.pricingMetrics?.pricePerSquareFoot || 0,
+        comp.propertyCharacteristics?.totalBuildingSquareFeet || 0,
+        comp.propertyCharacteristics?.numberOfUnits || 0,
+        comp.propertyCharacteristics?.yearBuilt || 'N/A',
+        comp.transactionParties?.buyerName || 'N/A'
+      ]);
+    });
+    sheet.addRow([]);
+  }
+
+  // Market Analysis Summary
+  if (compData.marketAnalysis) {
+    sheet.addRow(['Market Analysis']);
+    if (compData.marketAnalysis.pricingAnalysis) {
+      sheet.addRow(['Average Price per SF', compData.marketAnalysis.pricingAnalysis.averagePricePerSF || 0]);
+      sheet.addRow(['Median Price per SF', compData.marketAnalysis.pricingAnalysis.medianPricePerSF || 0]);
+    }
+    if (compData.marketAnalysis.capRateAnalysis) {
+      sheet.addRow(['Average Cap Rate', compData.marketAnalysis.capRateAnalysis.averageCapRate || 0]);
+      sheet.addRow(['Median Cap Rate', compData.marketAnalysis.capRateAnalysis.medianCapRate || 0]);
+    }
+  }
+
+  // Fallback for legacy or missing data
+  if (!compData.comparableSales && compData.comparables) {
+    sheet.addRow(['Legacy Comparables Data']);
+    compData.comparables.forEach((comp: any) => {
+      sheet.addRow([
+        comp.propertyAddress || 'N/A',
+        comp.propertyType || 'N/A',
+        comp.saleDate || 'N/A',
+        comp.salePrice || 0,
+        comp.pricePerSF || 0,
+        comp.buildingSize || 0,
+        comp.capRate || 0
+      ]);
+    });
+  }
 
   sheet.columns.forEach(column => { column.width = 20; });
 }
