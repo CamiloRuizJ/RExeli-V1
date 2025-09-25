@@ -428,9 +428,9 @@ async function generateBrokerSalesComparablesExcel(workbook: ExcelJS.Workbook, d
   // Add metadata sheet
   if (data.metadata) {
     sheet.addRow(['Document Information']);
-    sheet.addRow(['Report Title', data.metadata.reportTitle || 'N/A']);
-    sheet.addRow(['Market Area', data.metadata.marketArea || 'N/A']);
-    sheet.addRow(['Report Date', data.metadata.reportDate || 'N/A']);
+    sheet.addRow(['Report Title', (data.metadata as any).reportTitle || 'N/A']);
+    sheet.addRow(['Market Area', (data.metadata as any).marketArea || 'N/A']);
+    sheet.addRow(['Report Date', (data.metadata as any).reportDate || 'N/A']);
     sheet.addRow([]);
   }
 
