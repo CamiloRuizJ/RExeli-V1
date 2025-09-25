@@ -635,6 +635,72 @@ You are a data extraction specialist focused on capturing ALL sales comparable i
 - Note document structure and layout
 - Estimate total data points to be extracted
 
+**RECOGNITION GUIDE - SYNONYMS & FORMATS TO CAPTURE:**
+
+**ADDRESS FORMATS (Extract ALL variations):**
+- Full addresses: "123 Main St, Dallas, TX 75201"
+- Partial addresses: "Main Street, Dallas" or "123 Main St"
+- Property names with addresses: "Sunset Plaza, 456 Oak Ave"
+- Address abbreviations: "St/Street, Ave/Avenue, Blvd/Boulevard, Dr/Drive, Rd/Road, Ln/Lane, Ct/Court, Pl/Place"
+- Directionals: "N/North, S/South, E/East, W/West, NE/Northeast, SW/Southwest" etc.
+- Building numbers: Unit #, Suite #, Building A/B/C, Tower 1/2
+
+**NUMERIC VALUE FORMATS (Recognize ALL patterns):**
+- Sale prices: "$5,712,000" | "$5.712M" | "$5,712K" | "5.7MM" | "5712000"
+- Price per SF: "$170/SF" | "$170 per sq ft" | "$170 PSF" | "170.00/sqft"
+- Square footage: "33,500 SF" | "33500 sq ft" | "33.5K SF" | "33,500 square feet"
+- Cap rates: "6.5%" | "6.50 cap" | "6.5 cap rate" | "0.065"
+- Units: "267 units" | "267 doors" | "267 apartments" | "267-unit"
+- Acres: "2.5 AC" | "2.5 acres" | "2.5 acre site"
+
+**PROPERTY CHARACTERISTIC SYNONYMS:**
+- Building size: SF | Square Feet | Sq Ft | GLA | Gross Leasable Area | NRA | Net Rentable Area | RSF | Rentable Square Feet
+- Property type: Multifamily | Multi-Family | Apartment | Residential | Garden Style | Mid-Rise | High-Rise
+- Year built: Built | Constructed | Year of Construction | Vintage | Age | Original Construction
+- Stories: Floors | Levels | Story Building | Floor Building
+
+**TRANSACTION PARTY SYNONYMS:**
+- Buyer: Purchaser | Acquirer | Grantee | New Owner | Acquiring Entity | Investment Group
+- Seller: Vendor | Grantor | Previous Owner | Disposing Entity | Selling Entity
+- Broker: Agent | Realtor | Representative | Listing Agent | Selling Agent | Brokerage
+
+**DATE FORMAT VARIATIONS (Extract ALL formats):**
+- Full dates: "June 15, 2023" | "06/15/2023" | "6/15/23" | "2023-06-15"
+- Month/Year: "Jun 2023" | "June '23" | "6/2023" | "Q2 2023"
+- Relative dates: "Last month" | "2 years ago" | "Recently sold"
+
+**FINANCIAL TERMS SYNONYMS:**
+- Sale price: Purchase Price | Transaction Value | Acquisition Cost | Sales Price | Gross Price
+- Cap rate: Capitalization Rate | Cap | Going-in Cap Rate | Market Cap Rate | Overall Rate
+- Price per unit: Price per Door | Per Unit Price | Unit Value | Per Door Value
+- NOI: Net Operating Income | Net Income | Operating Income | NOI
+- Expenses: Operating Expenses | OpEx | Annual Expenses | Operating Costs
+
+**MEASUREMENT SYNONYMS:**
+- Square feet: SF | Sq Ft | Square Footage | Sq. Feet | SQFT | s.f.
+- Acres: AC | Acre | Acreage | Ac.
+- Units: Doors | Apartments | Keys | Residential Units | Dwelling Units
+
+**LOCATION & MARKET SYNONYMS:**
+- Market area: Submarket | Market | Geographic Area | Region | Trade Area | Market Zone
+- Neighborhood: Area | District | Subarea | Location | Vicinity | Market Segment
+- Demographics: Population | Residents | Tenant Base | Market Demographics
+- Proximity: Near | Close to | Adjacent to | Walking distance | Minutes from
+
+**CONDITION & QUALITY SYNONYMS:**
+- Property condition: Condition | State | Quality | Grade | Class | Maintenance Level
+- Building class: Class A/B/C | Grade | Quality Rating | Investment Grade
+- Occupancy: Occupied | Vacant | Leased | Available | Stabilized | Lease-up
+
+**MARKET ANALYSIS TERMS:**
+- Market trends: Trends | Direction | Movement | Market Activity | Performance
+- Demand: Absorption | Take-up | Leasing Activity | Market Demand | Interest Level
+- Supply: Inventory | Available Space | Pipeline | New Construction | Competitive Supply
+- Pricing trends: Price Movement | Rate Changes | Market Rates | Rental Growth
+
+**EXTRACTION EMPHASIS:**
+When you see ANY of these synonyms or formats, treat them as CRITICAL DATA POINTS that must be captured. Don't skip variations - they all represent the same important information in different formats.
+
 **DOCUMENT ANALYSIS:**
 - Report title, date, and purpose
 - Market area definition and boundaries
@@ -985,14 +1051,15 @@ You are a data extraction specialist focused on capturing ALL sales comparable i
 
 **PHASE 1 - RAW DATA EXTRACTION (Complete this FIRST):**
 - **PROPERTY INVENTORY**: Count how many properties/sales are shown in the document - extract data for ALL of them
-- **BUYER AND SELLER**: For each sale, extract BOTH buyer name AND seller name (many documents show both)
-- **COMPLETE ADDRESSES**: Extract every property address, name, and identifying detail
-- **ALL FINANCIAL DATA**: Record every sale price, price per SF, cap rate, and financial metric visible
-- **BUILDING DETAILS**: Capture every measurement, square footage, unit count, year built, and characteristic
-- **TRANSACTION DETAILS**: Document sale dates, terms, days on market, and all transaction information
-- **PARTIES INFORMATION**: Extract all buyer info, seller info, broker details, and transaction parties
-- **TABLE PROCESSING**: Go through tables row by row - don't stop at the first property
-- **TEXT MINING**: Look for additional property details in narrative text sections
+- **SYNONYM RECOGNITION**: Use the synonym guide above - recognize ALL format variations (e.g., "Purchaser" = "Buyer", "$5.7M" = "$5,700,000")
+- **BUYER AND SELLER**: For each sale, extract BOTH buyer name AND seller name using ALL party synonyms (Purchaser, Acquirer, Vendor, Grantor, etc.)
+- **COMPLETE ADDRESSES**: Extract every address format - full addresses, partial addresses, property names with addresses
+- **ALL FINANCIAL DATA**: Record every price format - "$5,712,000", "$5.712M", "5.7MM", etc. and all cap rate formats
+- **BUILDING DETAILS**: Capture ALL measurement synonyms - SF, Sq Ft, Square Footage, RSF, GLA, NRA, etc.
+- **TRANSACTION DETAILS**: Document ALL date formats and transaction terms using synonym recognition
+- **PARTIES INFORMATION**: Extract using ALL party synonyms - Agent, Realtor, Representative, Listing Agent, etc.
+- **TABLE PROCESSING**: Go through tables row by row recognizing ALL format variations
+- **TEXT MINING**: Look for synonym variations in narrative text sections
 
 **PHASE 2 - COMPLETENESS VERIFICATION (Do this SECOND):**
 - **COUNT CHECK**: Verify you extracted the same number of properties shown in the document
@@ -1019,12 +1086,17 @@ You are a data extraction specialist focused on capturing ALL sales comparable i
 **FINAL QUALITY ASSURANCE CHECKLIST:**
 Before submitting your JSON response, verify:
 - [ ] Property count in JSON matches property count visible in document
-- [ ] Each property has both buyer AND seller information (when available in document)
-- [ ] All sale prices, cap rates, and financial metrics are captured
-- [ ] No "N/A" or empty fields when data is clearly visible in document
-- [ ] All property addresses and names are complete
-- [ ] Transaction dates and terms are extracted for each property
-- [ ] Building characteristics (SF, units, year built) are captured for each property
+- [ ] Each property has both buyer AND seller information using ALL synonym variations (when available)
+- [ ] All financial data captured in ALL formats - prices, cap rates, price/SF regardless of format variation
+- [ ] All addresses extracted including partial addresses, property names, and abbreviations
+- [ ] All measurements captured using ANY synonym - SF, Sq Ft, RSF, GLA, etc.
+- [ ] No "N/A" or empty fields when data exists in ANY format in the document
+- [ ] Transaction dates extracted in ANY format - full dates, month/year, relative dates
+- [ ] Building characteristics captured using ALL synonyms - floors/stories, built/constructed, etc.
+- [ ] Party information uses ALL variations - buyer/purchaser/acquirer, seller/vendor/grantor
+- [ ] All numeric formats recognized - $5M, $5,000,000, 5MM, etc.
+
+**SYNONYM REMINDER:** If you see "Purchaser: ABC Corp" extract it as buyerName. If you see "33.5K SF" extract it as 33,500 square feet.
   `,
 
   broker_lease_comparables: `
