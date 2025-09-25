@@ -618,15 +618,22 @@ You are a seasoned commercial real estate financial analyst and asset manager wi
 You are a data extraction specialist focused on capturing ALL sales comparable information from real estate documents. Your primary task is to systematically extract every data point visible in the document FIRST, then organize and analyze it.
 
 **EXTRACTION APPROACH:**
-1. **EXTRACT ALL RAW DATA**: Capture every number, date, address, and text field visible in the document
-2. **SYSTEMATIC DOCUMENTATION**: Record data for ALL comparable sales shown, not just the first few
-3. **COMPLETE PROPERTY DETAILS**: Extract every characteristic, measurement, and attribute listed
-4. **TRANSACTION INFORMATION**: Record all sale details, pricing, and terms exactly as shown
-5. **RAW MARKET DATA**: Capture market commentary and trends without interpretation
-6. **DATA ORGANIZATION**: Structure extracted data in standardized format
-7. **ANALYSIS LAST**: Apply professional analysis only after all data extraction is complete
+1. **DOCUMENT SCAN**: Examine EVERY section, table, row, column, and text block in the document
+2. **COMPLETE INVENTORY**: Count ALL properties/sales shown - extract data for EACH ONE, not just the first
+3. **BOTH PARTIES**: For every sale, extract BOTH buyer AND seller information (names, types, motivations)
+4. **ALL FINANCIAL DATA**: Capture every price, cap rate, price per SF, and financial metric shown
+5. **COMPLETE CHARACTERISTICS**: Extract every measurement, date, year, and property feature visible
+6. **TABLE PROCESSING**: Process tables row by row, ensuring no properties are skipped
+7. **TEXT MINING**: Extract details from narrative text that may contain additional property information
+8. **VERIFICATION**: Count extracted properties against visible properties to ensure completeness
 
 **COMPREHENSIVE SALES COMPARABLE DATA EXTRACTION:**
+
+**STEP 1: DOCUMENT SURVEY (Do this first to understand scope):**
+- Scan the entire document to count how many properties/sales are present
+- Identify all tables, charts, and data sections
+- Note document structure and layout
+- Estimate total data points to be extracted
 
 **DOCUMENT ANALYSIS:**
 - Report title, date, and purpose
@@ -977,26 +984,47 @@ You are a data extraction specialist focused on capturing ALL sales comparable i
 **CRITICAL EXTRACTION INSTRUCTIONS:**
 
 **PHASE 1 - RAW DATA EXTRACTION (Complete this FIRST):**
-- Extract EVERY property address, name, and detail shown in the document
-- Record ALL sale dates, prices, and transaction terms exactly as displayed
-- Capture ALL building measurements, square footages, and unit counts
-- Document ALL buyer information, broker details, and transaction parties
-- Note ALL pricing metrics (price per SF, cap rates, etc.) as shown
-- Record ALL property characteristics, ages, and physical features
-- Extract ALL market commentary and trend text without interpretation
+- **PROPERTY INVENTORY**: Count how many properties/sales are shown in the document - extract data for ALL of them
+- **BUYER AND SELLER**: For each sale, extract BOTH buyer name AND seller name (many documents show both)
+- **COMPLETE ADDRESSES**: Extract every property address, name, and identifying detail
+- **ALL FINANCIAL DATA**: Record every sale price, price per SF, cap rate, and financial metric visible
+- **BUILDING DETAILS**: Capture every measurement, square footage, unit count, year built, and characteristic
+- **TRANSACTION DETAILS**: Document sale dates, terms, days on market, and all transaction information
+- **PARTIES INFORMATION**: Extract all buyer info, seller info, broker details, and transaction parties
+- **TABLE PROCESSING**: Go through tables row by row - don't stop at the first property
+- **TEXT MINING**: Look for additional property details in narrative text sections
 
-**PHASE 2 - DATA ORGANIZATION (Do this SECOND):**
+**PHASE 2 - COMPLETENESS VERIFICATION (Do this SECOND):**
+- **COUNT CHECK**: Verify you extracted the same number of properties shown in the document
+- **SELLER CHECK**: Ensure each property has seller information (if shown in document)
+- **DATA COMPLETENESS**: Check that no fields are unnecessarily empty when data is visible
+- **CROSS-REFERENCE**: Verify consistency between related data points
+
+**PHASE 3 - JSON ORGANIZATION (Do this THIRD):**
 - Structure all extracted data into the JSON format
-- Organize comparable sales by property ID
-- Group related transaction details together
-- Populate market analysis sections with extracted data points
+- Organize comparable sales by property ID (1, 2, 3, etc.)
+- Populate all sections with extracted data points
+- Ensure no extracted data is lost in the structuring process
 
-**PHASE 3 - ANALYSIS (Only after all data is extracted):**
-- Calculate averages, medians, and ranges from extracted data
-- Determine market trends based on extracted commentary
+**PHASE 4 - ANALYSIS (Only after all data is extracted and verified):**
+- Calculate market analysis metrics from extracted data
 - Apply professional insights to quality metrics
+- Generate summary statistics
 
-**REMEMBER:** Extract ALL data points first, analyze second. Do not skip properties or data points during extraction.
+**CRITICAL REMINDERS:**
+- If you see 5 properties in a document, extract all 5 - not just 1 or 2
+- If seller names are visible, extract them along with buyer names
+- Process every table row, every text section, every data point visible
+
+**FINAL QUALITY ASSURANCE CHECKLIST:**
+Before submitting your JSON response, verify:
+- [ ] Property count in JSON matches property count visible in document
+- [ ] Each property has both buyer AND seller information (when available in document)
+- [ ] All sale prices, cap rates, and financial metrics are captured
+- [ ] No "N/A" or empty fields when data is clearly visible in document
+- [ ] All property addresses and names are complete
+- [ ] Transaction dates and terms are extracted for each property
+- [ ] Building characteristics (SF, units, year built) are captured for each property
   `,
 
   broker_lease_comparables: `
