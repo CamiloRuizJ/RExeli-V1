@@ -2093,7 +2093,7 @@ export async function extractDocumentData(
       } catch (parseError) {
         // If JSON is malformed, try to fix it by cleaning corruption and closing structures
         console.log('JSON parse failed, attempting to fix malformed JSON...', {
-          errorMessage: parseError.message,
+          errorMessage: parseError instanceof Error ? parseError.message : 'Unknown error',
           jsonLength: jsonContent.length,
           jsonPreview: jsonContent.substring(0, 200) + '...'
         });
