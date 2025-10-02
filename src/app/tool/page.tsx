@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { FileUpload } from '@/components/upload/FileUpload';
 import { DocumentPreview } from '@/components/preview/DocumentPreview';
@@ -17,6 +19,33 @@ import type {
 } from '@/lib/types';
 
 export default function ToolPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/tool');
+    }
+  }, [status, router]);
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render tool if not authenticated
+  if (!session) {
+    return null;
+  }
+
   const [currentFile, setCurrentFile] = useState<DocumentFile | null>(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType | null>(null);
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([]);

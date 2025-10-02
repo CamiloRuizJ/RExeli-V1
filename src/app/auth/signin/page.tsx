@@ -52,7 +52,7 @@ export default function SignInPage() {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
-            RExeli Admin
+            RExeli
           </CardTitle>
           <CardDescription className="text-gray-500">
             Sign in to access the document processing system
@@ -71,7 +71,7 @@ export default function SignInPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@rexeli.com"
+                  placeholder="you@example.com"
                   required
                   disabled={isLoading}
                   className="pl-10"
@@ -125,16 +125,6 @@ export default function SignInPage() {
               )}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
-              <p className="text-sm text-emerald-700 font-medium">Demo Credentials</p>
-              <p className="text-xs text-emerald-600 mt-1">
-                Email: admin@rexeli.com<br />
-                Password: RExeli2025!Admin
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
