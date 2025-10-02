@@ -377,3 +377,266 @@ export interface ExportResponse {
   filename: string;
   expiresAt: string;
 }
+
+// =====================================================
+// AI Training System Types
+// =====================================================
+
+export type ProcessingStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type VerificationStatus = 'unverified' | 'in_review' | 'verified' | 'rejected';
+export type DatasetSplit = 'train' | 'validation' | 'test';
+export type VerificationAction = 'verify' | 'reject' | 'edit' | 'recheck';
+export type TrainingStatus = 'pending' | 'running' | 'completed' | 'failed';
+
+export interface TrainingDocument {
+  id: string;
+
+  // File information
+  file_path: string;
+  file_name: string;
+  file_url: string;
+  file_size?: number;
+  file_type?: string;
+  document_type: DocumentType;
+
+  // Processing status
+  upload_date: string;
+  processing_status: ProcessingStatus;
+  processed_date?: string;
+  error_message?: string;
+  retry_count: number;
+
+  // Extraction data
+  raw_extraction?: ExtractedData;
+  verified_extraction?: ExtractedData;
+  extraction_confidence?: number;
+
+  // Verification workflow
+  verification_status: VerificationStatus;
+  is_verified: boolean;
+  verified_by?: string;
+  verified_date?: string;
+  verification_notes?: string;
+  requires_recheck: boolean;
+
+  // Training metadata
+  dataset_split: DatasetSplit;
+  training_version: number;
+  include_in_training: boolean;
+  quality_score?: number; // 0-1 score
+
+  // Audit
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+}
+
+export interface TrainingMetrics {
+  id: string;
+  document_type: DocumentType;
+
+  // Document counts
+  total_documents: number;
+  pending_documents: number;
+  processing_documents: number;
+  completed_documents: number;
+  failed_documents: number;
+
+  // Verification counts
+  unverified_documents: number;
+  verified_documents: number;
+  rejected_documents: number;
+
+  // Dataset split counts
+  train_set_size: number;
+  validation_set_size: number;
+  test_set_size: number;
+
+  // Quality metrics
+  average_confidence?: number;
+  average_quality_score?: number;
+  ready_for_training: boolean;
+  minimum_examples_met: boolean;
+
+  // Training history
+  last_export_date?: string;
+  last_training_date?: string;
+  training_runs: number;
+
+  last_updated: string;
+}
+
+export interface TrainingRun {
+  id: string;
+  document_type: DocumentType;
+
+  // Run metadata
+  run_date: string;
+  total_examples?: number;
+  train_examples?: number;
+  validation_examples?: number;
+
+  // OpenAI fine-tuning info
+  openai_job_id?: string;
+  fine_tuned_model_id?: string;
+  training_status: TrainingStatus;
+
+  // Export info
+  export_file_path?: string;
+  export_file_size?: number;
+
+  // Performance metrics
+  training_accuracy?: number;
+  validation_accuracy?: number;
+  training_loss?: number;
+  validation_loss?: number;
+
+  // Audit
+  created_by?: string;
+  notes?: string;
+}
+
+export interface VerificationEdit {
+  id: string;
+  training_document_id: string;
+
+  editor_id: string;
+  edit_date: string;
+
+  before_data?: ExtractedData;
+  after_data?: ExtractedData;
+  changes_made?: string;
+
+  verification_action: VerificationAction;
+}
+
+// OpenAI Training Format
+export interface OpenAIMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string | OpenAIUserContent[];
+}
+
+export interface OpenAIUserContent {
+  type: 'text' | 'image_url';
+  text?: string;
+  image_url?: {
+    url: string;
+    detail?: 'low' | 'high' | 'auto';
+  };
+}
+
+export interface OpenAITrainingExample {
+  messages: OpenAIMessage[];
+}
+
+// API Request/Response Types
+export interface BatchUploadRequest {
+  files: File[];
+  document_type: DocumentType;
+  created_by?: string;
+}
+
+export interface BatchUploadResponse {
+  success: boolean;
+  uploaded: number;
+  failed: number;
+  documentIds: string[];
+  errors?: Array<{ filename: string; error: string }>;
+}
+
+export interface ProcessBatchRequest {
+  documentIds: string[];
+}
+
+export interface ProcessBatchResponse {
+  success: boolean;
+  processed: number;
+  failed: number;
+  results: Array<{
+    documentId: string;
+    success: boolean;
+    error?: string;
+  }>;
+}
+
+export interface VerifyDocumentRequest {
+  verified_extraction: ExtractedData;
+  verification_notes?: string;
+  quality_score: number; // 0-1
+  verified_by?: string;
+}
+
+export interface VerifyDocumentResponse {
+  success: boolean;
+  document: TrainingDocument;
+  message: string;
+}
+
+export interface RejectDocumentRequest {
+  rejection_reason: string;
+  verified_by?: string;
+}
+
+export interface RejectDocumentResponse {
+  success: boolean;
+  document: TrainingDocument;
+  message: string;
+}
+
+export interface TrainingDocumentsQuery {
+  document_type?: DocumentType;
+  processing_status?: ProcessingStatus;
+  verification_status?: VerificationStatus;
+  dataset_split?: DatasetSplit;
+  is_verified?: boolean;
+  include_in_training?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export interface TrainingDocumentsResponse {
+  success: boolean;
+  documents: TrainingDocument[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface TrainingMetricsResponse {
+  success: boolean;
+  metrics: TrainingMetrics[];
+  summary: {
+    total_documents: number;
+    total_verified: number;
+    types_ready_for_training: number;
+  };
+}
+
+export interface ExportTrainingDataRequest {
+  document_type: DocumentType;
+  dataset_split?: DatasetSplit; // If not specified, exports both train and validation
+}
+
+export interface ExportTrainingDataResponse {
+  success: boolean;
+  train_file_url?: string;
+  validation_file_url?: string;
+  train_examples?: number;
+  validation_examples?: number;
+  message: string;
+}
+
+export interface AutoSplitRequest {
+  document_type?: DocumentType; // If not specified, splits all types
+  train_percentage?: number; // Default 80
+}
+
+export interface AutoSplitResponse {
+  success: boolean;
+  splits: Array<{
+    document_type: DocumentType;
+    train_count: number;
+    validation_count: number;
+  }>;
+  message: string;
+}
