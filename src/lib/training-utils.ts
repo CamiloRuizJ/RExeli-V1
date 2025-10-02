@@ -3,7 +3,7 @@
  * Helper functions for AI training data collection and management
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 import type {
   TrainingDocument,
   TrainingMetrics,
@@ -13,45 +13,9 @@ import type {
   VerificationStatus,
   DatasetSplit
 } from './types';
-import { decryptApiKey } from './auth';
 
-// Initialize Supabase client using encrypted credentials
-function getSupabaseCredentials() {
-  const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
-  const encryptedServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  // Allow build to succeed with placeholders
-  if (!encryptedUrl || !encryptedServiceKey) {
-    console.warn('ENCRYPTED_SUPABASE keys not found - using placeholders');
-    return {
-      url: 'https://placeholder.supabase.co',
-      serviceKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTIwMDAsImV4cCI6MTk2MDc2ODAwMH0.placeholder'
-    };
-  }
-
-  try {
-    return {
-      url: decryptApiKey(encryptedUrl),
-      serviceKey: decryptApiKey(encryptedServiceKey)
-    };
-  } catch (error) {
-    // Decryption may fail during build with invalid keys
-    console.warn('Failed to decrypt Supabase credentials during build - using placeholders');
-    return {
-      url: 'https://placeholder.supabase.co',
-      serviceKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTIwMDAsImV4cCI6MTk2MDc2ODAwMH0.placeholder'
-    };
-  }
-}
-
-const { url: supabaseUrl, serviceKey: supabaseServiceKey } = getSupabaseCredentials();
-
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+// Re-export supabase for backward compatibility
+export { supabase };
 
 /**
  * Upload file to Supabase Storage
