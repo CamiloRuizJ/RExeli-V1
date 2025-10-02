@@ -89,11 +89,6 @@ export default function Navbar() {
                 <span className="text-xs">Operational</span>
               </div>
 
-              {/* Version Badge */}
-              <div className="hidden sm:block bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
-                Beta v1.0
-              </div>
-
               {/* Auth Actions - Desktop */}
               <div className="hidden md:flex items-center space-x-3">
                 {session ? (
