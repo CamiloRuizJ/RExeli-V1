@@ -29,10 +29,19 @@ function getSupabaseCredentials() {
     };
   }
 
-  return {
-    url: decryptApiKey(encryptedUrl),
-    serviceKey: decryptApiKey(encryptedServiceKey)
-  };
+  try {
+    return {
+      url: decryptApiKey(encryptedUrl),
+      serviceKey: decryptApiKey(encryptedServiceKey)
+    };
+  } catch (error) {
+    // Decryption may fail during build with invalid keys
+    console.warn('Failed to decrypt Supabase credentials during build - using placeholders');
+    return {
+      url: 'https://placeholder.supabase.co',
+      serviceKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTIwMDAsImV4cCI6MTk2MDc2ODAwMH0.placeholder'
+    };
+  }
 }
 
 const { url: supabaseUrl, serviceKey: supabaseServiceKey } = getSupabaseCredentials();
