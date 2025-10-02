@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import BatchUpload from './BatchUpload';
-import DocumentList from './DocumentList';
-import MetricsDashboard from './MetricsDashboard';
+import { BatchUpload } from './BatchUpload';
+import { DocumentList } from './DocumentList';
+import { MetricsDashboard } from './MetricsDashboard';
 import { Upload, FileText, BarChart3 } from 'lucide-react';
 
 export default function TrainingDashboard() {
