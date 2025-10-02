@@ -15,6 +15,11 @@ export default async function AdminPage() {
     redirect('/auth/signin?callbackUrl=/admin');
   }
 
+  // Require admin role
+  if (session.user.role !== 'admin') {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">

@@ -7,17 +7,24 @@ import Link from 'next/link';
 import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 
-const navigationItems = [
-  { name: 'Home', href: '/' },
-  { name: 'Document Tool', href: '/tool' },
-  { name: 'Admin Dashboard', href: '/admin', requiresAuth: true },
-];
-
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  // Dynamic navigation based on user role
+  const navigationItems = [
+    { name: 'Home', href: '/' },
+    { name: 'Document Tool', href: '/tool', requiresAuth: true },
+    // Show appropriate dashboard based on role
+    ...(session?.user.role === 'admin'
+      ? [{ name: 'Admin Dashboard', href: '/admin', requiresAuth: true }]
+      : session
+        ? [{ name: 'My Dashboard', href: '/dashboard', requiresAuth: true }]
+        : []
+    ),
+  ];
 
   const isActive = (href: string) => {
     if (href === '/') {
