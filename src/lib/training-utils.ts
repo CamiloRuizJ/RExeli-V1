@@ -14,12 +14,14 @@ import type {
   DatasetSplit
 } from './types';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Initialize Supabase client with build-time safety
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'build-time-placeholder-key';
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn('Supabase credentials not configured for training system');
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+    console.warn('Supabase credentials not configured for training system - runtime operations may fail');
+  }
 }
 
 export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
