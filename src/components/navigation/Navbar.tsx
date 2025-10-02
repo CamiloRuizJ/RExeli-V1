@@ -10,8 +10,7 @@ import MobileMenu from './MobileMenu';
 const navigationItems = [
   { name: 'Home', href: '/' },
   { name: 'Document Tool', href: '/tool' },
-  { name: 'Training System', href: '/admin/training', requiresAuth: true },
-  { name: 'Metrics', href: '/admin/training/metrics', requiresAuth: true },
+  { name: 'Admin Dashboard', href: '/admin', requiresAuth: true },
 ];
 
 export default function Navbar() {
@@ -88,49 +87,66 @@ export default function Navbar() {
                 Beta v1.0
               </div>
 
-              {/* User Menu - Desktop */}
-              {session && (
-                <div className="hidden md:block relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                    aria-label="User menu"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 transition-transform ${
-                        userMenuOpen ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </button>
-
-                  {userMenuOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setUserMenuOpen(false)}
-                      />
-                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
-                        <div className="px-4 py-2 border-b border-gray-100">
-                          <p className="text-xs text-gray-500">Signed in as</p>
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {session.user?.email}
-                          </p>
-                        </div>
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          <span>Sign Out</span>
-                        </button>
+              {/* Auth Actions - Desktop */}
+              <div className="hidden md:flex items-center space-x-3">
+                {session ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen(!userMenuOpen)}
+                      className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      aria-label="User menu"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-white" />
                       </div>
-                    </>
-                  )}
-                </div>
-              )}
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          userMenuOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+
+                    {userMenuOpen && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-40"
+                          onClick={() => setUserMenuOpen(false)}
+                        />
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                          <div className="px-4 py-2 border-b border-gray-100">
+                            <p className="text-xs text-gray-500">Signed in as</p>
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {session.user?.email}
+                            </p>
+                          </div>
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <Link
+                      href="/auth/signin"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-sm transition-all"
+                    >
+                      Sign Up
+                    </Link>
+                  </>
+                )}
+              </div>
 
               {/* Mobile Menu Button */}
               <button
