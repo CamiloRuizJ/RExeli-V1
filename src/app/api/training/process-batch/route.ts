@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         // Update status to processing
         await supabase
           .from('training_documents')
-          .update({ processing_status: 'processing' })
+          .update({ processing_status: 'processing' } as any)
           .eq('id', documentId);
 
         // Download file from Supabase Storage

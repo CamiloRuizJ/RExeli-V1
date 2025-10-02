@@ -15,40 +15,50 @@ import type {
 } from './types';
 import { decryptApiKey } from './auth';
 
-// Initialize Supabase client using encrypted credentials
-function getSupabaseCredentials() {
+// Lazy-initialize Supabase client to avoid build-time errors
+let _supabase: ReturnType<typeof createClient> | null = null;
+
+function getSupabase() {
+  if (_supabase) return _supabase;
+
   const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
   const encryptedServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  // Allow build to succeed with placeholders
-  if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-    if (!encryptedUrl || !encryptedServiceKey) {
-      console.warn('ENCRYPTED_SUPABASE keys not found during build - using placeholders');
-      return {
-        url: 'https://placeholder.supabase.co',
-        serviceKey: 'build-time-placeholder-key'
-      };
-    }
-  }
-
   if (!encryptedUrl || !encryptedServiceKey) {
-    throw new Error('ENCRYPTED_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables are required');
+    console.warn('ENCRYPTED_SUPABASE keys not found - using placeholders');
+    _supabase = createClient(
+      'https://placeholder.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTIwMDAsImV4cCI6MTk2MDc2ODAwMH0.placeholder',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+    return _supabase;
   }
 
-  return {
-    url: decryptApiKey(encryptedUrl),
-    serviceKey: decryptApiKey(encryptedServiceKey)
-  };
+  const url = decryptApiKey(encryptedUrl);
+  const serviceKey = decryptApiKey(encryptedServiceKey);
+
+  _supabase = createClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+
+  return _supabase;
 }
 
-const { url: supabaseUrl, serviceKey: supabaseServiceKey } = getSupabaseCredentials();
-
-export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+// Export as getter to ensure lazy initialization
+export const supabase: ReturnType<typeof createClient> = new Proxy({} as any, {
+  get(_target, prop) {
+    const client = getSupabase();
+    return (client as any)[prop];
   }
-});
+}) as any;
 
 /**
  * Upload file to Supabase Storage
