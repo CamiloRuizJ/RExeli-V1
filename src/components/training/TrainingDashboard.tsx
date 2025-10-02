@@ -10,7 +10,7 @@ import type { DocumentType } from '@/lib/types';
 
 export default function TrainingDashboard() {
   const [activeTab, setActiveTab] = useState('upload');
-  const [documentType, setDocumentType] = useState<DocumentType>('income_statement');
+  const [documentType, setDocumentType] = useState<DocumentType>('rent_roll');
 
   return (
     <div className="w-full">
