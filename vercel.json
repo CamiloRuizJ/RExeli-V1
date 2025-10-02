@@ -12,7 +12,7 @@
     "ENCRYPTED_SUPABASE_ANON_KEY": "U2FsdGVkX1/zatTFJgBWA648UBlxHuMDIQ1s73YbtBwW4235xcrCrtQeD1zEfMUJLGwKBnrscmpPQj+c+Fx7Tit39JU8ahduJMdWHgXAqPqVMGHVh5+8JYWlIFbkVmAI+8Jm+miv7UsK7IAVLzPhXwHZIClZk8C0xvBRUt8VYm9qwC4c1A0n1Zm7V9ddSl9M1h11Vg513IRF54skmSGL0XaC+XsPD07rTNg0X1DEQ0sqU7PKFYRff4gbGl/PC6atFLlr6KwinIPVZWdoKwnrlFZ4VQnsLuJEdV0hpg455RHXYEzB3PDhCQ8K4v1O5ud2",
     "ENCRYPTION_KEY": "RExeli-2025-Secure-Key-ForAPI-Encryption-V1-Production",
     "NEXTAUTH_SECRET": "RExeli-NextAuth-Secret-Key-2025-Production-Environment-Secure",
-    "NEXTAUTH_URL": "https://rexeli-v1.vercel.app"
+    "NEXTAUTH_URL": "https://rexeli.com"
   },
   "headers": [
     {
@@ -45,7 +45,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://rexeli-v1.vercel.app"
+          "value": "https://rexeli.com"
         },
         {
           "key": "Access-Control-Allow-Methods",

@@ -323,19 +323,19 @@ vercel --prod
 
 ```bash
 # 1. Upload 50 documents for rent_roll type
-curl -X POST http://localhost:3000/api/training/batch-upload \
+curl -X POST https://rexeli.com/api/training/batch-upload \
   -F "documentType=rent_roll" \
   -F "files=@document1.pdf" \
   -F "files=@document2.pdf" \
   # ... (50 files)
 
 # 2. Process all uploaded documents
-curl -X POST http://localhost:3000/api/training/process-batch \
+curl -X POST https://rexeli.com/api/training/process-batch \
   -H "Content-Type: application/json" \
   -d '{"documentIds": ["uuid1", "uuid2", ...]}'
 
 # 3. Review and verify each extraction
-curl -X PATCH http://localhost:3000/api/training/verify/{id} \
+curl -X PATCH https://rexeli.com/api/training/verify/{id} \
   -H "Content-Type: application/json" \
   -d '{
     "verified_extraction": {...},
@@ -344,12 +344,12 @@ curl -X PATCH http://localhost:3000/api/training/verify/{id} \
   }'
 
 # 4. Auto-assign train/validation split
-curl -X POST http://localhost:3000/api/training/auto-split \
+curl -X POST https://rexeli.com/api/training/auto-split \
   -H "Content-Type: application/json" \
   -d '{"document_type": "rent_roll", "train_percentage": 80}'
 
 # 5. Export to OpenAI format
-curl -X POST http://localhost:3000/api/training/export \
+curl -X POST https://rexeli.com/api/training/export \
   -H "Content-Type: application/json" \
   -d '{"document_type": "rent_roll"}'
 

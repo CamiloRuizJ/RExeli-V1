@@ -31,7 +31,7 @@ U2FsdGVkX1/zatTFJgBWA648UBlxHuMDIQ1s73YbtBwW4235xcrCrtQeD1zEfMUJLGwKBnrscmpPQj+c
 
 NEXTAUTH_SECRET=705da43ea52979df9d520c3ad6ef79db63e3990558b0b814db2509fd64199aa5
 
-NEXTAUTH_URL=https://your-project-name.vercel.app
+NEXTAUTH_URL=https://rexeli.com
 
 ENCRYPTION_KEY=RExeli-2025-Secure-Key-ForAPI-Encryption-V1-Production
 ```
@@ -62,7 +62,7 @@ ENCRYPTED_SUPABASE_ANON_KEY=U2FsdGVkX1/zatTFJgBWA648UBlxHuMDIQ1s73YbtBwW4235xcrC
 
 NEXTAUTH_SECRET=705da43ea52979df9d520c3ad6ef79db63e3990558b0b814db2509fd64199aa5
 
-NEXTAUTH_URL=https://your-project-name.vercel.app
+NEXTAUTH_URL=https://rexeli.com
 
 ENCRYPTION_KEY=RExeli-2025-Secure-Key-ForAPI-Encryption-V1-Production
 ```
@@ -122,7 +122,7 @@ Once deployed:
 ## 🎯 Admin Access
 
 **Production Login:**
-- **URL:** `https://your-domain.vercel.app/auth/signin`
+- **URL:** `https://rexeli.com/auth/signin`
 - **Email:** `admin@rexeli.com`
 - **Password:** `RExeli2025!Admin`
 

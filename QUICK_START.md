@@ -10,7 +10,9 @@ npm run dev
 
 ### 2. Open Your Browser
 
-Navigate to: **http://localhost:3000/admin/training**
+Production: **https://rexeli.com/admin/training**
+
+Local development: **http://localhost:3000/admin/training**
 
 ### 3. Upload Documents
 
@@ -98,4 +100,6 @@ See the complete documentation:
 
 **Start uploading now!** Your first batch of 50 documents awaits.
 
-Navigate to: **http://localhost:3000/admin/training**
+Production: **https://rexeli.com/admin/training**
+
+Local development: **http://localhost:3000/admin/training**

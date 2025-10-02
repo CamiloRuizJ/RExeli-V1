@@ -28,7 +28,8 @@
       "mcp__browser-mcp__browser_press_key",
       "Bash(npx vercel:*)",
       "Bash(cp:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(timeout 180 npm run build)"
     ],
     "deny": [],
     "ask": []

@@ -8,7 +8,9 @@ The Training Data Management System is a complete, production-ready interface fo
 
 ### Access the Training Dashboard
 
-Navigate to: `http://localhost:3000/admin/training`
+Navigate to: `https://rexeli.com/admin/training`
+
+For local development: `http://localhost:3000/admin/training`
 
 ## System Architecture
 
