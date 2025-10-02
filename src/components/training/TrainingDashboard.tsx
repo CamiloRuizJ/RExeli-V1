@@ -6,9 +6,11 @@ import { BatchUpload } from './BatchUpload';
 import { DocumentList } from './DocumentList';
 import { MetricsDashboard } from './MetricsDashboard';
 import { Upload, FileText, BarChart3 } from 'lucide-react';
+import type { DocumentType } from '@/lib/types';
 
 export default function TrainingDashboard() {
   const [activeTab, setActiveTab] = useState('upload');
+  const [documentType, setDocumentType] = useState<DocumentType>('income_statement');
 
   return (
     <div className="w-full">
@@ -36,7 +38,7 @@ export default function TrainingDashboard() {
             <p className="text-gray-600 mb-6">
               Upload documents to train and improve the AI extraction models. Select a document type and upload multiple files at once.
             </p>
-            <BatchUpload />
+            <BatchUpload documentType={documentType} />
           </div>
         </TabsContent>
 
