@@ -13,16 +13,35 @@ import type {
   VerificationStatus,
   DatasetSplit
 } from './types';
+import { decrypt } from './encryption';
 
-// Initialize Supabase client with build-time safety
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'build-time-placeholder-key';
+// Initialize Supabase client using encrypted credentials
+function getSupabaseCredentials() {
+  const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
+  const encryptedServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  if (process.env.NODE_ENV === 'production' && process.env.VERCEL) {
-    console.warn('Supabase credentials not configured for training system - runtime operations may fail');
+  // Allow build to succeed with placeholders
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    if (!encryptedUrl || !encryptedServiceKey) {
+      console.warn('ENCRYPTED_SUPABASE keys not found during build - using placeholders');
+      return {
+        url: 'https://placeholder.supabase.co',
+        serviceKey: 'build-time-placeholder-key'
+      };
+    }
   }
+
+  if (!encryptedUrl || !encryptedServiceKey) {
+    throw new Error('ENCRYPTED_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables are required');
+  }
+
+  return {
+    url: decrypt(encryptedUrl),
+    serviceKey: decrypt(encryptedServiceKey)
+  };
 }
+
+const { url: supabaseUrl, serviceKey: supabaseServiceKey } = getSupabaseCredentials();
 
 export const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
