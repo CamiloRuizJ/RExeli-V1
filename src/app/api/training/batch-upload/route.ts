@@ -11,9 +11,9 @@ import {
   isValidDocumentType
 } from '@/lib/training-utils';
 
-// Route segment config for larger payloads and longer execution
+// Route segment config for admin training uploads - no size limits, extended timeout
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 300; // 5 minutes for large batch uploads
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,17 +51,13 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`Processing file: ${file.name} (${file.size} bytes)`);
 
-        // Validate file type
+        // Validate file type (admin-only route, no size limits)
         const validTypes = ['application/pdf', 'image/png', 'image/jpeg'];
         if (!validTypes.includes(file.type)) {
           throw new Error(`Invalid file type: ${file.type}. Only PDF, PNG, and JPEG are supported.`);
         }
 
-        // Validate file size (50MB max)
-        const maxSize = 50 * 1024 * 1024; // 50MB
-        if (file.size > maxSize) {
-          throw new Error(`File size exceeds 50MB limit`);
-        }
+        // No file size validation for admin batch uploads
 
         // Generate document ID
         const documentId = crypto.randomUUID();
