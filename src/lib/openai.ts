@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { decryptApiKey } from './auth';
+import { convertPdfToPngServer } from './pdf-utils-server';
 import type {
   DocumentType,
   DocumentClassification,
@@ -2112,10 +2113,17 @@ export async function classifyDocument(file: File): Promise<DocumentClassificati
 
     // Handle different file types
     if (file.type === 'application/pdf') {
-      // For server-side batch processing, OpenAI Vision API can handle PDFs directly via base64
-      console.log('OpenAI: Classifying PDF file directly via base64 encoding');
-      imageBase64 = await fileToBase64(file);
-      mimeType = 'application/pdf';
+      // Convert PDF to PNG on server side since OpenAI Vision API only accepts image MIME types
+      console.log('OpenAI: Converting PDF to PNG for Vision API compatibility...');
+      try {
+        const converted = await convertPdfToPngServer(file);
+        imageBase64 = converted.imageBase64;
+        mimeType = converted.mimeType; // 'image/png'
+        console.log(`OpenAI: PDF converted to PNG successfully (${Math.round(imageBase64.length / 1024)}KB)`);
+      } catch (conversionError) {
+        console.error('OpenAI: PDF conversion failed:', conversionError);
+        throw new Error(`Failed to convert PDF for classification: ${conversionError instanceof Error ? conversionError.message : 'Unknown error'}`);
+      }
     } else {
       // Handle image files directly
       imageBase64 = await fileToBase64(file);
@@ -2227,10 +2235,17 @@ export async function extractDocumentData(
     let mimeType: string;
 
     if (file.type === 'application/pdf') {
-      // For server-side batch processing, OpenAI Vision API can handle PDFs directly via base64
-      console.log('OpenAI: Processing PDF file directly via base64 encoding');
-      imageBase64 = await fileToBase64(file);
-      mimeType = 'application/pdf';
+      // Convert PDF to PNG on server side since OpenAI Vision API only accepts image MIME types
+      console.log('OpenAI: Converting PDF to PNG for Vision API compatibility...');
+      try {
+        const converted = await convertPdfToPngServer(file);
+        imageBase64 = converted.imageBase64;
+        mimeType = converted.mimeType; // 'image/png'
+        console.log(`OpenAI: PDF converted to PNG successfully (${Math.round(imageBase64.length / 1024)}KB)`);
+      } catch (conversionError) {
+        console.error('OpenAI: PDF conversion failed:', conversionError);
+        throw new Error(`Failed to convert PDF for processing: ${conversionError instanceof Error ? conversionError.message : 'Unknown error'}`);
+      }
     } else {
       imageBase64 = await fileToBase64(file);
       mimeType = file.type;
