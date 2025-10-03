@@ -2100,20 +2100,22 @@ Return JSON with this structure:
 export async function classifyDocument(file: File): Promise<DocumentClassification> {
   try {
     console.log('OpenAI: Starting document classification...');
-    
+
     // Check API key availability
     const apiKey = getOpenAIApiKey();
     if (!apiKey) {
       throw new Error('OpenAI API key not configured');
     }
-    
+
     let imageBase64: string;
     let mimeType: string;
-    
+
     // Handle different file types
     if (file.type === 'application/pdf') {
-      // For PDFs, we need to return an error since server-side PDF processing is complex
-      throw new Error('PDF processing on server not supported. Please convert PDF to image on client side first.');
+      // For server-side batch processing, OpenAI Vision API can handle PDFs directly via base64
+      console.log('OpenAI: Classifying PDF file directly via base64 encoding');
+      imageBase64 = await fileToBase64(file);
+      mimeType = 'application/pdf';
     } else {
       // Handle image files directly
       imageBase64 = await fileToBase64(file);
@@ -2207,12 +2209,12 @@ export async function classifyDocument(file: File): Promise<DocumentClassificati
  * Extract structured data from a classified document
  */
 export async function extractDocumentData(
-  file: File, 
+  file: File,
   documentType: DocumentType
 ): Promise<ExtractedData> {
   try {
     console.log(`OpenAI: Starting data extraction for ${documentType}...`);
-    
+
     const prompt = EXTRACTION_PROMPTS[documentType as keyof typeof EXTRACTION_PROMPTS];
     if (!prompt) {
       throw new Error(`No extraction prompt available for document type: ${documentType}`);
@@ -2220,13 +2222,15 @@ export async function extractDocumentData(
 
     console.log(`OpenAI: Using extraction prompt for ${documentType}`);
 
-    // Handle file conversion (should be image at this point)
+    // Handle file conversion
     let imageBase64: string;
     let mimeType: string;
-    
+
     if (file.type === 'application/pdf') {
-      // PDFs should have been converted to images on client side
-      throw new Error('PDF processing on server not supported. PDF should have been converted to image on client side.');
+      // For server-side batch processing, OpenAI Vision API can handle PDFs directly via base64
+      console.log('OpenAI: Processing PDF file directly via base64 encoding');
+      imageBase64 = await fileToBase64(file);
+      mimeType = 'application/pdf';
     } else {
       imageBase64 = await fileToBase64(file);
       mimeType = file.type;
