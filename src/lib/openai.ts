@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
 import { decryptApiKey } from './auth';
-import { convertPdfToPngServer } from './pdf-utils-server';
 import type {
   DocumentType,
   DocumentClassification,
@@ -2108,30 +2107,17 @@ export async function classifyDocument(file: File): Promise<DocumentClassificati
       throw new Error('OpenAI API key not configured');
     }
 
-    let imageBase64: string;
-    let mimeType: string;
-
-    // Handle different file types
+    // PDFs should have been converted to images on client side before reaching this point
     if (file.type === 'application/pdf') {
-      // Convert PDF to PNG on server side since OpenAI Vision API only accepts image MIME types
-      console.log('OpenAI: Converting PDF to PNG for Vision API compatibility...');
-      try {
-        const converted = await convertPdfToPngServer(file);
-        imageBase64 = converted.imageBase64;
-        mimeType = converted.mimeType; // 'image/png'
-        console.log(`OpenAI: PDF converted to PNG successfully (${Math.round(imageBase64.length / 1024)}KB)`);
-      } catch (conversionError) {
-        console.error('OpenAI: PDF conversion failed:', conversionError);
-        throw new Error(`Failed to convert PDF for classification: ${conversionError instanceof Error ? conversionError.message : 'Unknown error'}`);
-      }
-    } else {
-      // Handle image files directly
-      imageBase64 = await fileToBase64(file);
-      mimeType = file.type;
-      if (file.type === 'image/png') mimeType = 'image/png';
-      else if (file.type === 'image/gif') mimeType = 'image/gif';
-      else mimeType = 'image/jpeg';
+      throw new Error('PDF processing on server not supported. PDF should have been converted to image on client side.');
     }
+
+    // Handle image files directly
+    const imageBase64 = await fileToBase64(file);
+    let mimeType = file.type;
+    if (file.type === 'image/png') mimeType = 'image/png';
+    else if (file.type === 'image/gif') mimeType = 'image/gif';
+    else mimeType = 'image/jpeg';
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini", // Cost-effective model as specified
@@ -2230,29 +2216,17 @@ export async function extractDocumentData(
 
     console.log(`OpenAI: Using extraction prompt for ${documentType}`);
 
-    // Handle file conversion
-    let imageBase64: string;
-    let mimeType: string;
-
+    // PDFs should have been converted to images on client side before reaching this point
     if (file.type === 'application/pdf') {
-      // Convert PDF to PNG on server side since OpenAI Vision API only accepts image MIME types
-      console.log('OpenAI: Converting PDF to PNG for Vision API compatibility...');
-      try {
-        const converted = await convertPdfToPngServer(file);
-        imageBase64 = converted.imageBase64;
-        mimeType = converted.mimeType; // 'image/png'
-        console.log(`OpenAI: PDF converted to PNG successfully (${Math.round(imageBase64.length / 1024)}KB)`);
-      } catch (conversionError) {
-        console.error('OpenAI: PDF conversion failed:', conversionError);
-        throw new Error(`Failed to convert PDF for processing: ${conversionError instanceof Error ? conversionError.message : 'Unknown error'}`);
-      }
-    } else {
-      imageBase64 = await fileToBase64(file);
-      mimeType = file.type;
-      if (file.type === 'image/png') mimeType = 'image/png';
-      else if (file.type === 'image/gif') mimeType = 'image/gif';
-      else mimeType = 'image/jpeg';
+      throw new Error('PDF processing on server not supported. PDF should have been converted to image on client side.');
     }
+
+    // Handle image files directly
+    const imageBase64 = await fileToBase64(file);
+    let mimeType = file.type;
+    if (file.type === 'image/png') mimeType = 'image/png';
+    else if (file.type === 'image/gif') mimeType = 'image/gif';
+    else mimeType = 'image/jpeg';
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",

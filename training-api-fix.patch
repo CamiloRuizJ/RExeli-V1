@@ -1,0 +1,59 @@
+--- a/src/lib/training-api.ts
++++ b/src/lib/training-api.ts
+@@ -55,13 +55,35 @@ export async function uploadBatchDocuments(
+         throw new Error(`Invalid file type: ${file.type}. Only PDF, PNG, and JPEG are supported.`);
+       }
+
+-      // Step 1: Upload file directly from browser to Supabase Storage
++      // Step 1: Convert PDF to PNG in browser (same architecture as tool)
++      let fileToUpload = file;
++
++      if (file.type === 'application/pdf') {
++        console.log(`[Training API] Converting PDF to PNG in browser: ${file.name}`);
++        try {
++          const { convertPdfToImage } = await import('@/lib/pdf-utils');
++          const { imageBase64, mimeType } = await convertPdfToImage(file, 1);
++          const response = await fetch(`data:${mimeType};base64,${imageBase64}`);
++          const blob = await response.blob();
++          const originalName = file.name.replace(/\.pdf$/i, '');
++          fileToUpload = new File([blob], `${originalName}_page1.png`, { type: mimeType });
++          console.log(`[Training API] PDF converted: ${(blob.size / 1024).toFixed(1)}KB`);
++        } catch (pdfError) {
++          console.error('[Training API] PDF conversion failed:', pdfError);
++          throw new Error(`PDF conversion failed: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`);
++        }
++      }
++
++      // Step 2: Upload file (now PNG if was PDF) directly to Supabase Storage
+       // This bypasses Vercel completely, avoiding the 4.5MB limit
+-      console.log(`[Training API] Uploading ${file.name} directly to Supabase...`);
++      console.log(`[Training API] Uploading ${fileToUpload.name} directly to Supabase...`);
+
+-      const uploadResult = await uploadFileDirectly(file, 'documents');
++      const uploadResult = await uploadFileDirectly(fileToUpload, 'documents');
+       uploadedFilePath = uploadResult.path;
+
+@@ -71,7 +93,7 @@ export async function uploadBatchDocuments(
+         filename: uploadResult.filename
+       });
+
+-      // Step 2: Create training document record via /api/training/create-record
++      // Step 3: Create training document record via /api/training/create-record
+       // Only metadata goes through Vercel (small JSON payload)
+       console.log(`[Training API] Creating database record for ${file.name}...`);
+
+@@ -79,9 +101,9 @@ export async function uploadBatchDocuments(
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+           file_path: uploadResult.path,
+-          file_name: file.name,
++          file_name: fileToUpload.name,
+           file_url: uploadResult.url,
+-          file_size: file.size,
+-          file_type: file.type,
++          file_size: fileToUpload.size,
++          file_type: fileToUpload.type,
+           document_type: documentType,
+         }),
+       });
