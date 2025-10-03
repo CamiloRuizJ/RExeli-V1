@@ -76,32 +76,88 @@ export function BatchUpload({
       const filesToUpload = files.map(f => f.file);
       const uploadResult = await uploadBatchDocuments(filesToUpload, documentType);
 
-      // Update progress
-      setFiles(prev =>
-        prev.map((f, i) => ({
-          ...f,
-          status: 'processing' as const,
-          progress: 60,
-          documentId: uploadResult.documentIds[i],
-        }))
-      );
+      // Check if any uploads succeeded
+      if (uploadResult.documentIds.length === 0) {
+        // All uploads failed - get the first error message or use a generic message
+        const errorMessage = uploadResult.errors?.[0]?.error || 'All uploads failed';
+        throw new Error(errorMessage);
+      }
 
-      // Process documents
+      // Handle partial failures - update file statuses based on upload results
+      if (uploadResult.errors && uploadResult.errors.length > 0) {
+        // Map errors by filename for quick lookup
+        const errorMap = new Map(
+          uploadResult.errors.map(err => [err.filename, err.error])
+        );
+
+        setFiles(prev =>
+          prev.map((f) => {
+            const error = errorMap.get(f.file.name);
+            if (error) {
+              // This file failed
+              return {
+                ...f,
+                status: 'error' as const,
+                error: error,
+                progress: 0,
+              };
+            } else {
+              // This file succeeded - update to processing status
+              return {
+                ...f,
+                status: 'processing' as const,
+                progress: 60,
+              };
+            }
+          })
+        );
+      } else {
+        // All uploads succeeded - update all to processing
+        setFiles(prev =>
+          prev.map(f => ({
+            ...f,
+            status: 'processing' as const,
+            progress: 60,
+          }))
+        );
+      }
+
+      // Process only the successfully uploaded documents
       await processBatchDocuments(uploadResult.documentIds);
 
-      // Mark as completed
-      setFiles(prev =>
-        prev.map(f => ({
-          ...f,
-          status: 'completed' as const,
-          progress: 100,
-        }))
+      // Mark successfully processed files as completed
+      const successfulFileNames = new Set(
+        files.map((f, i) => {
+          const errorMap = new Map(
+            uploadResult.errors?.map(err => [err.filename, true]) || []
+          );
+          return !errorMap.has(f.file.name) ? f.file.name : null;
+        }).filter(Boolean)
       );
 
-      toast.success(`Successfully uploaded ${uploadResult.uploaded} files`);
+      setFiles(prev =>
+        prev.map(f => {
+          if (f.status === 'error') {
+            return f; // Keep error status
+          }
+          return {
+            ...f,
+            status: 'completed' as const,
+            progress: 100,
+          };
+        })
+      );
 
-      // Notify parent
-      if (onUploadComplete) {
+      // Show appropriate success message
+      if (uploadResult.failed > 0) {
+        toast.success(`Successfully uploaded ${uploadResult.uploaded} of ${uploadResult.uploaded + uploadResult.failed} files`);
+        toast.error(`${uploadResult.failed} file(s) failed to upload`);
+      } else {
+        toast.success(`Successfully uploaded ${uploadResult.uploaded} files`);
+      }
+
+      // Notify parent only with successful document IDs
+      if (onUploadComplete && uploadResult.documentIds.length > 0) {
         onUploadComplete(uploadResult.documentIds);
       }
 
