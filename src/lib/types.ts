@@ -562,6 +562,7 @@ export interface ProcessBatchResponse {
 export interface VerifyDocumentRequest {
   verified_extraction: ExtractedData;
   verification_notes?: string;
+  feedback_categories?: string[]; // Structured feedback categories
   quality_score: number; // 0-1
   verified_by?: string;
 }

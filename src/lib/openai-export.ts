@@ -118,17 +118,30 @@ async function fileToBase64DataUrl(fileUrl: string): Promise<string> {
 
 /**
  * Create OpenAI training example from training document
+ * Enhanced with verification notes and learnings
  */
 export async function createTrainingExample(
-  document: TrainingDocument
+  document: TrainingDocument,
+  includeEnhancements: boolean = true
 ): Promise<OpenAITrainingExample> {
   console.log(`Creating training example for document: ${document.id}`);
 
-  // Get system prompt for document type
-  const systemPrompt = SYSTEM_PROMPTS[document.document_type] || SYSTEM_PROMPTS.rent_roll;
+  // Get base system prompt for document type
+  let systemPrompt = SYSTEM_PROMPTS[document.document_type] || SYSTEM_PROMPTS.rent_roll;
+
+  // Enhance prompt with learnings if enabled
+  if (includeEnhancements) {
+    const { buildEnhancedSystemPrompt } = await import('./feedback-analysis');
+    systemPrompt = await buildEnhancedSystemPrompt(document.document_type, systemPrompt);
+  }
 
   // Get extraction instruction
-  const userInstruction = EXTRACTION_INSTRUCTIONS[document.document_type] || EXTRACTION_INSTRUCTIONS.rent_roll;
+  let userInstruction = EXTRACTION_INSTRUCTIONS[document.document_type] || EXTRACTION_INSTRUCTIONS.rent_roll;
+
+  // Add verification notes as additional context if available
+  if (document.verification_notes && includeEnhancements) {
+    userInstruction += `\n\n**VERIFICATION NOTES FROM PREVIOUS REVIEW:**\n${document.verification_notes}`;
+  }
 
   // Convert file to base64
   const base64Image = await fileToBase64DataUrl(document.file_url);

@@ -22,7 +22,7 @@ export async function PATCH(
     console.log(`Verifying training document: ${id}`);
 
     const body: VerifyDocumentRequest = await request.json();
-    const { verified_extraction, verification_notes, quality_score, verified_by } = body;
+    const { verified_extraction, verification_notes, feedback_categories, quality_score, verified_by } = body;
 
     // Validate required fields
     if (!verified_extraction) {
@@ -62,10 +62,18 @@ export async function PATCH(
       quality_score
     });
 
-    // Create verification edit record
+    // Analyze feedback and create verification edit record
     const changesSummary = currentDocument.raw_extraction
       ? generateChangesSummary(currentDocument.raw_extraction, verified_extraction)
       : 'Initial verification';
+
+    // Parse verification notes for structured feedback
+    let parsedFeedback;
+    if (verification_notes) {
+      const { parseVerificationNotes } = await import('@/lib/feedback-analysis');
+      parsedFeedback = parseVerificationNotes(verification_notes);
+      console.log(`Parsed feedback categories:`, parsedFeedback.categories);
+    }
 
     await createVerificationEdit({
       training_document_id: id,
@@ -75,6 +83,34 @@ export async function PATCH(
       changes_made: changesSummary,
       verification_action: 'verify'
     });
+
+    // Store learning insights after verification
+    if (currentDocument.raw_extraction && verified_extraction) {
+      const { analyzeExtractionDifferences, storeLearningInsights, aggregateDocumentTypeLearnings } = await import('@/lib/feedback-analysis');
+
+      const { errorPatterns } = analyzeExtractionDifferences(
+        currentDocument.raw_extraction,
+        verified_extraction
+      );
+
+      if (errorPatterns.length > 0) {
+        console.log(`Identified ${errorPatterns.length} error patterns for learning`);
+
+        // Aggregate and store learnings periodically (every 5 verifications)
+        const { supabase: supabaseClient } = await import('@/lib/training-utils');
+        const { data: metrics } = await supabaseClient
+          .from('training_metrics')
+          .select('verified_documents')
+          .eq('document_type', currentDocument.document_type)
+          .single();
+
+        if (metrics && metrics.verified_documents % 5 === 0) {
+          const learnings = await aggregateDocumentTypeLearnings(currentDocument.document_type);
+          await storeLearningInsights(currentDocument.document_type, learnings);
+          console.log(`Updated learning insights for ${currentDocument.document_type}`);
+        }
+      }
+    }
 
     // Check if fine-tuning should be triggered
     let fineTuningTriggered = false;
