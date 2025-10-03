@@ -41,6 +41,30 @@ if (!process.env.ENCRYPTED_OPENAI_API_KEY && process.env.NODE_ENV === 'productio
 }
 
 /**
+ * Get the active fine-tuned model for a document type
+ * Falls back to base model if no fine-tuned model is active
+ */
+async function getActiveModelForDocumentType(documentType: DocumentType): Promise<string> {
+  try {
+    // Dynamic import to avoid circular dependencies
+    const { getActiveModel } = await import('./fine-tuning');
+    const activeModel = await getActiveModel(documentType);
+
+    if (activeModel && activeModel.model_id) {
+      console.log(`Using fine-tuned model for ${documentType}: ${activeModel.model_id} (v${activeModel.version_number})`);
+      return activeModel.model_id;
+    }
+  } catch (error) {
+    console.log(`Failed to fetch active model for ${documentType}, using base model:`, error);
+  }
+
+  // Fallback to base model
+  const baseModel = 'gpt-4o-mini-2024-07-18';
+  console.log(`Using base model for ${documentType}: ${baseModel}`);
+  return baseModel;
+}
+
+/**
  * Helper function to attempt fixing truncated JSON responses
  */
 function attemptJSONFix(malformedJson: string): string | null {
@@ -2227,9 +2251,12 @@ export async function extractDocumentData(
     if (file.type === 'image/png') mimeType = 'image/png';
     else if (file.type === 'image/gif') mimeType = 'image/gif';
     else mimeType = 'image/jpeg';
-    
+
+    // Get the active model for this document type (base or fine-tuned)
+    const modelToUse = await getActiveModelForDocumentType(documentType);
+
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: modelToUse,
       messages: [
         {
           role: "user",

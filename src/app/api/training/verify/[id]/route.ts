@@ -76,12 +76,48 @@ export async function PATCH(
       verification_action: 'verify'
     });
 
+    // Check if fine-tuning should be triggered
+    let fineTuningTriggered = false;
+    let fineTuningMessage = '';
+
+    try {
+      // Import fine-tuning utilities
+      const { checkFineTuningTrigger, startFineTuningJob } = await import('@/lib/fine-tuning');
+
+      // Check if we should trigger fine-tuning
+      const triggerCheck = await checkFineTuningTrigger(updatedDocument.document_type);
+
+      if (triggerCheck.should_trigger) {
+        console.log(`Auto-triggering fine-tuning: ${triggerCheck.reason}`);
+
+        // Start fine-tuning job
+        const job = await startFineTuningJob({
+          document_type: updatedDocument.document_type,
+          triggered_by: 'auto',
+          notes: `Auto-triggered at ${triggerCheck.current_count} verified documents`
+        });
+
+        fineTuningTriggered = true;
+        fineTuningMessage = `Fine-tuning job started automatically (Job ID: ${job.id})`;
+
+        console.log(`Fine-tuning auto-triggered: ${job.id}`);
+      } else {
+        console.log(`Fine-tuning not triggered: ${triggerCheck.reason}`);
+      }
+    } catch (fineTuningError) {
+      console.error('Fine-tuning trigger error:', fineTuningError);
+      // Don't fail verification if fine-tuning fails
+      fineTuningMessage = 'Note: Auto fine-tuning check failed but verification succeeded';
+    }
+
     const response: ApiResponse<VerifyDocumentResponse> = {
       success: true,
       data: {
         success: true,
         document: updatedDocument,
-        message: 'Document verified successfully'
+        message: fineTuningTriggered
+          ? `Document verified successfully. ${fineTuningMessage}`
+          : 'Document verified successfully'
       },
       message: 'Document verified and ready for training'
     };

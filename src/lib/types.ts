@@ -640,3 +640,182 @@ export interface AutoSplitResponse {
   }>;
   message: string;
 }
+
+// =====================================================
+// Fine-Tuning & Model Management Types
+// =====================================================
+
+export type FineTuningStatus = 'pending' | 'uploading' | 'running' | 'succeeded' | 'failed' | 'cancelled';
+export type ModelType = 'base' | 'fine_tuned';
+export type DeploymentStatus = 'inactive' | 'testing' | 'active' | 'archived';
+
+export interface FineTuningJob {
+  id: string;
+  document_type: DocumentType;
+
+  // OpenAI job information
+  openai_job_id?: string;
+  openai_file_id?: string;
+  openai_validation_file_id?: string;
+
+  // Job status
+  status: FineTuningStatus;
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+  failed_at?: string;
+
+  // Training configuration
+  base_model: string;
+  hyperparameters?: {
+    n_epochs?: number;
+    batch_size?: number;
+    learning_rate_multiplier?: number;
+  };
+
+  // Training data
+  training_examples_count?: number;
+  validation_examples_count?: number;
+  training_file_url?: string;
+  validation_file_url?: string;
+
+  // Results
+  fine_tuned_model_id?: string;
+  trained_tokens?: number;
+
+  // Metrics
+  training_loss?: number;
+  training_accuracy?: number;
+  validation_loss?: number;
+  validation_accuracy?: number;
+  metrics?: Record<string, any>;
+
+  // Error handling
+  error_message?: string;
+  error_code?: string;
+  retry_count: number;
+
+  // Trigger information
+  triggered_by: string;
+  triggered_at_count?: number;
+
+  // Audit
+  created_by?: string;
+  notes?: string;
+}
+
+export interface ModelVersion {
+  id: string;
+  document_type: DocumentType;
+  model_id: string;
+  version_number: number;
+
+  // Model type
+  model_type: ModelType;
+  fine_tuning_job_id?: string;
+
+  // Deployment
+  deployment_status: DeploymentStatus;
+  deployed_at?: string;
+  archived_at?: string;
+
+  // Performance tracking
+  total_requests: number;
+  successful_extractions: number;
+  failed_extractions: number;
+  average_confidence?: number;
+  user_satisfaction_score?: number;
+
+  // A/B testing
+  traffic_percentage: number;
+
+  // Metrics
+  performance_metrics?: Record<string, any>;
+
+  // Audit
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  notes?: string;
+}
+
+export interface TrainingTrigger {
+  id: string;
+  document_type: DocumentType;
+
+  // Trigger configuration
+  trigger_interval: number;
+  last_trigger_count: number;
+  next_trigger_at: number;
+
+  // Auto-trigger settings
+  auto_trigger_enabled: boolean;
+  min_documents_required: number;
+
+  // Last trigger information
+  last_triggered_at?: string;
+  last_job_id?: string;
+  total_triggers: number;
+
+  // Audit
+  created_at: string;
+  updated_at: string;
+}
+
+// API Request/Response Types for Fine-Tuning
+
+export interface StartFineTuningRequest {
+  document_type: DocumentType;
+  hyperparameters?: {
+    n_epochs?: number;
+    batch_size?: number;
+    learning_rate_multiplier?: number;
+  };
+  triggered_by?: string;
+  notes?: string;
+}
+
+export interface StartFineTuningResponse {
+  success: boolean;
+  job: FineTuningJob;
+  message: string;
+}
+
+export interface FineTuningStatusResponse {
+  success: boolean;
+  job: FineTuningJob;
+  progress?: {
+    current_step?: string;
+    percentage?: number;
+    estimated_completion?: string;
+  };
+}
+
+export interface DeployModelRequest {
+  deployment_status?: DeploymentStatus;
+  traffic_percentage?: number;
+  notes?: string;
+}
+
+export interface DeployModelResponse {
+  success: boolean;
+  model_version: ModelVersion;
+  message: string;
+}
+
+export interface MonitorJobsResponse {
+  success: boolean;
+  active_jobs: FineTuningJob[];
+  completed_count: number;
+  failed_count: number;
+  deployed_count: number;
+  message: string;
+}
+
+export interface TriggerCheckResult {
+  should_trigger: boolean;
+  document_type: DocumentType;
+  current_count: number;
+  trigger_threshold: number;
+  reason: string;
+}
