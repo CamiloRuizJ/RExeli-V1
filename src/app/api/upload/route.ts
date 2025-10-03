@@ -7,6 +7,8 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    const skipSizeLimit = formData.get('skipSizeLimit') === 'true'; // For admin training uploads
+    const bucket = (formData.get('bucket') as string) || 'documents'; // Default to 'documents' bucket
 
     if (!file) {
       return NextResponse.json<ApiResponse>({
@@ -30,18 +32,20 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Validate file size (25MB limit)
-    const maxSize = 25 * 1024 * 1024; // 25MB in bytes
-    if (file.size > maxSize) {
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: 'File size too large. Maximum size is 25MB.'
-      }, { status: 400 });
+    // Validate file size (25MB limit for regular uploads, no limit for admin training uploads)
+    if (!skipSizeLimit) {
+      const maxSize = 25 * 1024 * 1024; // 25MB in bytes
+      if (file.size > maxSize) {
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: 'File size too large. Maximum size is 25MB.'
+        }, { status: 400 });
+      }
     }
 
     // Upload to Supabase
-    console.log(`Upload API: Starting upload for ${file.name} (${file.size} bytes)`);
-    const uploadResult = await uploadFileToSupabase(file);
+    console.log(`Upload API: Starting upload for ${file.name} (${file.size} bytes) to bucket '${bucket}'`);
+    const uploadResult = await uploadFileToSupabase(file, bucket);
     console.log('Upload API: Upload completed successfully:', uploadResult);
 
     const response: ApiResponse<UploadResponse> = {

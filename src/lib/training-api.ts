@@ -23,29 +23,99 @@ import type {
 
 /**
  * Upload multiple documents for training
+ * Uses individual file upload pattern to avoid serverless function body size limits
  */
 export async function uploadBatchDocuments(
   files: File[],
   documentType: DocumentType
 ): Promise<BatchUploadResponse> {
-  const formData = new FormData();
+  const documentIds: string[] = [];
+  const errors: Array<{ filename: string; error: string }> = [];
+  let uploaded = 0;
+  let failed = 0;
 
-  files.forEach(file => {
-    formData.append('files', file);
-  });
-  formData.append('documentType', documentType);
+  // Validate file types upfront
+  const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
 
-  const response = await fetch('/api/training/batch-upload', {
-    method: 'POST',
-    body: formData,
-  });
+  // Process files one at a time
+  for (const file of files) {
+    try {
+      console.log(`Processing file: ${file.name} (${file.size} bytes)`);
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Upload failed');
+      // Validate file type
+      if (!validTypes.includes(file.type)) {
+        throw new Error(`Invalid file type: ${file.type}. Only PDF, PNG, and JPEG are supported.`);
+      }
+
+      // Step 1: Upload file to Supabase via /api/upload
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', file);
+      uploadFormData.append('skipSizeLimit', 'true'); // No size limit for admin training uploads
+      uploadFormData.append('bucket', 'training-documents'); // Use training-documents bucket
+
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      if (!uploadResponse.ok) {
+        const uploadError = await uploadResponse.json();
+        throw new Error(uploadError.error || 'File upload failed');
+      }
+
+      const uploadResult: ApiResponse<{ fileId: string; url: string; filename: string; size: number }> = await uploadResponse.json();
+
+      if (!uploadResult.success || !uploadResult.data) {
+        throw new Error('Upload response missing data');
+      }
+
+      // Step 2: Create training document record via /api/training/create-record
+      const createRecordResponse = await fetch('/api/training/create-record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file_path: uploadResult.data.fileId,
+          file_name: file.name,
+          file_url: uploadResult.data.url,
+          file_size: file.size,
+          file_type: file.type,
+          document_type: documentType,
+        }),
+      });
+
+      if (!createRecordResponse.ok) {
+        const recordError = await createRecordResponse.json();
+        throw new Error(recordError.error || 'Failed to create training record');
+      }
+
+      const recordResult: ApiResponse<{ document: { id: string } }> = await createRecordResponse.json();
+
+      if (!recordResult.success || !recordResult.data?.document?.id) {
+        throw new Error('Create record response missing document ID');
+      }
+
+      documentIds.push(recordResult.data.document.id);
+      uploaded++;
+      console.log(`Successfully uploaded: ${file.name} (ID: ${recordResult.data.document.id})`);
+
+    } catch (error) {
+      failed++;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Failed to upload ${file.name}:`, errorMessage);
+      errors.push({
+        filename: file.name,
+        error: errorMessage
+      });
+    }
   }
 
-  return response.json();
+  return {
+    success: uploaded > 0,
+    uploaded,
+    failed,
+    documentIds,
+    errors: errors.length > 0 ? errors : undefined
+  };
 }
 
 /**
