@@ -15,7 +15,6 @@ export default function Navbar() {
 
   // Dynamic navigation based on user role
   const navigationItems = [
-    { name: 'Home', href: '/' },
     { name: 'Document Tool', href: '/tool', requiresAuth: true },
     // Show appropriate dashboard based on role
     ...(session?.user.role === 'admin'

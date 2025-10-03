@@ -10,9 +10,9 @@ export default function LandingPage() {
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-emerald-100 to-emerald-50 px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
+      <section className="bg-gradient-to-br from-emerald-100 to-emerald-50 px-6 sm:px-8 lg:px-12 py-12 sm:py-16 lg:py-24">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          <div className="space-y-6 lg:space-y-8">
+          <div className="space-y-6 lg:space-y-8 px-2 sm:px-0">
             <div className="space-y-4 lg:space-y-6">
               <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-sm">
                 AI-Powered Document Processing
@@ -24,7 +24,7 @@ export default function LandingPage() {
                 <br />
                 Made Simple
               </h1>
-              <p className="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl">
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl">
                 Transform complex real estate documents into structured data with our AI-powered platform.
                 Extract insights from rent rolls, offering memos, and financial statements in seconds.
               </p>
@@ -156,11 +156,11 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white py-12 sm:py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
+      <section className="bg-white py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto">
           <div className="text-center space-y-4 lg:space-y-6 mb-12 lg:mb-16">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 px-4">Powerful Features for Real Estate Professionals</h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Powerful Features for Real Estate Professionals</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
               Everything you need to transform complex real estate documents into actionable insights
             </p>
           </div>
@@ -242,13 +242,13 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-emerald-600 py-12 sm:py-16 lg:py-24 px-4 sm:px-6 lg:px-8">
+      <section className="bg-emerald-600 py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto text-center">
           <div className="space-y-6 lg:space-y-8">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white px-4">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
               Ready to Transform Your Document Processing?
             </h2>
-            <p className="text-lg sm:text-xl text-emerald-100 max-w-3xl mx-auto px-4">
+            <p className="text-lg sm:text-xl text-emerald-100 max-w-3xl mx-auto">
               Join real estate professionals who are already saving hours with RExeli&apos;s AI-powered document analysis.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
