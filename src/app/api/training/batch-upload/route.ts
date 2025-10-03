@@ -11,6 +11,10 @@ import {
   isValidDocumentType
 } from '@/lib/training-utils';
 
+// Route segment config for larger payloads and longer execution
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     console.log('Batch upload request received');
