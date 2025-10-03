@@ -59,7 +59,7 @@ export async function uploadBatchDocuments(
       // This bypasses Vercel completely, avoiding the 4.5MB limit
       console.log(`[Training API] Uploading ${file.name} directly to Supabase...`);
 
-      const uploadResult = await uploadFileDirectly(file, 'training-documents');
+      const uploadResult = await uploadFileDirectly(file, 'documents');
       uploadedFilePath = uploadResult.path;
 
       console.log(`[Training API] File uploaded to Supabase:`, {
@@ -109,7 +109,7 @@ export async function uploadBatchDocuments(
       if (uploadedFilePath) {
         try {
           console.log(`[Training API] Cleaning up uploaded file: ${uploadedFilePath}`);
-          await deleteFileDirectly(uploadedFilePath, 'training-documents');
+          await deleteFileDirectly(uploadedFilePath, 'documents');
         } catch (cleanupError) {
           console.error(`[Training API] Failed to cleanup file ${uploadedFilePath}:`, cleanupError);
           // Don't fail the whole operation if cleanup fails

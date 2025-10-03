@@ -19,7 +19,7 @@ export { supabase };
 
 /**
  * Upload file to Supabase Storage
- * Path: training-documents/{document_type}/{uuid}_{filename}
+ * Path: documents/{document_type}/{uuid}_{filename}
  */
 export async function uploadTrainingFile(
   file: File,
@@ -33,7 +33,7 @@ export async function uploadTrainingFile(
   console.log(`Uploading training file: ${filePath}`);
 
   const { data, error } = await supabase.storage
-    .from('training-documents')
+    .from('documents')
     .upload(filePath, file, {
       cacheControl: '3600',
       upsert: false
@@ -46,7 +46,7 @@ export async function uploadTrainingFile(
 
   // Get public URL
   const { data: urlData } = supabase.storage
-    .from('training-documents')
+    .from('documents')
     .getPublicUrl(filePath);
 
   console.log(`Training file uploaded successfully: ${urlData.publicUrl}`);

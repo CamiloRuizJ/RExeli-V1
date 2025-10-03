@@ -73,16 +73,16 @@ async function getSupabaseClient(): Promise<SupabaseClient> {
  * Bypasses Vercel serverless functions completely
  *
  * @param file - File object from browser input
- * @param bucket - Supabase storage bucket name (default: 'training-documents')
+ * @param bucket - Supabase storage bucket name (default: 'documents')
  * @returns Object containing file path and public URL
  *
  * @example
- * const result = await uploadFileDirectly(file, 'training-documents');
+ * const result = await uploadFileDirectly(file, 'documents');
  * console.log('Uploaded to:', result.url);
  */
 export async function uploadFileDirectly(
   file: File,
-  bucket: string = 'training-documents'
+  bucket: string = 'documents'
 ): Promise<{ path: string; url: string; filename: string }> {
   try {
     console.log(`[Supabase Client] Starting direct upload to bucket '${bucket}' for file: ${file.name} (${file.size} bytes)`);
@@ -139,7 +139,7 @@ export async function uploadFileDirectly(
  */
 export async function deleteFileDirectly(
   path: string,
-  bucket: string = 'training-documents'
+  bucket: string = 'documents'
 ): Promise<void> {
   try {
     const client = await getSupabaseClient();
