@@ -20,10 +20,16 @@ import type {
   BatchUploadResponse,
   ProcessBatchResponse,
 } from './types';
+import { uploadFileDirectly, deleteFileDirectly } from './supabase-client';
 
 /**
  * Upload multiple documents for training
- * Uses individual file upload pattern to avoid serverless function body size limits
+ * Uses direct browser-to-Supabase uploads to bypass Vercel's 4.5MB limit
+ *
+ * Flow:
+ * 1. Upload file directly from browser to Supabase Storage (bypasses Vercel)
+ * 2. Send only metadata to /api/training/create-record (small JSON payload)
+ * 3. If metadata creation fails, cleanup uploaded file
  */
 export async function uploadBatchDocuments(
   files: File[],
@@ -39,44 +45,40 @@ export async function uploadBatchDocuments(
 
   // Process files one at a time
   for (const file of files) {
+    let uploadedFilePath: string | null = null;
+
     try {
-      console.log(`Processing file: ${file.name} (${file.size} bytes)`);
+      console.log(`[Training API] Processing file: ${file.name} (${file.size} bytes)`);
 
       // Validate file type
       if (!validTypes.includes(file.type)) {
         throw new Error(`Invalid file type: ${file.type}. Only PDF, PNG, and JPEG are supported.`);
       }
 
-      // Step 1: Upload file to Supabase via /api/upload
-      const uploadFormData = new FormData();
-      uploadFormData.append('file', file);
-      uploadFormData.append('skipSizeLimit', 'true'); // No size limit for admin training uploads
-      uploadFormData.append('bucket', 'training-documents'); // Use training-documents bucket
+      // Step 1: Upload file directly from browser to Supabase Storage
+      // This bypasses Vercel completely, avoiding the 4.5MB limit
+      console.log(`[Training API] Uploading ${file.name} directly to Supabase...`);
 
-      const uploadResponse = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadFormData,
+      const uploadResult = await uploadFileDirectly(file, 'training-documents');
+      uploadedFilePath = uploadResult.path;
+
+      console.log(`[Training API] File uploaded to Supabase:`, {
+        path: uploadResult.path,
+        url: uploadResult.url,
+        filename: uploadResult.filename
       });
 
-      if (!uploadResponse.ok) {
-        const uploadError = await uploadResponse.json();
-        throw new Error(uploadError.error || 'File upload failed');
-      }
-
-      const uploadResult: ApiResponse<{ fileId: string; url: string; filename: string; size: number }> = await uploadResponse.json();
-
-      if (!uploadResult.success || !uploadResult.data) {
-        throw new Error('Upload response missing data');
-      }
-
       // Step 2: Create training document record via /api/training/create-record
+      // Only metadata goes through Vercel (small JSON payload)
+      console.log(`[Training API] Creating database record for ${file.name}...`);
+
       const createRecordResponse = await fetch('/api/training/create-record', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          file_path: uploadResult.data.fileId,
+          file_path: uploadResult.path,
           file_name: file.name,
-          file_url: uploadResult.data.url,
+          file_url: uploadResult.url,
           file_size: file.size,
           file_type: file.type,
           document_type: documentType,
@@ -96,12 +98,24 @@ export async function uploadBatchDocuments(
 
       documentIds.push(recordResult.data.document.id);
       uploaded++;
-      console.log(`Successfully uploaded: ${file.name} (ID: ${recordResult.data.document.id})`);
+      console.log(`[Training API] Successfully uploaded: ${file.name} (ID: ${recordResult.data.document.id})`);
 
     } catch (error) {
       failed++;
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`Failed to upload ${file.name}:`, errorMessage);
+      console.error(`[Training API] Failed to upload ${file.name}:`, errorMessage);
+
+      // Cleanup: Delete uploaded file if record creation failed
+      if (uploadedFilePath) {
+        try {
+          console.log(`[Training API] Cleaning up uploaded file: ${uploadedFilePath}`);
+          await deleteFileDirectly(uploadedFilePath, 'training-documents');
+        } catch (cleanupError) {
+          console.error(`[Training API] Failed to cleanup file ${uploadedFilePath}:`, cleanupError);
+          // Don't fail the whole operation if cleanup fails
+        }
+      }
+
       errors.push({
         filename: file.name,
         error: errorMessage
