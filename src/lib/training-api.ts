@@ -138,18 +138,54 @@ export async function uploadBatchDocuments(
 export async function processBatchDocuments(
   documentIds: string[]
 ): Promise<ProcessBatchResponse> {
+  console.log('[CLIENT] ===== processBatchDocuments called =====');
+  console.log('[CLIENT] Input documentIds:', documentIds);
+  console.log('[CLIENT] documentIds type:', typeof documentIds);
+  console.log('[CLIENT] documentIds is array?', Array.isArray(documentIds));
+  console.log('[CLIENT] documentIds length:', documentIds?.length);
+
+  // Prepare the request body
+  const requestBody = { documentIds };
+  const requestBodyJSON = JSON.stringify(requestBody);
+
+  console.log('[CLIENT] Request body object:', requestBody);
+  console.log('[CLIENT] Request body JSON:', requestBodyJSON);
+  console.log('[CLIENT] Request body JSON length:', requestBodyJSON.length);
+
+  console.log('[CLIENT] Sending POST to /api/training/process-batch');
+
   const response = await fetch('/api/training/process-batch', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ documentIds }),
+    body: requestBodyJSON,
+  });
+
+  console.log('[CLIENT] Response status:', response.status);
+  console.log('[CLIENT] Response ok:', response.ok);
+  console.log('[CLIENT] Response headers:', {
+    contentType: response.headers.get('content-type'),
+    contentLength: response.headers.get('content-length')
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const errorText = await response.text();
+    console.error('[CLIENT] Error response text:', errorText);
+
+    let error;
+    try {
+      error = JSON.parse(errorText);
+      console.error('[CLIENT] Parsed error:', error);
+    } catch (e) {
+      console.error('[CLIENT] Could not parse error as JSON');
+      error = { error: errorText };
+    }
+
     throw new Error(error.error || 'Processing failed');
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('[CLIENT] Success response:', result);
+  return result;
 }
 
 /**
