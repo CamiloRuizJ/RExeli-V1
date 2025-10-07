@@ -430,6 +430,6 @@ export async function getTrainingDataStats(documentType: DocumentType): Promise<
     train_ready: trainDocs.length,
     validation_ready: validationDocs.length,
     average_quality_score,
-    meets_minimum: (data?.length || 0) >= 50 // OpenAI recommendation
+    meets_minimum: (data?.length || 0) >= 10 // OpenAI minimum (50-100 recommended)
   };
 }
