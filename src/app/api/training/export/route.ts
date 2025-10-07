@@ -33,11 +33,11 @@ export async function POST(request: NextRequest) {
     // Get training data statistics
     const stats = await getTrainingDataStats(document_type);
 
-    // Check if minimum examples are met (OpenAI minimum is 10, but 50-100 recommended)
-    if (stats.total_verified < 10) {
+    // Check if minimum examples are met (OpenAI minimum is 10, temporarily lowered to 5)
+    if (stats.total_verified < 5) {
       return NextResponse.json<ApiResponse>({
         success: false,
-        error: `Insufficient training data. Have ${stats.total_verified} verified documents, need at least 10 for OpenAI fine-tuning.`
+        error: `Insufficient training data. Have ${stats.total_verified} verified documents, need at least 5 for OpenAI fine-tuning.`
       }, { status: 400 });
     }
 
