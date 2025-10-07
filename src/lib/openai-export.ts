@@ -261,6 +261,7 @@ export async function exportTrainingData(
 
     if (trainUploadError) {
       console.error('Failed to upload training file:', trainUploadError);
+      throw new Error(`Failed to upload training file to Supabase Storage: ${trainUploadError.message}`);
     } else {
       const { data: trainUrl } = supabase.storage
         .from('training-exports')
