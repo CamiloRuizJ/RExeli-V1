@@ -203,9 +203,23 @@ export default function ToolPage() {
           const pdfInfo = await getPdfInfo(currentFile.file);
           console.log(`PDF has ${pdfInfo.numPages} pages`);
 
-          // Warn user about large PDFs
-          if (pdfInfo.numPages > 20) {
-            toast.warning(`This PDF has ${pdfInfo.numPages} pages. Processing may take longer and incur higher API costs.`);
+          // Warn user about large PDFs with clear guidance
+          if (pdfInfo.numPages > 10) {
+            toast.warning(
+              `Large Document Warning: This PDF has ${pdfInfo.numPages} pages. ` +
+              `Processing will take 30-60+ seconds and may timeout. ` +
+              `For best results, use documents with 5-10 pages maximum. ` +
+              `Consider splitting larger PDFs into smaller sections.`,
+              {
+                duration: 8000,  // Show warning longer for large documents
+              }
+            );
+          } else if (pdfInfo.numPages >= 5 && pdfInfo.numPages <= 10) {
+            // Add info toast for reasonable size
+            toast.info(
+              `Processing ${pdfInfo.numPages} pages. This will take approximately 30-45 seconds.`,
+              { duration: 4000 }
+            );
           }
 
           // Convert all PDF pages to images with progress tracking
@@ -280,13 +294,40 @@ export default function ToolPage() {
       extractionFormData.append('file', fileToProcess);
       extractionFormData.append('documentType', selectedDocumentType);
 
-      const extractResponse = await fetch('/api/extract', {
-        method: 'POST',
-        body: extractionFormData,
-      });
+      // Create AbortController for timeout protection
+      const controller = new AbortController();
+      const fetchTimeout = setTimeout(() => {
+        controller.abort();
+      }, 180000); // 3 minutes - allows for PDF conversion + OpenAI API processing
 
-      if (!extractResponse.ok) {
-        throw new Error('Data extraction failed');
+      let extractResponse;
+      try {
+        extractResponse = await fetch('/api/extract', {
+          method: 'POST',
+          body: extractionFormData,
+          signal: controller.signal,
+        });
+
+        clearTimeout(fetchTimeout);
+
+        if (!extractResponse.ok) {
+          const errorData = await extractResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || `Extraction failed with status ${extractResponse.status}`);
+        }
+      } catch (fetchError) {
+        clearTimeout(fetchTimeout);
+
+        if (fetchError instanceof Error) {
+          if (fetchError.name === 'AbortError') {
+            throw new Error(
+              'Request timeout: PDF extraction took too long. ' +
+              'This can happen with large multi-page documents (10+ pages). ' +
+              'Try splitting your PDF into smaller documents with 5-10 pages each.'
+            );
+          }
+          throw fetchError;
+        }
+        throw new Error('Extraction request failed');
       }
 
       const extractResult = await extractResponse.json();

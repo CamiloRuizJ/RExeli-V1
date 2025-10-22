@@ -116,15 +116,23 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Extraction API error:', error);
-    
+
     // Provide more detailed error messages based on error type
     let errorMessage = 'Data extraction failed';
     let statusCode = 500;
-    
+
     if (error instanceof Error) {
       errorMessage = error.message;
+
+      // Handle timeout errors specifically
+      if (error.message.includes('timeout') || error.message.includes('aborted') || error.message.includes('ETIMEDOUT')) {
+        errorMessage = 'Extraction timeout: Document processing took too long. ' +
+                       'This usually happens with large multi-page documents (10+ pages). ' +
+                       'Please try with a smaller document or split your PDF into sections.';
+        statusCode = 504;
+      }
       // Handle specific OpenAI errors
-      if (error.message.includes('401') || error.message.includes('invalid_api_key')) {
+      else if (error.message.includes('401') || error.message.includes('invalid_api_key')) {
         errorMessage = 'Invalid OpenAI API key. Please check your API key configuration.';
         statusCode = 401;
       } else if (error.message.includes('429')) {
@@ -138,7 +146,7 @@ export async function POST(request: NextRequest) {
         statusCode = 400;
       }
     }
-    
+
     return NextResponse.json<ApiResponse>({
       success: false,
       error: errorMessage

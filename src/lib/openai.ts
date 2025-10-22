@@ -33,6 +33,8 @@ function getOpenAIApiKey(): string {
 // Following OpenAI Quickstart Guide best practices with encrypted API key
 const openai = new OpenAI({
   apiKey: getOpenAIApiKey(),
+  timeout: 120000,  // 120 seconds (2 minutes) for Vision API with multiple pages
+  maxRetries: 2,    // Retry failed requests twice for resilience
 });
 
 // Validate API key is present (with build-time handling)
@@ -2303,34 +2305,53 @@ export async function extractDocumentData(
       }
     ];
 
-    // Add all page images
+    // Determine detail level based on page count to optimize performance and reduce timeout risk
+    // 'high' = 770 tokens per image (expensive, slow, best quality)
+    // 'auto' = 85 tokens per image (10x cheaper, 10x faster, good quality)
+    const detail = numPages > 5 ? 'auto' : 'high';
+    console.log(`Using detail level '${detail}' for ${numPages} pages to optimize ${numPages > 5 ? 'performance and reduce timeout risk' : 'quality'}`);
+
+    // Add all page images with dynamic detail level
     imageDataUrls.forEach((url, index) => {
       userContent.push({
         type: 'image_url',
         image_url: {
           url,
-          detail: 'high' // Use high detail for better extraction accuracy
+          detail: detail // Dynamic detail based on page count
         }
       });
     });
 
-    console.log(`Sending ${imageDataUrls.length} image(s) to OpenAI for extraction`);
+    console.log(`Sending ${imageDataUrls.length} image(s) to OpenAI for extraction with '${detail}' detail`);
 
     // Get the active model for this document type (base or fine-tuned)
     const modelToUse = await getActiveModelForDocumentType(documentType);
 
-    const response = await openai.chat.completions.create({
-      model: modelToUse,
-      messages: [
-        {
-          role: "user",
-          content: userContent as any, // Type assertion needed for mixed content array
-        },
-      ],
-      max_tokens: 15000,
-      temperature: 0.1,
-      response_format: { type: "json_object" }, // Ensure JSON response
-    });
+    // Track API call duration for monitoring
+    const startTime = Date.now();
+    let response;
+
+    try {
+      response = await openai.chat.completions.create({
+        model: modelToUse,
+        messages: [
+          {
+            role: "user",
+            content: userContent as any, // Type assertion needed for mixed content array
+          },
+        ],
+        max_tokens: 15000,
+        temperature: 0.1,
+        response_format: { type: "json_object" }, // Ensure JSON response
+      });
+
+      const duration = Date.now() - startTime;
+      console.log(`OpenAI Vision API call completed in ${duration}ms for ${numPages} pages (${(duration / 1000).toFixed(1)}s)`);
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`OpenAI Vision API failed after ${duration}ms for ${numPages} pages:`, error);
+      throw error;
+    }
 
     console.log('OpenAI: Extraction response received');
     const content = response.choices[0]?.message?.content;
