@@ -119,6 +119,7 @@ async function fileToBase64DataUrl(fileUrl: string): Promise<string> {
 /**
  * Create OpenAI training example from training document
  * Enhanced with verification notes and learnings
+ * VISION VERSION for gpt-4o (with image support)
  */
 export async function createTrainingExample(
   document: TrainingDocument,
@@ -153,7 +154,7 @@ export async function createTrainingExample(
     throw new Error(`No extraction data available for document ${document.id}`);
   }
 
-  // Create user content with text and image
+  // Create user content with text and image for gpt-4o vision
   const userContent: OpenAIUserContent[] = [
     {
       type: 'text',

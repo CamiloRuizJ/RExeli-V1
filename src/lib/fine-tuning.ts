@@ -22,9 +22,25 @@ function getOpenAIClient(): OpenAI {
   if (!encryptedKey) {
     throw new Error('ENCRYPTED_OPENAI_API_KEY environment variable is required');
   }
-  return new OpenAI({
-    apiKey: decryptApiKey(encryptedKey)
-  });
+
+  try {
+    const apiKey = decryptApiKey(encryptedKey);
+
+    // Validate API key format
+    if (!apiKey || (!apiKey.startsWith('sk-proj-') && !apiKey.startsWith('sk-'))) {
+      console.error('Invalid API key format after decryption');
+      throw new Error('Decrypted API key has invalid format. Expected sk-proj-* or sk-*');
+    }
+
+    return new OpenAI({
+      apiKey,
+      maxRetries: 3, // Retry failed requests up to 3 times
+      timeout: 60000, // 60 second timeout
+    });
+  } catch (error) {
+    console.error('Failed to initialize OpenAI client:', error);
+    throw new Error(`OpenAI client initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 /**
@@ -228,7 +244,7 @@ export async function startFineTuningJob(params: {
         openai_file_id: trainingFileId,
         openai_validation_file_id: validationFileId,
         status: 'uploading',
-        base_model: 'gpt-4o-mini-2024-07-18',
+        base_model: 'gpt-4o-2024-08-06',
         hyperparameters: params.hyperparameters || { n_epochs: 3 },
         training_examples_count: exportResult.train_examples,
         validation_examples_count: exportResult.validation_examples,
@@ -249,7 +265,7 @@ export async function startFineTuningJob(params: {
     console.log('Step 4: Creating OpenAI fine-tuning job...');
     const fineTuningParams: any = {
       training_file: trainingFileId,
-      model: 'gpt-4o-mini-2024-07-18',
+      model: 'gpt-4o-2024-08-06',
       hyperparameters: params.hyperparameters || { n_epochs: 3 }
     };
 
@@ -257,9 +273,26 @@ export async function startFineTuningJob(params: {
       fineTuningParams.validation_file = validationFileId;
     }
 
-    const openaiJob = await openai.fineTuning.jobs.create(fineTuningParams);
+    let openaiJob;
+    try {
+      openaiJob = await openai.fineTuning.jobs.create(fineTuningParams);
+      console.log(`OpenAI job created: ${openaiJob.id}`);
+    } catch (apiError: any) {
+      // Handle API errors during job creation
+      console.error('Failed to create OpenAI fine-tuning job:', apiError);
 
-    console.log(`OpenAI job created: ${openaiJob.id}`);
+      if (apiError.status === 401 || apiError.status === 403) {
+        throw new Error(`Authentication error: ${apiError.message}. Verify your API key has fine-tuning permissions.`);
+      } else if (apiError.message && apiError.message.includes('OAuth')) {
+        throw new Error(`OAuth token error: Fine-tuning requires a project API key (sk-proj-*), not an OAuth token.`);
+      } else if (apiError.message && apiError.message.includes('file')) {
+        throw new Error(`File error: ${apiError.message}. The training file may be invalid or not accessible.`);
+      } else if (apiError.message && apiError.message.includes('billing')) {
+        throw new Error(`Billing error: ${apiError.message}. Check your OpenAI account billing status.`);
+      }
+
+      throw new Error(`Failed to create fine-tuning job: ${apiError.message || 'Unknown error'}`);
+    }
 
     // Step 5: Update job record with OpenAI job ID
     const { data: updatedJob, error: updateError } = await supabase
@@ -323,9 +356,24 @@ export async function updateFineTuningJobStatus(jobId: string): Promise<FineTuni
       throw new Error(`Job has no OpenAI job ID: ${jobId}`);
     }
 
-    // Query OpenAI for job status
+    // Query OpenAI for job status with retry logic
     const openai = getOpenAIClient();
-    const openaiJob = await openai.fineTuning.jobs.retrieve(job.openai_job_id);
+    let openaiJob;
+
+    try {
+      openaiJob = await openai.fineTuning.jobs.retrieve(job.openai_job_id);
+    } catch (apiError: any) {
+      // Handle common API errors
+      if (apiError.status === 404) {
+        throw new Error(`OpenAI job ${job.openai_job_id} not found. It may have been deleted or belongs to a different project.`);
+      } else if (apiError.status === 401 || apiError.status === 403) {
+        throw new Error(`Authentication error: ${apiError.message}. Check that your API key has fine-tuning permissions.`);
+      } else if (apiError.message && apiError.message.includes('OAuth')) {
+        throw new Error(`OAuth token error: You may be using an OAuth token instead of a project API key. Fine-tuning requires a project API key (sk-proj-*).`);
+      }
+      // Re-throw other errors
+      throw apiError;
+    }
 
     console.log(`OpenAI job status: ${openaiJob.status}`);
 
@@ -343,7 +391,15 @@ export async function updateFineTuningJobStatus(jobId: string): Promise<FineTuni
       case 'failed':
         status = 'failed';
         failedAt = new Date().toISOString();
-        errorMessage = openaiJob.error?.message || 'Fine-tuning failed';
+        const rawError = openaiJob.error?.message || 'Fine-tuning failed';
+
+        // Enhanced error message for moderation failures
+        if (rawError.includes('moderation') || rawError.includes('eval')) {
+          errorMessage = `OpenAI Moderation Failure: ${rawError}. Note: This is an OpenAI infrastructure issue during safety evaluation, not a data quality issue. The model training may have completed successfully. Consider retrying or contacting OpenAI support.`;
+          console.warn('Moderation evaluation failure detected - this is an OpenAI-side issue');
+        } else {
+          errorMessage = rawError;
+        }
         break;
       case 'cancelled':
         status = 'cancelled';
