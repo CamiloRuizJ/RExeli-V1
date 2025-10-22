@@ -49,6 +49,20 @@ export async function POST(request: NextRequest) {
     // Extract structured data using OpenAI Vision (handles PDF conversion automatically)
     const startTime = Date.now();
     console.log(`Processing file for extraction: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+
+    // Check if this is a multi-page document
+    if (file.type === 'application/json' && file.name.includes('multipage')) {
+      try {
+        const fileText = await file.text();
+        const multiPageData = JSON.parse(fileText);
+        if (multiPageData.type === 'multi-page' && Array.isArray(multiPageData.pages)) {
+          console.log(`Multi-page document detected: ${multiPageData.pages.length} pages for ${documentType}`);
+        }
+      } catch (parseError) {
+        console.warn('Could not parse multi-page data for logging:', parseError);
+      }
+    }
+
     console.log(`Starting data extraction for manually selected document type: ${documentType}`);
 
     let extractedData;

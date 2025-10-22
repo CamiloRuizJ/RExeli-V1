@@ -2224,7 +2224,7 @@ export async function classifyDocument(file: File): Promise<DocumentClassificati
 }
 
 /**
- * Extract structured data from a classified document
+ * Extract structured data from a classified document (supports multi-page PDFs)
  */
 export async function extractDocumentData(
   file: File,
@@ -2245,12 +2245,76 @@ export async function extractDocumentData(
       throw new Error('PDF processing on server not supported. PDF should have been converted to image on client side.');
     }
 
-    // Handle image files directly
-    const imageBase64 = await fileToBase64(file);
-    let mimeType = file.type;
-    if (file.type === 'image/png') mimeType = 'image/png';
-    else if (file.type === 'image/gif') mimeType = 'image/gif';
-    else mimeType = 'image/jpeg';
+    // Check if this is a multi-page document (JSON file with page data)
+    let imageDataUrls: string[] = [];
+    let numPages = 1;
+
+    if (file.type === 'application/json' && file.name.includes('multipage')) {
+      // Multi-page PDF that was converted client-side
+      console.log('Processing multi-page document...');
+
+      try {
+        const fileText = await file.text();
+        const multiPageData = JSON.parse(fileText);
+
+        if (multiPageData.type === 'multi-page' && Array.isArray(multiPageData.pages)) {
+          numPages = multiPageData.pages.length;
+          console.log(`Multi-page document detected: ${numPages} pages`);
+
+          imageDataUrls = multiPageData.pages.map((page: any) =>
+            `data:${page.mimeType};base64,${page.imageBase64}`
+          );
+        } else {
+          throw new Error('Invalid multi-page data format');
+        }
+      } catch (parseError) {
+        console.error('Failed to parse multi-page data:', parseError);
+        throw new Error('Invalid multi-page document format');
+      }
+    } else {
+      // Single image file
+      const imageBase64 = await fileToBase64(file);
+      let mimeType = file.type;
+      if (file.type === 'image/png') mimeType = 'image/png';
+      else if (file.type === 'image/gif') mimeType = 'image/gif';
+      else mimeType = 'image/jpeg';
+
+      imageDataUrls = [`data:${mimeType};base64,${imageBase64}`];
+    }
+
+    // Build content array with text prompt and all images
+    type ContentPart = {
+      type: 'text';
+      text: string;
+    } | {
+      type: 'image_url';
+      image_url: {
+        url: string;
+        detail: 'high' | 'low' | 'auto';
+      };
+    };
+
+    const userContent: ContentPart[] = [
+      {
+        type: 'text',
+        text: numPages > 1
+          ? `${prompt}\n\n**MULTI-PAGE INSTRUCTIONS:**\n- You are viewing ${numPages} pages of this document\n- Extract data from ALL ${numPages} pages\n- Consolidate information across all pages\n- If data spans multiple pages, merge it appropriately\n- Ensure completeness by checking all pages for relevant information`
+          : prompt
+      }
+    ];
+
+    // Add all page images
+    imageDataUrls.forEach((url, index) => {
+      userContent.push({
+        type: 'image_url',
+        image_url: {
+          url,
+          detail: 'high' // Use high detail for better extraction accuracy
+        }
+      });
+    });
+
+    console.log(`Sending ${imageDataUrls.length} image(s) to OpenAI for extraction`);
 
     // Get the active model for this document type (base or fine-tuned)
     const modelToUse = await getActiveModelForDocumentType(documentType);
@@ -2260,16 +2324,7 @@ export async function extractDocumentData(
       messages: [
         {
           role: "user",
-          content: [
-            { type: "text", text: prompt },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${mimeType};base64,${imageBase64}`,
-                detail: "high" // Use high detail for better extraction accuracy
-              },
-            },
-          ],
+          content: userContent as any, // Type assertion needed for mixed content array
         },
       ],
       max_tokens: 15000,
@@ -2360,27 +2415,27 @@ export async function extractDocumentData(
  */
 export async function fileToBase64(file: File): Promise<string> {
   console.log(`Converting file to base64: ${file.name}, ${file.size} bytes, ${file.type}`);
-  
-  // Validate file type
-  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+
+  // Validate file type (include JSON for multi-page documents)
+  const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf', 'application/json'];
   if (!validTypes.includes(file.type)) {
     console.error(`Invalid file type: ${file.type}. Supported types: ${validTypes.join(', ')}`);
     throw new Error(`Unsupported file type: ${file.type}. Please upload JPG, PNG, or PDF files.`);
   }
-  
-  // Validate file size (max 10MB)
-  const maxSize = 10 * 1024 * 1024; // 10MB
+
+  // Validate file size (max 10MB for regular files, 50MB for JSON multi-page)
+  const maxSize = file.type === 'application/json' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
   if (file.size > maxSize) {
     console.error(`File too large: ${file.size} bytes. Max size: ${maxSize} bytes`);
-    throw new Error(`File too large (${Math.round(file.size / 1024 / 1024)}MB). Maximum size is 10MB.`);
+    throw new Error(`File too large (${Math.round(file.size / 1024 / 1024)}MB). Maximum size is ${Math.round(maxSize / 1024 / 1024)}MB.`);
   }
-  
+
   try {
     // Convert File to ArrayBuffer, then to base64
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64 = buffer.toString('base64');
-    
+
     console.log(`File converted successfully: ${base64.length} base64 characters`);
     return base64;
   } catch (error) {

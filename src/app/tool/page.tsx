@@ -54,6 +54,7 @@ export default function ToolPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [pdfConversionProgress, setPdfConversionProgress] = useState<{current: number; total: number} | null>(null);
 
   // Refs for auto-scrolling
   const documentPreviewRef = useRef<HTMLDivElement>(null);
@@ -190,26 +191,56 @@ export default function ToolPage() {
       // Handle PDF conversion on client side if needed
       if (currentFile.file.type === 'application/pdf') {
         try {
-          console.log('Converting PDF to image on client side...');
+          console.log('Converting PDF to images on client side (all pages)...');
 
           // Update step with specific PDF processing status
-          updateStep(1, 'processing', 'Converting PDF to image for AI analysis...');
+          updateStep(1, 'processing', 'Converting PDF pages to images for AI analysis...');
 
           // Dynamically import the PDF utilities
-          const { convertPdfToImage } = await import('@/lib/pdf-utils');
+          const { convertPdfToAllImages, getPdfInfo } = await import('@/lib/pdf-utils');
 
-          // Convert PDF to image (first page)
-          const { imageBase64, mimeType } = await convertPdfToImage(currentFile.file, 1);
+          // Get PDF info first to show total pages
+          const pdfInfo = await getPdfInfo(currentFile.file);
+          console.log(`PDF has ${pdfInfo.numPages} pages`);
 
-          // Convert base64 back to File object for API submission
-          const response = await fetch(`data:${mimeType};base64,${imageBase64}`);
-          const blob = await response.blob();
+          // Warn user about large PDFs
+          if (pdfInfo.numPages > 20) {
+            toast.warning(`This PDF has ${pdfInfo.numPages} pages. Processing may take longer and incur higher API costs.`);
+          }
 
-          // Create new file with descriptive name
+          // Convert all PDF pages to images with progress tracking
+          const allPages = await convertPdfToAllImages(
+            currentFile.file,
+            (current, total) => {
+              setPdfConversionProgress({ current, total });
+              updateStep(1, 'processing', `Converting page ${current} of ${total}...`);
+            }
+          );
+
+          // Clear progress indicator
+          setPdfConversionProgress(null);
+
+          console.log(`All ${allPages.length} pages converted successfully`);
+
+          // Create a multi-page image blob by encoding all pages
+          // We'll pass the array of images to the API
+          // For now, create a marker file that indicates multi-page processing
+          const multiPageData = JSON.stringify({
+            type: 'multi-page',
+            pages: allPages.map(page => ({
+              imageBase64: page.imageBase64,
+              mimeType: page.mimeType,
+              pageNumber: page.pageNumber
+            }))
+          });
+
+          // Store multi-page data in a blob
+          const blob = new Blob([multiPageData], { type: 'application/json' });
           const originalName = currentFile.file.name.replace(/\.pdf$/i, '');
-          fileToProcess = new File([blob], `${originalName}_page1.png`, { type: mimeType });
+          fileToProcess = new File([blob], `${originalName}_multipage.json`, { type: 'application/json' });
 
-          console.log(`PDF converted to image successfully: ${Math.round(blob.size / 1024)}KB PNG`);
+          const totalSize = allPages.reduce((sum, page) => sum + page.imageBase64.length, 0);
+          console.log(`PDF converted to ${allPages.length} images successfully: ${Math.round(totalSize / 1024)}KB total`);
 
         } catch (pdfError) {
           console.error('PDF conversion failed:', pdfError);
@@ -433,6 +464,32 @@ export default function ToolPage() {
                   </p>
                 </div>
               </div>
+
+              {/* PDF Conversion Progress Indicator */}
+              {pdfConversionProgress && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="font-medium text-blue-900">
+                        Converting PDF Pages
+                      </span>
+                    </div>
+                    <span className="text-sm text-blue-700">
+                      Page {pdfConversionProgress.current} of {pdfConversionProgress.total}
+                    </span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{
+                        width: `${(pdfConversionProgress.current / pdfConversionProgress.total) * 100}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <ProcessingWorkflow
                 file={currentFile!}
                 steps={processingSteps}
