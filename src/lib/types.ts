@@ -180,7 +180,8 @@ export interface OperatingBudgetData {
 }
 
 export interface BrokerSalesComparablesData {
-  comparables: {
+  // Support both flat and nested structures for backward compatibility
+  comparables?: {
     propertyAddress: string;
     propertyType: string;
     saleDate: string;
@@ -197,12 +198,106 @@ export interface BrokerSalesComparablesData {
     buyer?: string;
     seller?: string;
   }[];
-  summary: {
-    averagePricePerSF: number;
+
+  // New nested structure from OpenAI extraction
+  comparableSales?: {
+    propertyId?: string;
+    propertyName?: string;
+    propertyAddress?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+
+    transactionDetails?: {
+      saleDate?: string;
+      closingDate?: string;
+      salePrice?: number;
+      originalListPrice?: number;
+      daysOnMarket?: number;
+      termsOfSale?: string;
+    };
+
+    pricingMetrics?: {
+      pricePerSquareFoot?: number;
+      pricePerUnit?: number;
+      pricePerDoor?: number;
+    };
+
+    propertyCharacteristics?: {
+      propertyType?: string;
+      propertySubtype?: string;
+      buildingClass?: string;
+      totalBuildingSquareFeet?: number;
+      netRentableSquareFeet?: number;
+      landAreaSquareFeet?: number;
+      numberOfUnits?: number;
+      yearBuilt?: number;
+      yearRenovated?: number;
+      buildingCondition?: string;
+    };
+
+    financialPerformance?: {
+      noiAtSale?: number;
+      grossRentalIncomeAtSale?: number;
+      occupancyRateAtSale?: number;
+      capRateAtSale?: number;
+      averageRentPerSF?: number;
+    };
+
+    transactionParties?: {
+      buyerName?: string;
+      buyerType?: string;
+      sellerName?: string;
+      sellerType?: string;
+    };
+  }[];
+
+  // Summary can be flat or nested
+  summary?: {
+    averagePricePerSF?: number;
     averageCapRate?: number;
-    priceRange: {
+    priceRange?: {
       min: number;
       max: number;
+    };
+  };
+
+  // Additional nested structures from OpenAI
+  marketSummary?: {
+    totalSalesAnalyzed?: number;
+    salesPeriod?: string;
+    marketConditions?: string;
+    marketTrends?: string;
+    averageDaysOnMarket?: number;
+  };
+
+  marketAnalysis?: {
+    salesVolumeAnalysis?: {
+      totalDollarVolume?: number;
+      numberOfTransactions?: number;
+      averageTransactionSize?: number;
+    };
+
+    pricingAnalysis?: {
+      averagePricePerSF?: number;
+      medianPricePerSF?: number;
+      pricePerSFRange?: {
+        min: number;
+        max: number;
+      };
+      priceAppreciation?: {
+        quarterOverQuarter?: number;
+        yearOverYear?: number;
+      };
+    };
+
+    capRateAnalysis?: {
+      averageCapRate?: number;
+      medianCapRate?: number;
+      capRateRange?: {
+        min: number;
+        max: number;
+      };
     };
   };
 }

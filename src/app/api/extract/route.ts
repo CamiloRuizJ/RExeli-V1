@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractDocumentData } from '@/lib/openai';
+import { transformExtractedData } from '@/lib/data-transformers';
 import type { ApiResponse, ExtractionResponse, DocumentType, ExtractedData } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -56,7 +57,11 @@ export async function POST(request: NextRequest) {
 
     try {
       extractedData = await extractDocumentData(file, documentType);
-      console.log('Data extraction completed successfully:', extractedData);
+      console.log('Raw data extraction completed:', extractedData);
+
+      // Transform the extracted data to match display component expectations
+      extractedData = transformExtractedData(extractedData);
+      console.log('Data transformation completed successfully');
     } catch (extractionError) {
       console.error('Extraction error, attempting partial recovery:', extractionError);
 

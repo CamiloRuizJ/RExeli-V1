@@ -307,14 +307,44 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
     </div>
   );
 
-  const renderBrokerSalesComparablesData = (data: BrokerSalesComparablesData) => (
+  const renderBrokerSalesComparablesData = (data: BrokerSalesComparablesData) => {
+    // Helper function to safely extract summary data with fallbacks
+    const getSummaryValue = (field: string): any => {
+      // Check direct summary field first
+      if (data.summary && data.summary[field as keyof typeof data.summary] !== undefined) {
+        return data.summary[field as keyof typeof data.summary];
+      }
+
+      // Fallback to marketAnalysis.pricingAnalysis for pricing fields
+      const anyData = data as any;
+      if (field === 'averagePricePerSF') {
+        return anyData.marketAnalysis?.pricingAnalysis?.averagePricePerSF;
+      }
+      if (field === 'averageCapRate') {
+        return anyData.marketAnalysis?.capRateAnalysis?.averageCapRate;
+      }
+      if (field === 'priceRange') {
+        const pricingAnalysis = anyData.marketAnalysis?.pricingAnalysis;
+        if (pricingAnalysis?.pricePerSFRange) {
+          return pricingAnalysis.pricePerSFRange;
+        }
+      }
+
+      return undefined;
+    };
+
+    const avgPricePerSF = getSummaryValue('averagePricePerSF');
+    const avgCapRate = getSummaryValue('averageCapRate');
+    const priceRange = getSummaryValue('priceRange') || { min: 0, max: 0 };
+
+    return (
     <div className="space-y-6">
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{formatCurrency(data.summary.averagePricePerSF)}</div>
+              <div className="text-2xl font-bold text-blue-600">{formatCurrency(avgPricePerSF)}</div>
               <div className="text-sm text-gray-500">Avg Price/SF</div>
             </div>
           </CardContent>
@@ -322,7 +352,7 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{formatPercentage(data.summary.averageCapRate)}</div>
+              <div className="text-2xl font-bold text-green-600">{formatPercentage(avgCapRate)}</div>
               <div className="text-sm text-gray-500">Avg Cap Rate</div>
             </div>
           </CardContent>
@@ -331,7 +361,7 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-lg font-bold text-purple-600">
-                {formatCurrency(data.summary.priceRange.min)} - {formatCurrency(data.summary.priceRange.max)}
+                {formatCurrency(priceRange?.min)} - {formatCurrency(priceRange?.max)}
               </div>
               <div className="text-sm text-gray-500">Price Range</div>
             </div>
@@ -359,33 +389,51 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
                 </tr>
               </thead>
               <tbody>
-                {data.comparables.map((comp, index) => (
+                {(data.comparables || (data as any).comparableSales || []).map((comp: any, index: number) => {
+                  // Handle both flat and nested structures
+                  const address = comp.propertyAddress || comp.propertyCharacteristics?.propertyAddress || 'N/A';
+                  const saleDate = comp.saleDate || comp.transactionDetails?.saleDate;
+                  const salePrice = comp.salePrice || comp.transactionDetails?.salePrice;
+                  const pricePerSF = comp.pricePerSF || comp.pricingMetrics?.pricePerSquareFoot;
+                  const buildingSize = comp.buildingSize || comp.propertyCharacteristics?.totalBuildingSquareFeet;
+                  const capRate = comp.capRate || comp.financialPerformance?.capRateAtSale;
+                  const occupancy = comp.occupancyAtSale || comp.financialPerformance?.occupancyRateAtSale;
+
+                  return (
                   <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="p-2 font-medium">{safeString(comp.propertyAddress)}</td>
-                    <td className="p-2">{formatDate(comp.saleDate)}</td>
-                    <td className="p-2 text-right font-bold text-green-600">{formatCurrency(comp.salePrice)}</td>
-                    <td className="p-2 text-right">{formatCurrency(comp.pricePerSF)}</td>
-                    <td className="p-2 text-right">{formatSquareFeet(comp.buildingSize)}</td>
-                    <td className="p-2 text-right">{formatPercentage(comp.capRate)}</td>
-                    <td className="p-2 text-right">{formatPercentage(comp.occupancyAtSale)}</td>
+                    <td className="p-2 font-medium">{safeString(address)}</td>
+                    <td className="p-2">{formatDate(saleDate)}</td>
+                    <td className="p-2 text-right font-bold text-green-600">{formatCurrency(salePrice)}</td>
+                    <td className="p-2 text-right">{formatCurrency(pricePerSF)}</td>
+                    <td className="p-2 text-right">{formatSquareFeet(buildingSize)}</td>
+                    <td className="p-2 text-right">{formatPercentage(capRate)}</td>
+                    <td className="p-2 text-right">{formatPercentage(occupancy)}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+    );
+  };
 
-  const renderBrokerLeaseComparablesData = (data: BrokerLeaseComparablesData) => (
+  const renderBrokerLeaseComparablesData = (data: BrokerLeaseComparablesData) => {
+    // Safe data extraction with fallbacks
+    const avgBaseRent = data.summary?.averageBaseRent;
+    const avgEffectiveRent = data.summary?.averageEffectiveRent;
+    const rentRange = data.summary?.rentRange || { min: 0, max: 0 };
+
+    return (
     <div className="space-y-6">
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{formatCurrency(data.summary.averageBaseRent)}</div>
+              <div className="text-2xl font-bold text-blue-600">{formatCurrency(avgBaseRent)}</div>
               <div className="text-sm text-gray-500">Avg Base Rent/SF</div>
             </div>
           </CardContent>
@@ -393,7 +441,7 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{formatCurrency(data.summary.averageEffectiveRent)}</div>
+              <div className="text-2xl font-bold text-green-600">{formatCurrency(avgEffectiveRent)}</div>
               <div className="text-sm text-gray-500">Avg Effective Rent/SF</div>
             </div>
           </CardContent>
@@ -402,7 +450,7 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-lg font-bold text-purple-600">
-                {formatCurrency(data.summary.rentRange.min)} - {formatCurrency(data.summary.rentRange.max)}
+                {formatCurrency(rentRange?.min)} - {formatCurrency(rentRange?.max)}
               </div>
               <div className="text-sm text-gray-500">Rent Range/SF</div>
             </div>
@@ -431,7 +479,7 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
                 </tr>
               </thead>
               <tbody>
-                {data.comparables.map((comp, index) => (
+                {(data.comparables || []).map((comp, index) => (
                   <tr key={index} className="border-b hover:bg-gray-50">
                     <td className="p-2 font-medium">{safeString(comp.propertyAddress)}</td>
                     <td className="p-2">{safeString(comp.tenantIndustry)}</td>
@@ -439,14 +487,14 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
                     <td className="p-2 text-right">{formatSquareFeet(comp.squareFootage)}</td>
                     <td className="p-2 text-right font-bold text-blue-600">{formatCurrency(comp.baseRent)}</td>
                     <td className="p-2 text-right font-bold text-green-600">{formatCurrency(comp.effectiveRent)}</td>
-                    <td className="p-2 text-right">{(comp.leaseTerm / 12).toFixed(1)}</td>
+                    <td className="p-2 text-right">{comp.leaseTerm ? (comp.leaseTerm / 12).toFixed(1) : 'N/A'}</td>
                     <td className="p-2">
                       <span className={`px-2 py-1 text-xs rounded-full ${
                         comp.leaseType === 'NNN' ? 'bg-blue-100 text-blue-800' :
                         comp.leaseType === 'Gross' ? 'bg-green-100 text-green-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {comp.leaseType}
+                        {comp.leaseType || 'N/A'}
                       </span>
                     </td>
                   </tr>
@@ -457,7 +505,8 @@ export function ResultsDisplay({ extractedData, onExportExcel, isExporting }: Re
         </CardContent>
       </Card>
     </div>
-  );
+    );
+  };
 
   const renderBrokerListingData = (data: BrokerListingData) => (
     <div className="space-y-6">
