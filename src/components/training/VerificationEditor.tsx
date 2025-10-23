@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, CheckCircle, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Save, CheckCircle, XCircle, ChevronLeft, ChevronRight, Eye, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QualityRating } from './QualityRating';
 import { DocumentPreview } from './DocumentPreview';
+import { ResultsDisplay } from '@/components/results/ResultsDisplay';
 import type { TrainingDocument, ExtractedData } from '@/lib/types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { transformExtractedData } from '@/lib/data-transformers';
 
 interface VerificationEditorProps {
   document: TrainingDocument;
@@ -214,10 +217,34 @@ export function VerificationEditor({
             <div className="space-y-4 pb-32">
               <div>
                 <h3 className="text-lg font-semibold mb-4">Extracted Data</h3>
-                <DataEditor
-                  data={editedData}
-                  onChange={setEditedData}
-                />
+                <Tabs defaultValue="preview" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="preview">
+                      <Eye className="mr-2 h-4 w-4" />
+                      Formatted Preview
+                    </TabsTrigger>
+                    <TabsTrigger value="edit">
+                      <Code className="mr-2 h-4 w-4" />
+                      Edit JSON
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="preview" className="mt-4">
+                    <div className="border rounded-lg p-4 bg-white">
+                      <PreviewDisplay
+                        data={editedData}
+                        documentType={document.document_type}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="edit" className="mt-4">
+                    <DataEditor
+                      data={editedData}
+                      onChange={setEditedData}
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
 
               {/* Quality Rating */}
@@ -303,6 +330,60 @@ export function VerificationEditor({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Preview Display Component - Wraps ResultsDisplay for verification interface
+function PreviewDisplay({
+  data,
+  documentType,
+}: {
+  data: any; // Raw extracted data object
+  documentType: string;
+}) {
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Transform data into ExtractedData format that ResultsDisplay expects
+  const extractedData: ExtractedData = {
+    documentType: documentType as any,
+    data: data, // This is the actual typed data (RentRollData, OperatingBudgetData, etc.)
+    metadata: {
+      extractedDate: new Date().toISOString(),
+      propertyName: data?.propertyOverview?.name ||
+                    data?.propertyDetails?.name ||
+                    data?.listingDetails?.propertyOwner ||
+                    'N/A',
+      propertyAddress: data?.propertyOverview?.address ||
+                       data?.propertyDetails?.address ||
+                       data?.premises?.propertyAddress ||
+                       'N/A',
+      totalSquareFeet: data?.propertyOverview?.totalSquareFeet ||
+                       data?.propertyDetails?.squareFootage ||
+                       data?.premises?.squareFeet ||
+                       data?.summary?.totalSquareFeet,
+      totalUnits: data?.rentRollSummary?.totalUnits ||
+                  data?.summary?.totalUnits,
+    }
+  };
+
+  // Transform data using data-transformers
+  const transformedData = transformExtractedData(extractedData);
+
+  // Mock export handler (not needed in verification interface)
+  const handleExport = async () => {
+    setIsExporting(true);
+    toast.info('Export functionality is not available in verification mode');
+    setTimeout(() => setIsExporting(false), 1000);
+  };
+
+  return (
+    <div className="max-h-[600px] overflow-y-auto">
+      <ResultsDisplay
+        extractedData={transformedData}
+        onExportExcel={handleExport}
+        isExporting={isExporting}
+      />
     </div>
   );
 }
