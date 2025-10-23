@@ -33,7 +33,7 @@ function getOpenAIApiKey(): string {
 // Following OpenAI Quickstart Guide best practices with encrypted API key
 const openai = new OpenAI({
   apiKey: getOpenAIApiKey(),
-  timeout: 120000,  // 120 seconds (2 minutes) for Vision API with multiple pages
+  timeout: 600000,  // 600 seconds (10 minutes) for Vision API with multiple pages
   maxRetries: 2,    // Retry failed requests twice for resilience
 });
 

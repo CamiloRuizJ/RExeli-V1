@@ -29,7 +29,16 @@
       "Bash(npx vercel:*)",
       "Bash(cp:*)",
       "Bash(npx tsc:*)",
-      "Bash(timeout 180 npm run build)"
+      "Bash(timeout 180 npm run build)",
+      "Read(//c/Users/cruiz/AppData/Roaming/Code/User/globalStorage/saoudrizwan.claude-dev/settings/**)",
+      "Read(//c/Users/cruiz/AppData/Roaming/Code/**)",
+      "Bash(set SUPABASE_URL=https://lddwbkefiucimrkfskzt.supabase.co)",
+      "Bash(set:*)",
+      "Bash(npx:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(where npx)",
+      "Bash(Select-Object -First 100)"
     ],
     "deny": [],
     "ask": []

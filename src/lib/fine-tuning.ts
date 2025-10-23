@@ -35,7 +35,7 @@ function getOpenAIClient(): OpenAI {
     return new OpenAI({
       apiKey,
       maxRetries: 3, // Retry failed requests up to 3 times
-      timeout: 60000, // 60 second timeout
+      timeout: 600000, // 600 second timeout (10 minutes)
     });
   } catch (error) {
     console.error('Failed to initialize OpenAI client:', error);

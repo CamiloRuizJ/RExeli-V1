@@ -232,8 +232,7 @@ export function VerificationEditor({
                   <TabsContent value="preview" className="mt-4">
                     <div className="border rounded-lg p-4 bg-white">
                       <PreviewDisplay
-                        data={editedData}
-                        documentType={document.document_type}
+                        extractedData={editedData}
                       />
                     </div>
                   </TabsContent>
@@ -336,38 +335,13 @@ export function VerificationEditor({
 
 // Preview Display Component - Wraps ResultsDisplay for verification interface
 function PreviewDisplay({
-  data,
-  documentType,
+  extractedData,
 }: {
-  data: any; // Raw extracted data object
-  documentType: string;
+  extractedData: ExtractedData;
 }) {
   const [isExporting, setIsExporting] = useState(false);
 
-  // Transform data into ExtractedData format that ResultsDisplay expects
-  const extractedData: ExtractedData = {
-    documentType: documentType as any,
-    data: data, // This is the actual typed data (RentRollData, OperatingBudgetData, etc.)
-    metadata: {
-      extractedDate: new Date().toISOString(),
-      propertyName: data?.propertyOverview?.name ||
-                    data?.propertyDetails?.name ||
-                    data?.listingDetails?.propertyOwner ||
-                    'N/A',
-      propertyAddress: data?.propertyOverview?.address ||
-                       data?.propertyDetails?.address ||
-                       data?.premises?.propertyAddress ||
-                       'N/A',
-      totalSquareFeet: data?.propertyOverview?.totalSquareFeet ||
-                       data?.propertyDetails?.squareFootage ||
-                       data?.premises?.squareFeet ||
-                       data?.summary?.totalSquareFeet,
-      totalUnits: data?.rentRollSummary?.totalUnits ||
-                  data?.summary?.totalUnits,
-    }
-  };
-
-  // Transform data using data-transformers
+  // Transform data using data-transformers to normalize structure
   const transformedData = transformExtractedData(extractedData);
 
   // Mock export handler (not needed in verification interface)

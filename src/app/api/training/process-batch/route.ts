@@ -114,9 +114,40 @@ export async function POST(request: NextRequest) {
         const fileBlob = await fileResponse.blob();
         const file = new File([fileBlob], document.file_name, { type: document.file_type || 'application/pdf' });
 
+        // Convert PDF to images if needed (server-side multi-page support)
+        let fileToProcess: File = file;
+
+        if (file.type === 'application/pdf') {
+          console.log(`Converting PDF to images for training document: ${documentId}`);
+
+          // Import server-side PDF converter
+          const { convertPdfToAllPngsServer } = await import('@/lib/pdf-utils-server');
+
+          // Convert all pages to images
+          const allPages = await convertPdfToAllPngsServer(file);
+
+          console.log(`Converted ${allPages.length} pages for training document`);
+
+          // Create multi-page JSON file format (same as client-side tool page)
+          const multiPageData = {
+            type: 'multi-page',
+            pages: allPages.map(page => ({
+              imageBase64: page.imageBase64,
+              mimeType: page.mimeType,
+              pageNumber: page.pageNumber
+            }))
+          };
+
+          // Create JSON file with multi-page data
+          const jsonBlob = new Blob([JSON.stringify(multiPageData)], { type: 'application/json' });
+          fileToProcess = new File([jsonBlob], `${document.file_name}_multipage.json`, { type: 'application/json' });
+
+          console.log(`Created multi-page JSON file for training extraction`);
+        }
+
         // Extract data using OpenAI
         console.log(`Extracting data for document type: ${document.document_type}`);
-        const extractedData = await extractDocumentData(file, document.document_type as DocumentType);
+        const extractedData = await extractDocumentData(fileToProcess, document.document_type as DocumentType);
 
         // Calculate confidence score
         const confidence = calculateConfidenceScore(extractedData);

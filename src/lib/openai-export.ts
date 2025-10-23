@@ -144,9 +144,6 @@ export async function createTrainingExample(
     userInstruction += `\n\n**VERIFICATION NOTES FROM PREVIOUS REVIEW:**\n${document.verification_notes}`;
   }
 
-  // Convert file to base64
-  const base64Image = await fileToBase64DataUrl(document.file_url);
-
   // Use verified extraction if available, otherwise use raw extraction
   const extraction = document.verified_extraction || document.raw_extraction;
 
@@ -154,20 +151,57 @@ export async function createTrainingExample(
     throw new Error(`No extraction data available for document ${document.id}`);
   }
 
-  // Create user content with text and image for gpt-4o vision
+  // Create user content with text and images for gpt-4o vision
   const userContent: OpenAIUserContent[] = [
     {
       type: 'text',
       text: userInstruction
-    },
-    {
+    }
+  ];
+
+  // Handle multi-page PDFs vs single images
+  if (document.file_type === 'application/pdf') {
+    console.log(`Training document is PDF - converting all pages: ${document.file_url}`);
+
+    // Download PDF from storage
+    const response = await fetch(document.file_url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+    }
+
+    const pdfBlob = await response.blob();
+    const pdfFile = new File([pdfBlob], document.file_name, { type: 'application/pdf' });
+
+    // Import server-side PDF converter
+    const { convertPdfToAllPngsServer } = await import('./pdf-utils-server');
+
+    // Convert all pages to images
+    const allPages = await convertPdfToAllPngsServer(pdfFile);
+
+    console.log(`Converted ${allPages.length} pages for training example`);
+
+    // Add all pages as images to user content
+    allPages.forEach((page) => {
+      userContent.push({
+        type: 'image_url',
+        image_url: {
+          url: `data:${page.mimeType};base64,${page.imageBase64}`,
+          detail: 'high' // Use high detail for training
+        }
+      });
+    });
+  } else {
+    // Single image file
+    const base64Image = await fileToBase64DataUrl(document.file_url);
+
+    userContent.push({
       type: 'image_url',
       image_url: {
         url: base64Image,
         detail: 'high' // Use high detail for training
       }
-    }
-  ];
+    });
+  }
 
   // Create messages array
   const messages: OpenAIMessage[] = [

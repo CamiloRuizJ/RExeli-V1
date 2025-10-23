@@ -262,6 +262,232 @@ export async function convertPdfToPngServer(
 }
 
 /**
+ * Convert all pages of a PDF file to PNG images on the server side
+ *
+ * @param file - PDF file from FormData or File object
+ * @param onProgress - Optional callback to track conversion progress
+ * @returns Array of base64 encoded PNG images, one per page
+ */
+export async function convertPdfToAllPngsServer(
+  file: File,
+  onProgress?: (current: number, total: number) => void
+): Promise<Array<{
+  imageBase64: string;
+  mimeType: string;
+  pageNumber: number;
+}>> {
+  console.log(`[PDF-Server] Starting multi-page PDF to PNG conversion for: ${file.name}`);
+  console.log(`[PDF-Server] File size: ${Math.round(file.size / 1024)}KB`);
+
+  // Validate input
+  if (!file || file.type !== 'application/pdf') {
+    throw new Error('Invalid file: Must be a PDF file');
+  }
+
+  try {
+    // Step 1: Load PDF.js for Node.js
+    const pdfjs = await loadPdfjsForNode();
+
+    // Step 2: Convert File to ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    console.log(`[PDF-Server] File loaded: ${arrayBuffer.byteLength} bytes`);
+
+    // Step 3: Load PDF document
+    const loadingTask = pdfjs.getDocument({
+      data: new Uint8Array(arrayBuffer),
+      disableStream: true,
+      disableAutoFetch: true,
+      disableFontFace: false,
+      useSystemFonts: true,
+    });
+
+    const pdfDocument: PDFDocumentProxy = await loadingTask.promise;
+    const numPages = pdfDocument.numPages;
+    console.log(`[PDF-Server] PDF loaded successfully: ${numPages} pages to convert`);
+
+    // Warn if PDF has too many pages
+    if (numPages > 20) {
+      console.warn(`[PDF-Server] PDF has ${numPages} pages. This may result in large API costs and potential token limits.`);
+    }
+
+    const allPages: Array<{
+      imageBase64: string;
+      mimeType: string;
+      pageNumber: number;
+    }> = [];
+
+    // Convert each page
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      try {
+        console.log(`[PDF-Server] Converting page ${pageNum} of ${numPages}...`);
+
+        // Report progress
+        if (onProgress) {
+          onProgress(pageNum, numPages);
+        }
+
+        // Get the page
+        const page: PDFPageProxy = await pdfDocument.getPage(pageNum);
+
+        // Set up rendering parameters
+        const scale = 2.0;
+        const viewport = page.getViewport({ scale });
+        const width = Math.floor(viewport.width);
+        const height = Math.floor(viewport.height);
+
+        console.log(`[PDF-Server] Rendering page ${pageNum} at ${width}x${height} (scale: ${scale})`);
+
+        // Create buffer for RGBA pixel data
+        const canvasData = new Uint8ClampedArray(width * height * 4);
+
+        // Create minimal canvas context
+        const canvasContext = {
+          canvas: { width, height, style: {} },
+          getImageData: (x: number, y: number, w: number, h: number) => ({
+            data: canvasData.slice(y * width * 4 + x * 4, (y + h) * width * 4 + (x + w) * 4),
+            width: w,
+            height: h,
+          }),
+          putImageData: (imageData: any, dx: number, dy: number) => {
+            const src = imageData.data;
+            const w = imageData.width;
+            const h = imageData.height;
+            for (let y = 0; y < h; y++) {
+              for (let x = 0; x < w; x++) {
+                const srcIdx = (y * w + x) * 4;
+                const dstIdx = ((dy + y) * width + (dx + x)) * 4;
+                canvasData[dstIdx] = src[srcIdx];
+                canvasData[dstIdx + 1] = src[srcIdx + 1];
+                canvasData[dstIdx + 2] = src[srcIdx + 2];
+                canvasData[dstIdx + 3] = src[srcIdx + 3];
+              }
+            }
+          },
+          save: () => {},
+          restore: () => {},
+          translate: () => {},
+          scale: () => {},
+          transform: () => {},
+          setTransform: () => {},
+          resetTransform: () => {},
+          fillRect: (x: number, y: number, w: number, h: number) => {
+            for (let py = y; py < y + h && py < height; py++) {
+              for (let px = x; px < x + w && px < width; px++) {
+                const idx = (py * width + px) * 4;
+                canvasData[idx] = 255;
+                canvasData[idx + 1] = 255;
+                canvasData[idx + 2] = 255;
+                canvasData[idx + 3] = 255;
+              }
+            }
+          },
+          clearRect: () => {},
+          strokeRect: () => {},
+          beginPath: () => {},
+          closePath: () => {},
+          moveTo: () => {},
+          lineTo: () => {},
+          rect: () => {},
+          arc: () => {},
+          arcTo: () => {},
+          quadraticCurveTo: () => {},
+          bezierCurveTo: () => {},
+          fill: () => {},
+          stroke: () => {},
+          clip: () => {},
+          isPointInPath: () => false,
+          drawImage: () => {},
+          createImageData: (w: number, h: number) => ({
+            data: new Uint8ClampedArray(w * h * 4),
+            width: w,
+            height: h,
+          }),
+          createLinearGradient: () => ({ addColorStop: () => {} }),
+          createRadialGradient: () => ({ addColorStop: () => {} }),
+          createPattern: () => null,
+          measureText: (text: string) => ({ width: text.length * 10 }),
+          fillStyle: '#000000',
+          strokeStyle: '#000000',
+          globalAlpha: 1,
+          lineWidth: 1,
+          lineCap: 'butt' as const,
+          lineJoin: 'miter' as const,
+          miterLimit: 10,
+          shadowOffsetX: 0,
+          shadowOffsetY: 0,
+          shadowBlur: 0,
+          shadowColor: 'rgba(0, 0, 0, 0)',
+          globalCompositeOperation: 'source-over' as const,
+          font: '10px sans-serif',
+          textAlign: 'start' as const,
+          textBaseline: 'alphabetic' as const,
+        };
+
+        // Render the page
+        const renderContext = {
+          canvasContext: canvasContext as any,
+          viewport: viewport,
+          intent: 'print' as const,
+        };
+
+        await page.render(renderContext).promise;
+
+        // Convert to PNG using sharp
+        const pngBuffer = await sharpLib(Buffer.from(canvasData.buffer), {
+          raw: {
+            width,
+            height,
+            channels: 4,
+          }
+        })
+        .png({
+          compressionLevel: 9,
+          quality: 100,
+        })
+        .toBuffer();
+
+        console.log(`[PDF-Server] Page ${pageNum} converted: ${Math.round(pngBuffer.length / 1024)}KB`);
+
+        const imageBase64 = pngBuffer.toString('base64');
+
+        allPages.push({
+          imageBase64,
+          mimeType: 'image/png',
+          pageNumber: pageNum
+        });
+
+      } catch (pageError) {
+        console.error(`[PDF-Server] Error converting page ${pageNum}:`, pageError);
+        throw new Error(`Failed to convert page ${pageNum}: ${pageError instanceof Error ? pageError.message : 'Unknown error'}`);
+      }
+    }
+
+    // Clean up
+    await pdfDocument.destroy();
+
+    const totalSize = allPages.reduce((sum, page) => sum + page.imageBase64.length, 0);
+    console.log(`[PDF-Server] All ${numPages} pages converted successfully. Total size: ${Math.round(totalSize / 1024)}KB`);
+
+    return allPages;
+
+  } catch (error) {
+    console.error('[PDF-Server] Multi-page PDF conversion error:', error);
+
+    if (error instanceof Error) {
+      if (error.message.includes('Invalid PDF structure')) {
+        throw new Error('Invalid PDF file: The file appears to be corrupted or not a valid PDF');
+      } else if (error.message.includes('Password')) {
+        throw new Error('Password-protected PDFs are not supported');
+      } else if (error.message.includes('Failed to convert page')) {
+        throw error; // Re-throw specific page conversion errors
+      }
+    }
+
+    throw new Error(`Failed to convert PDF to images: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
  * Get PDF metadata on server side
  * @param file - PDF file
  * @returns PDF metadata including page count

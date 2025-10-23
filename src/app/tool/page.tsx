@@ -206,10 +206,9 @@ export default function ToolPage() {
           // Warn user about large PDFs with clear guidance
           if (pdfInfo.numPages > 10) {
             toast.warning(
-              `Large Document Warning: This PDF has ${pdfInfo.numPages} pages. ` +
-              `Processing will take 30-60+ seconds and may timeout. ` +
-              `For best results, use documents with 5-10 pages maximum. ` +
-              `Consider splitting larger PDFs into smaller sections.`,
+              `Large Document: This PDF has ${pdfInfo.numPages} pages. ` +
+              `Processing may take up to 5-10 minutes. ` +
+              `For best results, use documents with 10-15 pages maximum.`,
               {
                 duration: 8000,  // Show warning longer for large documents
               }
@@ -217,7 +216,7 @@ export default function ToolPage() {
           } else if (pdfInfo.numPages >= 5 && pdfInfo.numPages <= 10) {
             // Add info toast for reasonable size
             toast.info(
-              `Processing ${pdfInfo.numPages} pages. This will take approximately 30-45 seconds.`,
+              `Processing ${pdfInfo.numPages} pages. This will take approximately 1-3 minutes.`,
               { duration: 4000 }
             );
           }
@@ -298,7 +297,7 @@ export default function ToolPage() {
       const controller = new AbortController();
       const fetchTimeout = setTimeout(() => {
         controller.abort();
-      }, 180000); // 3 minutes - allows for PDF conversion + OpenAI API processing
+      }, 600000); // 10 minutes - allows for multi-page PDF conversion + OpenAI API processing
 
       let extractResponse;
       try {
@@ -320,9 +319,9 @@ export default function ToolPage() {
         if (fetchError instanceof Error) {
           if (fetchError.name === 'AbortError') {
             throw new Error(
-              'Request timeout: PDF extraction took too long. ' +
-              'This can happen with large multi-page documents (10+ pages). ' +
-              'Try splitting your PDF into smaller documents with 5-10 pages each.'
+              'Request timeout: PDF extraction took longer than 10 minutes. ' +
+              'This can happen with very large documents (20+ pages). ' +
+              'Consider splitting into smaller sections.'
             );
           }
           throw fetchError;
