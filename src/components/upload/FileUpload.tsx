@@ -269,7 +269,8 @@ export function FileUpload({
               <Button
                 onClick={handleDocumentTypeConfirmation}
                 disabled={!selectedDocumentType}
-                className="flex-1 h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold"
+                size="lg"
+                className="flex-1"
               >
                 <ArrowRight className="w-4 h-4 mr-2" />
                 Continue to Processing
@@ -277,7 +278,7 @@ export function FileUpload({
               <Button
                 onClick={handleStartOver}
                 variant="outline"
-                className="px-6 h-12"
+                size="lg"
               >
                 Start Over
               </Button>
