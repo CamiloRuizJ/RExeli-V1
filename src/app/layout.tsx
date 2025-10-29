@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import Navbar from "@/components/navigation/Navbar";
+import { cn } from "@/lib/utils";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,7 +33,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-gray-50 min-h-screen`}>
+      <body
+        className={cn(
+          "font-sans antialiased bg-background text-foreground min-h-screen",
+          inter.variable,
+        )}
+      >
         <SessionProvider>
           <div className="min-h-screen flex flex-col">
           {/* Navigation */}

@@ -50,7 +50,7 @@ export default function LandingPage() {
 
             <div className="flex items-center justify-center lg:justify-start">
               <Link href="/tool">
-                <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 sm:px-8 text-base sm:text-lg">
+                <Button size="lg" className="px-6 sm:px-8 text-base sm:text-lg">
                   Try RExeli Now
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -242,23 +242,31 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-emerald-600 py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
+      <section className="bg-primary py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto text-center">
           <div className="space-y-6 lg:space-y-8">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground">
               Ready to Transform Your Document Processing?
             </h2>
-            <p className="text-lg sm:text-xl text-emerald-100 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-primary-foreground/80 max-w-3xl mx-auto">
               Join real estate professionals who are already saving hours with RExeli&apos;s AI-powered document analysis.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <Link href="/tool">
-                <Button size="lg" className="bg-white text-emerald-600 hover:bg-emerald-50 px-6 sm:px-8 w-full sm:w-auto">
+                <Button
+                  variant="inverted"
+                  size="lg"
+                  className="px-6 sm:px-8 w-full sm:w-auto"
+                >
                   Start Processing Documents
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-emerald-600 w-full sm:w-auto">
+              <Button
+                variant="contrast"
+                size="lg"
+                className="w-full sm:w-auto"
+              >
                 Contact Sales
               </Button>
             </div>
