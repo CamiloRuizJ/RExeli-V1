@@ -1257,27 +1257,19 @@ export async function extractDocumentData(
         throw new Error('Invalid multi-page document format');
       }
     }
-    // SCENARIO 2: PDF file (hybrid approach)
+    // SCENARIO 2: PDF file (native PDF support for all page counts)
     else if (file.type === 'application/pdf') {
-      // Estimate page count
+      // Estimate page count for logging
       const estimatedPages = estimatePdfPageCount(file);
       console.log(`PDF detected. Estimated pages: ${estimatedPages}`);
 
-      if (estimatedPages <= 5) {
-        // Use NATIVE PDF support for small documents
-        console.log('Using NATIVE PDF processing (≤5 pages estimated)');
-        const pdfBase64 = await fileToBase64(file);
+      // Use NATIVE PDF support for all PDFs regardless of page count
+      // Claude Sonnet 4.5 can handle multi-page PDFs natively
+      console.log('Using NATIVE PDF processing for all pages');
+      const pdfBase64 = await fileToBase64(file);
 
-        // Call Claude with native PDF - returns ExtractedData directly
-        return await extractDataFromNativePDF(documentType, pdfBase64, prompt);
-      } else {
-        // Reject - client should have converted to PNG
-        throw new Error(
-          `PDF has ${estimatedPages} estimated pages (>5). ` +
-          `Please convert to images on client-side for better control. ` +
-          `The client should use convertPdfToAllImages() before uploading.`
-        );
-      }
+      // Call Claude with native PDF - returns ExtractedData directly
+      return await extractDataFromNativePDF(documentType, pdfBase64, prompt);
     }
     // SCENARIO 3: Image file
     else if (file.type.startsWith('image/')) {
