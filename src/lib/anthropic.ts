@@ -1094,21 +1094,16 @@ export async function extractData(
 
 /**
  * Convert File to base64 string
+ * Server-side implementation using Node.js Buffer
  * @param file - File object (PDF, image, or JSON)
  * @returns Base64 encoded string (without data URL prefix)
  */
 async function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      // Remove data URL prefix (data:image/png;base64,)
-      const base64 = result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
-  });
+  // Server-side: Use Buffer to convert File to base64
+  // File object has arrayBuffer() method in both browser and Node.js
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  return buffer.toString('base64');
 }
 
 /**
