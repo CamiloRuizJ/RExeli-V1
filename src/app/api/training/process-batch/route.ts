@@ -11,7 +11,7 @@ import type {
   DocumentType
 } from '@/lib/types';
 import { supabase, updateTrainingDocumentExtraction, calculateConfidenceScore } from '@/lib/training-utils';
-import { extractDocumentData } from '@/lib/openai';
+import { extractDocumentData } from '@/lib/anthropic';
 
 export async function POST(request: NextRequest) {
   try {

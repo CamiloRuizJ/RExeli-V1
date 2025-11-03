@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { classifyDocument } from '@/lib/openai';
+import { classifyDocument } from '@/lib/anthropic';
 import type { ApiResponse, ClassificationResponse } from '@/lib/types';
 
 export async function POST(request: NextRequest) {

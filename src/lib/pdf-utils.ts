@@ -1,6 +1,7 @@
 /**
  * PDF Processing Utilities
- * Converts PDF files to images for OpenAI Vision API processing
+ * Converts PDF files to images for AI Vision API processing (Claude Sonnet 4.5)
+ * Works identically for both OpenAI Vision and Anthropic Claude Vision
  */
 
 // PDF.js library instance - dynamically loaded
@@ -71,7 +72,7 @@ async function loadPdfjs(): Promise<typeof import('pdfjs-dist')> {
 }
 
 /**
- * Convert PDF file to image (PNG) for OpenAI Vision API
+ * Convert PDF file to image (PNG) for AI Vision API (Claude Sonnet 4.5)
  * @param file - PDF file from form data
  * @param pageNumber - Page number to convert (default: 1)
  * @returns Base64 encoded PNG image

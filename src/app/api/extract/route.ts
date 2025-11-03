@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractDocumentData } from '@/lib/openai';
+import { extractDocumentData } from '@/lib/anthropic';
 import { transformExtractedData } from '@/lib/data-transformers';
 import type { ApiResponse, ExtractionResponse, DocumentType, ExtractedData } from '@/lib/types';
 
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Extract structured data using OpenAI Vision (handles PDF conversion automatically)
+    // Extract structured data using Claude Sonnet 4.5 (handles PDF conversion automatically)
     const startTime = Date.now();
     console.log(`Processing file for extraction: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
 
@@ -131,15 +131,15 @@ export async function POST(request: NextRequest) {
                        'Please try with a smaller document or split your PDF into sections.';
         statusCode = 504;
       }
-      // Handle specific OpenAI errors
-      else if (error.message.includes('401') || error.message.includes('invalid_api_key')) {
-        errorMessage = 'Invalid OpenAI API key. Please check your API key configuration.';
+      // Handle specific Claude/Anthropic errors
+      else if (error.message.includes('401') || error.message.includes('invalid_api_key') || error.message.includes('authentication')) {
+        errorMessage = 'Invalid Anthropic API key. Please check your API key configuration.';
         statusCode = 401;
-      } else if (error.message.includes('429')) {
-        errorMessage = 'OpenAI API rate limit exceeded. Please try again later.';
+      } else if (error.message.includes('429') || error.message.includes('rate_limit')) {
+        errorMessage = 'Anthropic API rate limit exceeded. Please try again later.';
         statusCode = 429;
-      } else if (error.message.includes('insufficient_quota')) {
-        errorMessage = 'OpenAI API quota exceeded. Please check your billing details.';
+      } else if (error.message.includes('insufficient_quota') || error.message.includes('credit_balance')) {
+        errorMessage = 'Anthropic API quota exceeded. Please check your billing details.';
         statusCode = 402;
       } else if (error.message.includes('No extraction prompt available')) {
         errorMessage = `Unsupported document type for extraction: ${error.message.split(': ')[1] || 'unknown'}`;

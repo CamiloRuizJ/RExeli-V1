@@ -2,6 +2,11 @@
  * OpenAI JSONL Export Utility
  * Generates OpenAI fine-tuning format training files
  * Following OpenAI's best practices for GPT-4o-mini fine-tuning
+ *
+ * ⚠️ MIGRATION NOTE: This file is DISABLED and preserved for reference only.
+ * The application has migrated to Claude Sonnet 4.5. Fine-tuning is not
+ * currently active. If Claude fine-tuning is needed in the future, this
+ * file will need to be adapted to Anthropic's fine-tuning format.
  */
 
 import type {

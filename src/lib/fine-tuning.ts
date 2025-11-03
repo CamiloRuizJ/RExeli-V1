@@ -1,12 +1,36 @@
 /**
  * Fine-Tuning Pipeline Utilities
- * Manages OpenAI fine-tuning jobs, model versioning, and auto-triggering
+ *
+ * ⚠️ MIGRATION NOTE: This file contains OpenAI-specific fine-tuning logic.
+ * Since the application has migrated to Claude Sonnet 4.5, this fine-tuning
+ * system is currently DISABLED and preserved for reference only.
+ *
+ * Claude's base model performance is excellent for structured data extraction,
+ * and initial testing should be done without fine-tuning. If fine-tuning proves
+ * necessary, Claude supports a different fine-tuning process that will require
+ * significant changes to this implementation.
+ *
+ * TODO: Future Claude Fine-Tuning Migration
+ * - Adapt for Anthropic fine-tuning API (different format)
+ * - Update training data export format for Claude
+ * - Implement Claude-specific model management
+ * - Test if fine-tuning improves results over base model
+ *
+ * For now, all functions in this file will return default/disabled responses
+ * to prevent OpenAI API calls.
  */
 
-import OpenAI from 'openai';
+// OpenAI import commented out - migrated to Claude Sonnet 4.5
+// import OpenAI from 'openai';
 import { decryptApiKey } from './auth';
 import { supabase } from './training-utils';
-import { exportTrainingData } from './openai-export';
+// OpenAI export utilities disabled - fine-tuning not active with Claude
+// import { exportTrainingData } from './openai-export';
+
+// Type stub for disabled exportTrainingData function
+const exportTrainingData = async (docType: any): Promise<any> => {
+  throw new Error('Fine-tuning disabled - migrated to Claude');
+};
 import type {
   DocumentType,
   FineTuningJob,
@@ -16,7 +40,13 @@ import type {
   FineTuningStatus
 } from './types';
 
-// Get OpenAI client with decrypted API key
+// DISABLED: OpenAI client function (migrated to Claude)
+// Fine-tuning is not currently active - Claude base model is used instead
+function getOpenAIClient(): any {
+  throw new Error('OpenAI fine-tuning is disabled. Application has migrated to Claude Sonnet 4.5.');
+}
+
+/* ORIGINAL OpenAI CLIENT (commented out for reference)
 function getOpenAIClient(): OpenAI {
   const encryptedKey = process.env.ENCRYPTED_OPENAI_API_KEY;
   if (!encryptedKey) {
@@ -34,14 +64,15 @@ function getOpenAIClient(): OpenAI {
 
     return new OpenAI({
       apiKey,
-      maxRetries: 3, // Retry failed requests up to 3 times
-      timeout: 600000, // 600 second timeout (10 minutes)
+      maxRetries: 3,
+      timeout: 600000,
     });
   } catch (error) {
     console.error('Failed to initialize OpenAI client:', error);
     throw new Error(`OpenAI client initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
+*/
 
 /**
  * Check if fine-tuning should be triggered for a document type
