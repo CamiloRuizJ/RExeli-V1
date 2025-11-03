@@ -54,7 +54,6 @@ export default function ToolPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [pdfConversionProgress, setPdfConversionProgress] = useState<{current: number; total: number} | null>(null);
 
   // Refs for auto-scrolling
   const documentPreviewRef = useRef<HTMLDivElement>(null);
@@ -73,22 +72,6 @@ export default function ToolPage() {
         behavior: 'smooth'
       });
     }
-  }, []);
-
-  // Preload PDF.js for better user experience
-  useEffect(() => {
-    // Preload PDF.js when component mounts
-    const preloadPdfjs = async () => {
-      try {
-        const { preloadPdfjs } = await import('@/lib/pdf-utils');
-        await preloadPdfjs();
-      } catch (error) {
-        console.warn('PDF.js preload failed:', error);
-        // Don't show user error for preload failure
-      }
-    };
-
-    preloadPdfjs();
   }, []);
 
   // Initialize processing steps (removed auto-classification)
@@ -186,96 +169,9 @@ export default function ToolPage() {
       updateStep(1, 'processing');
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate processing
 
-      let fileToProcess = currentFile.file;
-
-      // Handle PDF conversion on client side if needed
-      if (currentFile.file.type === 'application/pdf') {
-        try {
-          console.log('Converting PDF to images on client side (all pages)...');
-
-          // Update step with specific PDF processing status
-          updateStep(1, 'processing', 'Converting PDF pages to images for AI analysis...');
-
-          // Dynamically import the PDF utilities
-          const { convertPdfToAllImages, getPdfInfo } = await import('@/lib/pdf-utils');
-
-          // Get PDF info first to show total pages
-          const pdfInfo = await getPdfInfo(currentFile.file);
-          console.log(`PDF has ${pdfInfo.numPages} pages`);
-
-          // Warn user about large PDFs with clear guidance
-          if (pdfInfo.numPages > 10) {
-            toast.warning(
-              `Large Document: This PDF has ${pdfInfo.numPages} pages. ` +
-              `Processing may take up to 5-10 minutes. ` +
-              `For best results, use documents with 10-15 pages maximum.`,
-              {
-                duration: 8000,  // Show warning longer for large documents
-              }
-            );
-          } else if (pdfInfo.numPages >= 5 && pdfInfo.numPages <= 10) {
-            // Add info toast for reasonable size
-            toast.info(
-              `Processing ${pdfInfo.numPages} pages. This will take approximately 1-3 minutes.`,
-              { duration: 4000 }
-            );
-          }
-
-          // Convert all PDF pages to images with progress tracking
-          const allPages = await convertPdfToAllImages(
-            currentFile.file,
-            (current, total) => {
-              setPdfConversionProgress({ current, total });
-              updateStep(1, 'processing', `Converting page ${current} of ${total}...`);
-            }
-          );
-
-          // Clear progress indicator
-          setPdfConversionProgress(null);
-
-          console.log(`All ${allPages.length} pages converted successfully`);
-
-          // Create a multi-page image blob by encoding all pages
-          // We'll pass the array of images to the API
-          // For now, create a marker file that indicates multi-page processing
-          const multiPageData = JSON.stringify({
-            type: 'multi-page',
-            pages: allPages.map(page => ({
-              imageBase64: page.imageBase64,
-              mimeType: page.mimeType,
-              pageNumber: page.pageNumber
-            }))
-          });
-
-          // Store multi-page data in a blob
-          const blob = new Blob([multiPageData], { type: 'application/json' });
-          const originalName = currentFile.file.name.replace(/\.pdf$/i, '');
-          fileToProcess = new File([blob], `${originalName}_multipage.json`, { type: 'application/json' });
-
-          const totalSize = allPages.reduce((sum, page) => sum + page.imageBase64.length, 0);
-          console.log(`PDF converted to ${allPages.length} images successfully: ${Math.round(totalSize / 1024)}KB total`);
-
-        } catch (pdfError) {
-          console.error('PDF conversion failed:', pdfError);
-
-          // Provide specific error handling for different PDF issues
-          let errorMessage = 'PDF conversion failed';
-          if (pdfError instanceof Error) {
-            if (pdfError.message.includes('Password')) {
-              errorMessage = 'Password-protected PDFs are not supported';
-            } else if (pdfError.message.includes('corrupted')) {
-              errorMessage = 'PDF file appears to be corrupted';
-            } else if (pdfError.message.includes('too large')) {
-              errorMessage = 'PDF file is too large (max 25MB)';
-            } else if (pdfError.message.includes('worker')) {
-              errorMessage = 'PDF processing failed - please check your internet connection';
-            } else {
-              errorMessage = `PDF conversion failed: ${pdfError.message}`;
-            }
-          }
-
-          throw new Error(errorMessage);
-        }
+      // Check if we have a Supabase URL for the uploaded file
+      if (!currentFile.supabaseUrl) {
+        throw new Error('File must be uploaded to Supabase before processing');
       }
 
       updateStep(1, 'completed', 'Document prepared for processing');
@@ -289,15 +185,16 @@ export default function ToolPage() {
         scrollToElement(processingWorkflowRef, 80);
       }, 200);
 
+      // Send Supabase URL instead of large file blob to avoid 413 errors
       const extractionFormData = new FormData();
-      extractionFormData.append('file', fileToProcess);
+      extractionFormData.append('supabaseUrl', currentFile.supabaseUrl);
       extractionFormData.append('documentType', selectedDocumentType);
 
       // Create AbortController for timeout protection
       const controller = new AbortController();
       const fetchTimeout = setTimeout(() => {
         controller.abort();
-      }, 600000); // 10 minutes - allows for multi-page PDF conversion + OpenAI API processing
+      }, 600000); // 10 minutes - allows for Claude API processing of multi-page PDFs
 
       let extractResponse;
       try {
@@ -504,31 +401,6 @@ export default function ToolPage() {
                   </p>
                 </div>
               </div>
-
-              {/* PDF Conversion Progress Indicator */}
-              {pdfConversionProgress && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      <span className="font-medium text-blue-900">
-                        Converting PDF Pages
-                      </span>
-                    </div>
-                    <span className="text-sm text-blue-700">
-                      Page {pdfConversionProgress.current} of {pdfConversionProgress.total}
-                    </span>
-                  </div>
-                  <div className="w-full bg-blue-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${(pdfConversionProgress.current / pdfConversionProgress.total) * 100}%`
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
 
               <ProcessingWorkflow
                 file={currentFile!}

@@ -38,7 +38,12 @@
       "Bash(dir:*)",
       "Bash(findstr:*)",
       "Bash(where npx)",
-      "Bash(Select-Object -First 100)"
+      "Bash(Select-Object -First 100)",
+      "Bash(del encrypt-anthropic-key.js)",
+      "Bash(npm uninstall:*)",
+      "Bash(tee:*)",
+      "Bash(git log:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

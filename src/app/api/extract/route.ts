@@ -7,13 +7,15 @@ export async function POST(request: NextRequest) {
   try {
 
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file') as File | null;
+    const supabaseUrl = formData.get('supabaseUrl') as string | null;
     const documentType = formData.get('documentType') as DocumentType;
 
-    if (!file) {
+    // Accept either a file directly or a Supabase URL to fetch from
+    if (!file && !supabaseUrl) {
       return NextResponse.json<ApiResponse>({
         success: false,
-        error: 'No file provided'
+        error: 'No file or Supabase URL provided'
       }, { status: 400 });
     }
 
@@ -46,14 +48,41 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // If Supabase URL is provided, fetch the file from there
+    let fileToProcess: File;
+    if (supabaseUrl) {
+      console.log(`Fetching file from Supabase URL: ${supabaseUrl}`);
+      try {
+        const response = await fetch(supabaseUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch file from Supabase: ${response.statusText}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+        // Extract filename from URL or use default
+        const urlParts = supabaseUrl.split('/');
+        const filename = urlParts[urlParts.length - 1].split('?')[0] || 'document.pdf';
+        fileToProcess = new File([blob], filename, { type: 'application/pdf' });
+        console.log(`Successfully fetched file from Supabase: ${filename}, size: ${fileToProcess.size} bytes`);
+      } catch (fetchError) {
+        console.error('Error fetching file from Supabase:', fetchError);
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: `Failed to fetch file from Supabase: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`
+        }, { status: 500 });
+      }
+    } else {
+      fileToProcess = file as File;
+    }
+
     // Extract structured data using Claude Sonnet 4.5 (handles PDF conversion automatically)
     const startTime = Date.now();
-    console.log(`Processing file for extraction: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+    console.log(`Processing file for extraction: ${fileToProcess.name}, size: ${fileToProcess.size} bytes, type: ${fileToProcess.type}`);
 
     // Check if this is a multi-page document
-    if (file.type === 'application/json' && file.name.includes('multipage')) {
+    if (fileToProcess.type === 'application/json' && fileToProcess.name.includes('multipage')) {
       try {
-        const fileText = await file.text();
+        const fileText = await fileToProcess.text();
         const multiPageData = JSON.parse(fileText);
         if (multiPageData.type === 'multi-page' && Array.isArray(multiPageData.pages)) {
           console.log(`Multi-page document detected: ${multiPageData.pages.length} pages for ${documentType}`);
@@ -70,7 +99,7 @@ export async function POST(request: NextRequest) {
     let warnings: string[] = [];
 
     try {
-      extractedData = await extractDocumentData(file, documentType);
+      extractedData = await extractDocumentData(fileToProcess, documentType);
       console.log('Raw data extraction completed:', extractedData);
 
       // Transform the extracted data to match display component expectations
