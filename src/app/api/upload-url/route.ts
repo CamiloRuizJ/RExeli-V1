@@ -55,39 +55,30 @@ export async function POST(request: NextRequest) {
     const cleanFileName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
     const filePath = `${timestamp}_${cleanFileName}`;
 
-    console.log(`Upload URL API: Generating signed URL for ${filePath} (${fileSize} bytes)`);
+    console.log(`Upload URL API: Preparing for file ${filePath} (${fileSize} bytes)`);
 
-    // Create signed upload URL - expires in 1 hour
-    const { data, error } = await supabase.storage
-      .from('documents')
-      .createSignedUploadUrl(filePath, {
-        upsert: false
-      });
-
-    if (error) {
-      console.error('Supabase signed URL error:', error);
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: `Failed to create upload URL: ${error.message}`
-      }, { status: 500 });
-    }
+    // Instead of signed URLs, return the direct upload API endpoint
+    // The client will upload directly through our /api/upload endpoint
+    const uploadUrl = '/api/upload';
 
     // Get the future public URL
     const { data: urlData } = supabase.storage
       .from('documents')
       .getPublicUrl(filePath);
 
+    const publicUrl = urlData.publicUrl;
+
     const response: ApiResponse<UploadUrlResponse> = {
       success: true,
       data: {
-        uploadUrl: data.signedUrl,
+        uploadUrl: uploadUrl,
         filePath: filePath,
-        publicUrl: urlData.publicUrl
+        publicUrl: publicUrl
       },
-      message: 'Upload URL generated successfully'
+      message: 'Upload endpoint ready'
     };
 
-    console.log('Upload URL API: Generated successfully:', response.data);
+    console.log('Upload URL API: Response prepared:', response.data);
     return NextResponse.json(response);
 
   } catch (error) {
