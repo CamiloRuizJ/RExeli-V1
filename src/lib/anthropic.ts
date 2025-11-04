@@ -1141,7 +1141,7 @@ async function extractDataFromNativePDF(
 
     const response = await anthropic.messages.create({
       model: await getActiveModelForDocumentType(documentType),
-      max_tokens: 100000, // Increased for large documents with many comparables (supports up to 200K)
+      max_tokens: 64000, // Maximum for Claude Sonnet 4.5 (supports large documents with many comparables)
       temperature: 0.1,
       system: "You are an expert commercial real estate document analyst with 20+ years of experience.",
       messages: [
@@ -1258,9 +1258,9 @@ export async function extractDocumentData(
     }
     // SCENARIO 2: PDF file (native PDF support for all page counts)
     else if (file.type === 'application/pdf') {
-      // Estimate page count for logging
+      // Estimate page count for logging (based on file size - may not reflect actual page count)
       const estimatedPages = estimatePdfPageCount(file);
-      console.log(`PDF detected. Estimated pages: ${estimatedPages}`);
+      console.log(`PDF detected. Estimated ${estimatedPages} pages based on file size (actual page count may vary)`);
 
       // Use NATIVE PDF support for all PDFs regardless of page count
       // Claude Sonnet 4.5 can handle multi-page PDFs natively
