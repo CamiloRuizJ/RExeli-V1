@@ -1,23 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadFileToSupabase } from '@/lib/supabase';
 import type { ApiResponse, UploadResponse } from '@/lib/types';
 
+// Route segment config - optimize for metadata processing
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 seconds timeout for metadata operations
+
+/**
+ * Upload API Route - Accepts metadata from direct Supabase uploads
+ *
+ * This route NO LONGER accepts file uploads directly. Files are uploaded
+ * directly from the browser to Supabase Storage, and this route only
+ * receives metadata for database record creation.
+ *
+ * This approach bypasses Vercel's 4.5MB request body limit.
+ */
 export async function POST(request: NextRequest) {
   try {
+    // Parse JSON metadata (no longer using FormData)
+    const metadata = await request.json();
+    const { supabaseUrl, filename, size, mimeType, path } = metadata;
 
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const skipSizeLimit = formData.get('skipSizeLimit') === 'true'; // For admin training uploads
-    const bucket = (formData.get('bucket') as string) || 'documents'; // Default to 'documents' bucket
-
-    if (!file) {
+    // Validate required metadata fields
+    if (!supabaseUrl) {
       return NextResponse.json<ApiResponse>({
         success: false,
-        error: 'No file provided'
+        error: 'Missing required field: supabaseUrl'
       }, { status: 400 });
     }
 
-    // Validate file type (PDF documents)
+    if (!filename) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Missing required field: filename'
+      }, { status: 400 });
+    }
+
+    if (!size) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Missing required field: size'
+      }, { status: 400 });
+    }
+
+    // Validate file type from mimeType
     const allowedTypes = [
       'application/pdf',
       'image/jpeg',
@@ -25,58 +50,68 @@ export async function POST(request: NextRequest) {
       'image/png'
     ];
 
-    if (!allowedTypes.includes(file.type)) {
+    if (mimeType && !allowedTypes.includes(mimeType)) {
       return NextResponse.json<ApiResponse>({
         success: false,
         error: 'Invalid file type. Please upload PDF, JPEG, or PNG files only.'
       }, { status: 400 });
     }
 
-    // Validate file size (25MB limit for regular uploads, no limit for admin training uploads)
-    if (!skipSizeLimit) {
-      const maxSize = 25 * 1024 * 1024; // 25MB in bytes
-      if (file.size > maxSize) {
-        return NextResponse.json<ApiResponse>({
-          success: false,
-          error: 'File size too large. Maximum size is 25MB.'
-        }, { status: 400 });
-      }
+    // Validate file size (25MB limit)
+    const maxSize = 25 * 1024 * 1024; // 25MB in bytes
+    if (size > maxSize) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'File size too large. Maximum size is 25MB.'
+      }, { status: 400 });
     }
 
-    // Upload to Supabase
-    console.log(`Upload API: Starting upload for ${file.name} (${file.size} bytes) to bucket '${bucket}'`);
-    const uploadResult = await uploadFileToSupabase(file, bucket);
-    console.log('Upload API: Upload completed successfully:', uploadResult);
+    // Validate Supabase URL format
+    if (!supabaseUrl.includes('supabase.co/storage/v1/object/public/')) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Invalid Supabase URL format'
+      }, { status: 400 });
+    }
+
+    console.log(`[Upload API] Received metadata for: ${filename} (${(size / 1024 / 1024).toFixed(2)}MB)`);
+    console.log(`[Upload API] Supabase URL: ${supabaseUrl}`);
+
+    // Create response with upload metadata
+    // File is already uploaded to Supabase at this point
+    const uploadResult: UploadResponse = {
+      fileId: path || filename,
+      url: supabaseUrl,
+      filename: filename,
+      size: size
+    };
 
     const response: ApiResponse<UploadResponse> = {
       success: true,
       data: uploadResult,
-      message: 'File uploaded successfully'
+      message: 'File metadata recorded successfully'
     };
 
+    console.log('[Upload API] Metadata processing completed successfully');
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('Upload API error:', error);
-    
+    console.error('[Upload API] Metadata processing error:', error);
+
     // Provide more detailed error messages based on error type
-    let errorMessage = 'Upload failed';
+    let errorMessage = 'Metadata processing failed';
     let statusCode = 500;
-    
+
     if (error instanceof Error) {
       errorMessage = error.message;
-      // Handle specific Supabase errors
-      if (error.message.includes('signature verification failed')) {
-        errorMessage = 'Supabase authentication failed. Please check your API keys.';
-        statusCode = 401;
-      } else if (error.message.includes('Invalid API key')) {
-        errorMessage = 'Invalid Supabase API key. Please check your configuration.';
-        statusCode = 401;
-      } else if (error.message.includes('Upload failed')) {
+
+      // Handle JSON parsing errors
+      if (error.message.includes('JSON')) {
+        errorMessage = 'Invalid request format. Expected JSON metadata.';
         statusCode = 400;
       }
     }
-    
+
     return NextResponse.json<ApiResponse>({
       success: false,
       error: errorMessage

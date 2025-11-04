@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { uploadFileDirectly } from '@/lib/supabase-client';
 import type { DocumentFile, DocumentType } from '@/lib/types';
 
 interface FileUploadProps {
@@ -74,69 +75,81 @@ export function FileUpload({
     onFileUpload(documentFile);
 
     try {
-      // Upload directly through our API endpoint (which handles Supabase upload)
-      const formData = new FormData();
-      formData.append('file', file);
+      console.log('[FileUpload] Starting direct Supabase upload for:', file.name, `(${(file.size / 1024 / 1024).toFixed(2)}MB)`);
 
-      const xhr = new XMLHttpRequest();
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const progress = Math.round((event.loaded / event.total) * 100);
-          const updatedFile = { ...documentFile, uploadProgress: progress };
-
-          setUploadingFiles(prev => {
+      // Simulate progress updates during upload (Supabase SDK doesn't provide upload progress)
+      const progressInterval = setInterval(() => {
+        setUploadingFiles(prev => {
+          const currentFile = prev.get(fileId);
+          if (currentFile && currentFile.uploadProgress < 90) {
+            const newProgress = Math.min(currentFile.uploadProgress + 10, 90);
+            const updatedFile = { ...currentFile, uploadProgress: newProgress };
             const newMap = new Map(prev);
             newMap.set(fileId, updatedFile);
             return newMap;
-          });
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-          if (response.success && response.data) {
-            const completedFile: DocumentFile = {
-              ...documentFile,
-              status: 'uploaded',
-              uploadProgress: 100,
-              supabaseUrl: response.data.url // URL from API response
-            };
-
-            setUploadingFiles(prev => {
-              const newMap = new Map(prev);
-              newMap.set(fileId, completedFile);
-              return newMap;
-            });
-
-            // Show document type selection step instead of immediate completion
-            setUploadedFile(completedFile);
-            setShowDocumentTypeSelection(true);
-          } else {
-            throw new Error(response.error || 'Upload failed');
           }
-        } else {
-          const response = JSON.parse(xhr.responseText);
-          throw new Error(response.error || `Upload failed with status ${xhr.status}`);
-        }
-      };
-
-      xhr.onerror = () => {
-        const errorFile = { ...documentFile, status: 'error' as const };
-        setUploadingFiles(prev => {
-          const newMap = new Map(prev);
-          newMap.set(fileId, errorFile);
-          return newMap;
+          return prev;
         });
-        onUploadError('Upload failed due to network error');
+      }, 200);
+
+      // Upload directly to Supabase Storage (bypasses Vercel completely!)
+      const uploadResult = await uploadFileDirectly(file, 'documents');
+
+      // Clear progress interval
+      clearInterval(progressInterval);
+
+      console.log('[FileUpload] Direct upload successful:', uploadResult.url);
+
+      // Now send only metadata to our API endpoint for database record creation
+      const metadataResponse = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          supabaseUrl: uploadResult.url,
+          filename: uploadResult.filename,
+          size: file.size,
+          mimeType: file.type,
+          path: uploadResult.path
+        })
+      });
+
+      // Handle potential HTML error responses
+      const contentType = metadataResponse.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        // Got HTML instead of JSON - likely a 413 or 500 error
+        const htmlText = await metadataResponse.text();
+        console.error('[FileUpload] Received HTML response instead of JSON:', htmlText.substring(0, 200));
+        throw new Error('Server returned an error page. Please try again or contact support.');
+      }
+
+      const metadataResult = await metadataResponse.json();
+
+      if (!metadataResponse.ok || !metadataResult.success) {
+        throw new Error(metadataResult.error || `Metadata save failed with status ${metadataResponse.status}`);
+      }
+
+      const completedFile: DocumentFile = {
+        ...documentFile,
+        status: 'uploaded',
+        uploadProgress: 100,
+        supabaseUrl: uploadResult.url
       };
 
-      // Upload through our API endpoint
-      xhr.open('POST', '/api/upload');
-      xhr.send(formData);
+      setUploadingFiles(prev => {
+        const newMap = new Map(prev);
+        newMap.set(fileId, completedFile);
+        return newMap;
+      });
+
+      // Show document type selection step
+      setUploadedFile(completedFile);
+      setShowDocumentTypeSelection(true);
 
     } catch (error) {
+      console.error('[FileUpload] Upload error:', error);
+
       const errorFile = { ...documentFile, status: 'error' as const };
       setUploadingFiles(prev => {
         const newMap = new Map(prev);
@@ -145,9 +158,20 @@ export function FileUpload({
       });
 
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-      onUploadError(errorMessage);
+
+      // Provide user-friendly error messages
+      let userMessage = errorMessage;
+      if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
+        userMessage = 'Network error. Please check your connection and try again.';
+      } else if (errorMessage.includes('413') || errorMessage.includes('too large')) {
+        userMessage = 'File size limit exceeded. Please use a smaller file (max 25MB).';
+      } else if (errorMessage.includes('Supabase')) {
+        userMessage = 'Storage service error. Please try again in a moment.';
+      }
+
+      onUploadError(userMessage);
     }
-  }, [onFileUpload, onUploadComplete, onUploadError]);
+  }, [onFileUpload, onUploadError]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach(uploadFile);
@@ -289,14 +313,14 @@ export function FileUpload({
             } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:text-blue-600'}`}
           >
             <input {...getInputProps()} />
-            
+
             {/* Upload Icon with Animation */}
             <div className={`mx-auto mb-6 transition-all duration-300 ${
               isDragActive ? 'scale-110' : 'hover:scale-105'
             }`}>
               <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${
-                isDragActive 
-                  ? 'bg-blue-100 border-2 border-blue-300' 
+                isDragActive
+                  ? 'bg-blue-100 border-2 border-blue-300'
                   : 'bg-gray-50 border-2 border-gray-200'
               }`}>
                 <Upload className={`w-8 h-8 ${
@@ -304,7 +328,7 @@ export function FileUpload({
                 }`} />
               </div>
             </div>
-            
+
             {isDragActive ? (
               <div className="space-y-2">
                 <p className="text-xl font-semibold text-blue-600">Drop your document here</p>
@@ -317,13 +341,13 @@ export function FileUpload({
                     {isProcessing ? 'Processing your document...' : 'Upload Your Real Estate Document'}
                   </p>
                   <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                    Drag & drop your file here, or click to browse. We support rent rolls, 
+                    Drag & drop your file here, or click to browse. We support rent rolls,
                     offering memos, lease agreements, and more.
                   </p>
                 </div>
-                
-                <Button 
-                  className="px-8 py-3 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus-ring" 
+
+                <Button
+                  className="px-8 py-3 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus-ring"
                   disabled={isProcessing}
                 >
                   {isProcessing ? (
@@ -335,7 +359,7 @@ export function FileUpload({
                     'Choose File'
                   )}
                 </Button>
-                
+
                 {/* Supported File Types */}
                 <div className="flex items-center justify-center space-x-4 mt-6 text-xs text-gray-400">
                   <div className="flex items-center space-x-1">
@@ -369,47 +393,47 @@ export function FileUpload({
             <Card key={file.id} className="p-6 card-hover border border-gray-100 shadow-sm">
               <div className="flex items-center space-x-4">
                 <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                  file.status === 'uploading' 
-                    ? 'bg-blue-100' 
-                    : file.status === 'uploaded' 
-                    ? 'bg-green-100' 
+                  file.status === 'uploading'
+                    ? 'bg-blue-100'
+                    : file.status === 'uploaded'
+                    ? 'bg-green-100'
                     : 'bg-red-100'
                 }`}>
                   {getStatusIcon(file.status)}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-base font-semibold text-gray-900 truncate">
                       {file.name}
                     </p>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      file.status === 'uploading' 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : file.status === 'uploaded' 
-                        ? 'bg-green-100 text-green-700' 
+                      file.status === 'uploading'
+                        ? 'bg-blue-100 text-blue-700'
+                        : file.status === 'uploaded'
+                        ? 'bg-green-100 text-green-700'
                         : 'bg-red-100 text-red-700'
                     }`}>
-                      {file.status === 'uploading' 
-                        ? `${file.uploadProgress}%` 
-                        : file.status === 'uploaded' 
-                        ? 'Ready' 
+                      {file.status === 'uploading'
+                        ? `${file.uploadProgress}%`
+                        : file.status === 'uploaded'
+                        ? 'Ready'
                         : 'Error'
                       }
                     </span>
                   </div>
-                  
+
                   <p className="text-sm text-gray-500 mb-3">
                     {formatFileSize(file.size)} • {file.type.split('/')[1]?.toUpperCase() || 'Unknown'}
                   </p>
-                  
+
                   {file.status === 'uploading' && (
                     <div className="space-y-2">
                       <Progress value={file.uploadProgress} className="h-2 bg-gray-100" />
-                      <p className="text-xs text-gray-400">Uploading to secure storage...</p>
+                      <p className="text-xs text-gray-400">Uploading directly to secure storage (bypassing server limits)...</p>
                     </div>
                   )}
-                  
+
                   {file.status === 'uploaded' && (
                     <p className="text-xs text-green-600 font-medium">✓ Upload complete, ready for AI processing</p>
                   )}

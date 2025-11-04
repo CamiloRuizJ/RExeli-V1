@@ -3,6 +3,10 @@ import { extractDocumentData } from '@/lib/anthropic';
 import { transformExtractedData } from '@/lib/data-transformers';
 import type { ApiResponse, ExtractionResponse, DocumentType, ExtractedData } from '@/lib/types';
 
+// Route segment config - optimize for long-running Claude API calls
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutes for large PDF processing
+
 export async function POST(request: NextRequest) {
   try {
 
