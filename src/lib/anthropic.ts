@@ -1119,7 +1119,8 @@ function estimatePdfPageCount(file: File): number {
 }
 
 /**
- * Extract data from native PDF using Claude (for PDFs ≤5 pages)
+ * Extract data from native PDF using Claude's native PDF support
+ * Uses DocumentBlockParam with base64 PDF source (supported in SDK v0.68.0+)
  * @param documentType - Type of document
  * @param pdfBase64 - Base64 encoded PDF
  * @param prompt - Extraction prompt
@@ -1135,9 +1136,8 @@ async function extractDataFromNativePDF(
   try {
     console.log(`Calling Claude with native PDF for ${documentType}...`);
 
-    // Build content array with PDF document
-    // NOTE: Check if current Anthropic SDK version supports PDF documents
-    // If not, we may need to fall back to image conversion
+    // Build content array with PDF document using native PDF support
+    // The Anthropic SDK v0.68.0+ supports DocumentBlockParam with type: 'document'
 
     const response = await anthropic.messages.create({
       model: await getActiveModelForDocumentType(documentType),
@@ -1149,13 +1149,13 @@ async function extractDataFromNativePDF(
           role: 'user',
           content: [
             {
-              type: 'document' as any, // Type assertion for PDF support
+              type: 'document',
               source: {
                 type: 'base64',
                 media_type: 'application/pdf',
                 data: pdfBase64
               }
-            } as any,
+            },
             {
               type: 'text',
               text: prompt
@@ -1185,12 +1185,16 @@ async function extractDataFromNativePDF(
   } catch (error) {
     console.error('Native PDF extraction error:', error);
 
-    // If PDF support fails, provide helpful error message
-    if (error instanceof Error && error.message.includes('document')) {
-      throw new Error(
-        'Native PDF support not available in current Anthropic SDK version. ' +
-        'Please convert PDF to images on client-side using convertPdfToAllImages().'
-      );
+    // Log detailed error information for debugging
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+
+    // Re-throw the actual error with context
+    if (error instanceof Error) {
+      throw new Error(`PDF extraction failed: ${error.message}`);
     }
 
     throw error;
