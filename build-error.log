@@ -1,0 +1,128 @@
+
+> rexeli-v1@1.0.2 build
+> next build
+
+   ▲ Next.js 15.5.2
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ✓ scrollRestoration
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 3.1s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+   Generating static pages (0/30) ...
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+Supabase configured: {
+  url: 'https://lddwbkefiucimrkfskzt.s...',
+  keyPrefix: 'eyJhbGciOi...',
+  hasUrl: true,
+  hasKey: true
+}
+   Generating static pages (7/30) 
+   Generating static pages (14/30) 
+   Generating static pages (22/30) 
+ ✓ Generating static pages (30/30)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                    Size  First Load JS
+┌ ○ /                                       4.38 kB         119 kB
+├ ○ /_not-found                                1 kB         103 kB
+├ ƒ /admin                                    168 B         106 kB
+├ ○ /admin/training                         8.21 kB         222 kB
+├ ○ /admin/training/metrics                  3.8 kB         168 kB
+├ ƒ /admin/training/verify/[id]             6.03 kB         184 kB
+├ ƒ /api/auth/[...nextauth]                   193 B         102 kB
+├ ƒ /api/auth/signup                          193 B         102 kB
+├ ƒ /api/classify                             193 B         102 kB
+├ ƒ /api/config/supabase                      193 B         102 kB
+├ ƒ /api/export                               193 B         102 kB
+├ ƒ /api/extract                              193 B         102 kB
+├ ƒ /api/training/auto-split                  193 B         102 kB
+├ ƒ /api/training/batch-upload                193 B         102 kB
+├ ƒ /api/training/create-record               193 B         102 kB
+├ ƒ /api/training/document/[id]               193 B         102 kB
+├ ƒ /api/training/documents                   193 B         102 kB
+├ ƒ /api/training/export                      193 B         102 kB
+├ ƒ /api/training/fine-tune/check-status      193 B         102 kB
+├ ƒ /api/training/fine-tune/deploy/[jobId]    193 B         102 kB
+├ ƒ /api/training/fine-tune/monitor           193 B         102 kB
+├ ƒ /api/training/fine-tune/start             193 B         102 kB
+├ ƒ /api/training/fine-tune/status/[jobId]    193 B         102 kB
+├ ƒ /api/training/metrics                     193 B         102 kB
+├ ƒ /api/training/process-batch               193 B         102 kB
+├ ƒ /api/training/reject/[id]                 193 B         102 kB
+├ ƒ /api/training/verify/[id]                 193 B         102 kB
+├ ƒ /api/upload                               193 B         102 kB
+├ ƒ /api/upload-url                           193 B         102 kB
+├ ○ /auth/error                              2.6 kB         117 kB
+├ ○ /auth/signin                            3.42 kB         127 kB
+├ ○ /auth/signup                            3.05 kB         112 kB
+├ ƒ /dashboard                                168 B         106 kB
+└ ○ /tool                                   10.7 kB         228 kB
++ First Load JS shared by all                102 kB
+  ├ chunks/1255-83cb42014f6de1e2.js         45.7 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js     54.2 kB
+  └ other shared chunks (total)             2.06 kB
+
+
+ƒ Middleware                                45.4 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

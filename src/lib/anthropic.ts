@@ -1141,7 +1141,7 @@ async function extractDataFromNativePDF(
 
     const response = await anthropic.messages.create({
       model: await getActiveModelForDocumentType(documentType),
-      max_tokens: 16000,
+      max_tokens: 100000, // Increased for large documents with many comparables (supports up to 200K)
       temperature: 0.1,
       system: "You are an expert commercial real estate document analyst with 20+ years of experience.",
       messages: [
