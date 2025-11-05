@@ -70,30 +70,45 @@ async function getActiveModelForDocumentType(documentType: DocumentType): Promis
  */
 function extractJSONFromResponse(content: string): any {
   try {
-    // Try parsing as JSON first
-    return JSON.parse(content);
-  } catch (firstError) {
-    console.log('Direct JSON parse failed, attempting extraction from markdown...');
+    // STEP 1: Remove verification tags (new enforcement mechanism)
+    // These tags are used for Claude's internal verification but should not be in final JSON
+    let cleanedContent = content;
 
+    // Remove <document_analysis> tags and content
+    cleanedContent = cleanedContent.replace(/<document_analysis>[\s\S]*?<\/document_analysis>/gi, '');
+
+    // Remove <verification> tags and content
+    cleanedContent = cleanedContent.replace(/<verification>[\s\S]*?<\/verification>/gi, '');
+
+    // Log if we found and removed verification tags (indicates Claude followed instructions)
+    if (content.includes('<document_analysis>') || content.includes('<verification>')) {
+      console.log('[JSON Parser] Found and removed verification tags - Claude followed enforcement instructions ✓');
+    }
+
+    // STEP 2: Try parsing as JSON first
     try {
-      // Extract from markdown code blocks (```json ... ```)
-      const jsonBlockMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+      return JSON.parse(cleanedContent);
+    } catch (firstError) {
+      console.log('Direct JSON parse failed, attempting extraction from markdown...');
+
+      // STEP 3: Extract from markdown code blocks (```json ... ```)
+      const jsonBlockMatch = cleanedContent.match(/```json\s*([\s\S]*?)\s*```/);
       if (jsonBlockMatch) {
         const extracted = jsonBlockMatch[1].trim();
         console.log('Extracted JSON from markdown code block');
         return JSON.parse(extracted);
       }
 
-      // Try extracting any code block
-      const anyBlockMatch = content.match(/```\s*([\s\S]*?)\s*```/);
+      // STEP 4: Try extracting any code block
+      const anyBlockMatch = cleanedContent.match(/```\s*([\s\S]*?)\s*```/);
       if (anyBlockMatch) {
         const extracted = anyBlockMatch[1].trim();
         console.log('Extracted content from generic code block');
         return JSON.parse(extracted);
       }
 
-      // Attempt basic cleanup: remove markdown formatting
-      const cleaned = content
+      // STEP 5: Attempt basic cleanup: remove markdown formatting
+      const cleaned = cleanedContent
         .replace(/^```json\s*/i, '')
         .replace(/^```\s*/i, '')
         .replace(/```\s*$/i, '')
@@ -101,10 +116,10 @@ function extractJSONFromResponse(content: string): any {
 
       console.log('Attempting to parse cleaned content');
       return JSON.parse(cleaned);
-    } catch (extractError) {
-      console.error('Failed to extract and parse JSON from response:', extractError);
-      throw new Error(`Could not parse JSON from Claude response. First 500 chars: ${content.substring(0, 500)}`);
     }
+  } catch (extractError) {
+    console.error('Failed to extract and parse JSON from response:', extractError);
+    throw new Error(`Could not parse JSON from Claude response. First 500 chars: ${content.substring(0, 500)}`);
   }
 }
 
@@ -140,13 +155,40 @@ Respond with this exact JSON structure:
  */
 const EXTRACTION_PROMPTS = {
   rent_roll: `
-You are an expert commercial real estate professional analyzing a rent roll for investment analysis and property management decisions. Extract comprehensive rent roll data with the precision required for NOI calculations and investment underwriting.
+You are a meticulous commercial real estate professional analyzing rent rolls. Your job is to extract EVERY tenant row - completeness is critical for accurate NOI calculations and investment underwriting.
+
+**═══════════════════════════════════════════════════════════**
+**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
+**═══════════════════════════════════════════════════════════**
+
+**YOU MUST FOLLOW THIS EXACT PROCESS:**
+1. FIRST: Count total tenant rows (occupied + vacant) - write this number down
+2. SECOND: Output a <document_analysis> tag with your count
+3. THIRD: Extract data for EVERY tenant/unit (your JSON array length MUST equal your count)
+4. FOURTH: Output a <verification> tag confirming completeness
+5. If verification fails, re-extract missing tenants immediately
+
+**MANDATORY OUTPUT FORMAT:**
+<document_analysis>
+Total tenant rows visible: [YOUR COUNT HERE]
+Occupied units: [X]
+Vacant units: [Y]
+Pages analyzed: [X through Y]
+</document_analysis>
+
+[YOUR EXTRACTED JSON HERE]
+
+<verification>
+Tenants counted in document: [X]
+Tenants in my JSON array: [Y]
+Completeness check: [X = Y? YES/NO]
+</verification>
 
 **═══════════════════════════════════════════════════════════**
 **PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
 **═══════════════════════════════════════════════════════════**
 
-Before extracting data, analyze the document structure:
+Before extracting data, analyze the document structure and COUNT total tenant rows (including vacant):
 
 **1.1 LAYOUT PATTERN RECOGNITION:**
 - Identify if rent roll is in spreadsheet, table, or list format
@@ -171,8 +213,29 @@ Before extracting data, analyze the document structure:
 **PHASE 2: COMPREHENSIVE DATA EXTRACTION**
 **═══════════════════════════════════════════════════════════**
 
-Focus on extracting ALL relevant data points that real estate professionals need:
-- Tenant name & suite/unit number
+**STEP-BY-STEP EXTRACTION PROCESS (FOLLOW EXACTLY):**
+
+**STEP 1 - COUNT FIRST:**
+- Count total tenant rows including vacant units: "I see ___ total units"
+- Count occupied: "I see ___ occupied units"
+- Count vacant: "I see ___ vacant units"
+- Write down these numbers - you MUST extract all units
+
+**STEP 2 - EXTRACT SYSTEMATICALLY:**
+- Process EVERY row in order (Row 1, 2, 3... up to your count)
+- Extract data for occupied AND vacant units
+- Do NOT skip any rows, even if data is incomplete
+- For vacant units, capture unit number and SF, use null for tenant data
+
+**STEP 3 - VERIFY COMPLETENESS:**
+- Count your JSON array length
+- Compare: JSON array length = total units counted?
+- If NO: identify missing units and extract them immediately
+- If YES: proceed to output
+
+**COMPREHENSIVE DATA EXTRACTION FOR EACH TENANT/UNIT:**
+Extract ALL relevant data points that real estate professionals need:
+- Tenant name & suite/unit number (or "VACANT" for vacant units)
 - Lease start & expiration dates
 - Rent commencement date
 - Base rent (current & escalations)
@@ -277,13 +340,41 @@ Return JSON with this structure:
   `,
 
   operating_budget: `
-You are a seasoned commercial real estate financial analyst and asset manager with 20+ years of experience in investment underwriting, NOI optimization, and property financial management. Your task is to perform a systematic, comprehensive extraction of ALL financial data visible in this operating budget document.
+You are a meticulous commercial real estate financial analyst. Your job is to extract EVERY line item from this operating budget - completeness is critical for accurate NOI calculations and investment analysis.
+
+**═══════════════════════════════════════════════════════════**
+**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
+**═══════════════════════════════════════════════════════════**
+
+**YOU MUST FOLLOW THIS EXACT PROCESS:**
+1. FIRST: Count total income line items and expense line items - write these numbers down
+2. SECOND: Output a <document_analysis> tag with your counts
+3. THIRD: Extract EVERY line item (your JSON must contain all items)
+4. FOURTH: Output a <verification> tag confirming completeness
+5. If verification fails, re-extract missing line items immediately
+
+**MANDATORY OUTPUT FORMAT:**
+<document_analysis>
+Total income line items: [YOUR COUNT]
+Total expense line items: [YOUR COUNT]
+Pages analyzed: [X through Y]
+</document_analysis>
+
+[YOUR EXTRACTED JSON HERE]
+
+<verification>
+Income items counted: [X]
+Income items in JSON: [Y]
+Expense items counted: [X]
+Expense items in JSON: [Y]
+Completeness check: YES/NO
+</verification>
 
 **═══════════════════════════════════════════════════════════**
 **PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
 **═══════════════════════════════════════════════════════════**
 
-Before extracting data, analyze the document structure:
+Before extracting data, analyze the document structure and COUNT all line items:
 
 **1.1 LAYOUT PATTERN RECOGNITION:**
 - Identify if budget is in spreadsheet, table, or narrative format
@@ -426,13 +517,39 @@ Before submitting, verify:
   `,
 
   broker_sales_comparables: `
-You are a data extraction specialist focused on capturing ALL sales comparable information from real estate documents. Your primary task is to systematically extract every data point visible in the document FIRST, then organize and analyze it.
+You are a meticulous data extraction specialist focused on capturing ALL sales comparable information from real estate documents. Your job is to extract EVERY data point - completeness is more important than speed.
+
+**═══════════════════════════════════════════════════════════**
+**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
+**═══════════════════════════════════════════════════════════**
+
+**YOU MUST FOLLOW THIS EXACT PROCESS:**
+1. FIRST: Count total sales/properties visible in the document - write this number down
+2. SECOND: Output a <document_analysis> tag with your count and structure analysis
+3. THIRD: Extract data for EVERY property (your JSON array length MUST equal the count from step 1)
+4. FOURTH: Output a <verification> tag confirming you extracted all properties
+5. If verification shows mismatch, STOP and re-extract missing properties
+
+**MANDATORY OUTPUT FORMAT:**
+<document_analysis>
+Total properties visible: [YOUR COUNT HERE]
+Document format: [table/list/mixed]
+Pages analyzed: [X through Y]
+</document_analysis>
+
+[YOUR EXTRACTED JSON HERE]
+
+<verification>
+Properties counted in document: [X]
+Properties in my JSON array: [Y]
+Completeness check: [X = Y? YES/NO]
+</verification>
 
 **═══════════════════════════════════════════════════════════**
 **PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
 **═══════════════════════════════════════════════════════════**
 
-Before extracting data, analyze the document structure:
+Before extracting data, analyze the document structure and COUNT total properties:
 
 **1.1 LAYOUT PATTERN RECOGNITION:**
 - Identify if sales data is in table, list, or mixed format
@@ -457,14 +574,31 @@ Before extracting data, analyze the document structure:
 **PHASE 2: COMPREHENSIVE DATA EXTRACTION**
 **═══════════════════════════════════════════════════════════**
 
-**EXTRACTION APPROACH:**
-1. **DOCUMENT SCAN**: Examine EVERY section, table, row, column, and text block in the document
-2. **COMPLETE INVENTORY**: Count ALL properties/sales shown - extract data for EACH ONE, not just the first
-3. **BOTH PARTIES**: For every sale, extract BOTH buyer AND seller information (names, types, motivations)
-4. **ALL FINANCIAL DATA**: Capture every price, cap rate, price per SF, and financial metric shown
-5. **COMPLETE CHARACTERISTICS**: Extract every measurement, date, year, and property feature visible
-6. **TABLE PROCESSING**: Process tables row by row, ensuring no properties are skipped
-7. **VERIFICATION**: Count extracted properties against visible properties to ensure completeness
+**STEP-BY-STEP EXTRACTION PROCESS (FOLLOW EXACTLY):**
+
+**STEP 1 - COUNT FIRST:**
+- Count total sales/properties in document: "I see ___ properties total"
+- Write down this number - you MUST extract this exact number
+- Identify where each property appears (table row numbers, page numbers)
+
+**STEP 2 - EXTRACT SYSTEMATICALLY:**
+- Process EVERY row/entry in order (Property 1, 2, 3... up to your count)
+- Extract data for EACH property using the schema below
+- Do NOT skip any properties, even if data is incomplete
+- Mark your progress: "Extracted property X of Y"
+
+**STEP 3 - VERIFY COMPLETENESS:**
+- Count your JSON array length
+- Compare: JSON array length = total properties counted?
+- If NO: identify which properties are missing and extract them
+- If YES: proceed to output
+
+**EXTRACTION APPROACH FOR EACH PROPERTY:**
+1. **COMPLETE PROPERTY DATA**: Extract ALL visible fields for this property
+2. **BOTH PARTIES**: Extract BOTH buyer AND seller information (names, types, motivations)
+3. **ALL FINANCIAL DATA**: Capture every price, cap rate, price per SF, and financial metric
+4. **COMPLETE CHARACTERISTICS**: Extract every measurement, date, year, and property feature
+5. **USE PLACEHOLDERS**: If a field is missing, use null or "Not specified" - don't skip the property
 
 **COMPREHENSIVE SALES COMPARABLE DATA EXTRACTION:**
 
@@ -533,16 +667,24 @@ Before extracting data, analyze the document structure:
 - ✓ Price range min/max correctly reflect actual data?
 - ✓ Cap rate averages mathematically correct?
 
-**QUALITY ASSURANCE CHECKLIST:**
-Before submitting, verify:
-[ ] Did you examine every visible row and table in the document?
-[ ] Did you extract data for ALL sales comparables, not just the first few?
-[ ] Did you capture buyer AND seller information where available?
+**QUALITY ASSURANCE CHECKLIST (MANDATORY - DO NOT SKIP):**
+Before submitting, YOU MUST verify:
+[ ] CRITICAL: Did you count total properties BEFORE extraction? Count = ___
+[ ] CRITICAL: Does your JSON array length equal your count? Array length = ___
+[ ] CRITICAL: If counts don't match, identify and extract missing properties NOW
+[ ] Did you examine every visible row and table in ALL pages?
+[ ] Did you extract data for ALL sales comparables, starting from first to last?
+[ ] Did you capture buyer AND seller information for each sale?
 [ ] Did you extract ALL property characteristics (SF, units, year, etc.)?
 [ ] Did you include ALL financial metrics (price, cap rate, NOI)?
 [ ] Are all monetary amounts and percentages in correct formats?
 [ ] Are summary calculations mathematically accurate?
-[ ] Does total count match number of comparables extracted?
+
+**FINAL VERIFICATION (OUTPUT THIS):**
+Total properties I counted: ___
+Total properties in my JSON: ___
+Match: YES/NO
+If NO: [List missing property addresses/numbers]
 
 **COMPREHENSIVE JSON STRUCTURE** - Extract ALL comparable sales data:
 {
@@ -621,13 +763,39 @@ Before submitting, verify:
   `,
 
   broker_lease_comparables: `
-You are a seasoned commercial real estate leasing expert with 20+ years of experience in market analysis, lease negotiations, and rental rate determination. Your task is to perform comprehensive extraction of ALL lease comparable data for market positioning and leasing strategy development.
+You are a meticulous commercial real estate leasing expert focused on capturing ALL lease comparable data. Completeness is more important than speed - you MUST extract every single lease comparable.
+
+**═══════════════════════════════════════════════════════════**
+**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
+**═══════════════════════════════════════════════════════════**
+
+**YOU MUST FOLLOW THIS EXACT PROCESS:**
+1. FIRST: Count total lease comparables visible in the document - write this number down
+2. SECOND: Output a <document_analysis> tag with your count
+3. THIRD: Extract data for EVERY lease (your JSON array length MUST equal your count)
+4. FOURTH: Output a <verification> tag confirming completeness
+5. If verification fails, re-extract missing leases immediately
+
+**MANDATORY OUTPUT FORMAT:**
+<document_analysis>
+Total lease comparables visible: [YOUR COUNT HERE]
+Document format: [table/list/mixed]
+Pages analyzed: [X through Y]
+</document_analysis>
+
+[YOUR EXTRACTED JSON HERE]
+
+<verification>
+Leases counted in document: [X]
+Leases in my JSON array: [Y]
+Completeness check: [X = Y? YES/NO]
+</verification>
 
 **═══════════════════════════════════════════════════════════**
 **PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
 **═══════════════════════════════════════════════════════════**
 
-Before extracting data, analyze the document structure:
+Before extracting data, analyze the document structure and COUNT total lease comparables:
 
 **1.1 LAYOUT PATTERN RECOGNITION:**
 - Identify if data is in table format, paragraph format, or mixed
@@ -651,11 +819,31 @@ Before extracting data, analyze the document structure:
 **PHASE 2: COMPREHENSIVE DATA EXTRACTION**
 **═══════════════════════════════════════════════════════════**
 
-**EXTRACTION METHODOLOGY:**
-1. **COMPLETE LEASE DATABASE SCAN**: Extract ALL lease comparables, not just selected examples
+**STEP-BY-STEP EXTRACTION PROCESS (FOLLOW EXACTLY):**
+
+**STEP 1 - COUNT FIRST:**
+- Count total lease comparables in document: "I see ___ lease comparables total"
+- Write down this number - you MUST extract this exact number
+- Identify where each lease appears (row numbers, page numbers)
+
+**STEP 2 - EXTRACT SYSTEMATICALLY:**
+- Process EVERY lease in order (Lease 1, 2, 3... up to your count)
+- Extract data for EACH lease using the schema below
+- Do NOT skip any leases, even if data is incomplete
+- Mark progress: "Extracted lease X of Y"
+
+**STEP 3 - VERIFY COMPLETENESS:**
+- Count your JSON array length
+- Compare: JSON array length = total leases counted?
+- If NO: identify missing leases and extract them immediately
+- If YES: proceed to output
+
+**EXTRACTION METHODOLOGY FOR EACH LEASE:**
+1. **COMPLETE LEASE DATABASE**: Extract ALL lease comparables, not just selected examples
 2. **SYSTEMATIC LEASE ANALYSIS**: Capture every lease term, concession, and financial detail
 3. **EFFECTIVE RENT CALCULATIONS**: Calculate and verify effective rents with all concessions
 4. **TENANT PROFILE ANALYSIS**: Classify tenants by industry, size, and creditworthiness
+5. **USE PLACEHOLDERS**: If a field is missing, use null or "Not specified" - don't skip the lease
 
 **COMPREHENSIVE LEASE COMPARABLE DATA EXTRACTION:**
 
@@ -766,13 +954,39 @@ Return comprehensive JSON with ALL lease data:
   `,
 
   broker_listing: `
-You are a seasoned commercial real estate broker with 20+ years of experience in property marketing, transaction management, and commission negotiations. Extract comprehensive listing agreement data for complete transaction tracking and commission management.
+You are a meticulous commercial real estate broker focused on extracting ALL terms from listing agreements. Completeness is critical for transaction tracking and commission management.
+
+**═══════════════════════════════════════════════════════════**
+**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
+**═══════════════════════════════════════════════════════════**
+
+**YOU MUST FOLLOW THIS EXACT PROCESS:**
+1. FIRST: Identify all key sections (parties, property, financial terms, dates) - verify each is present
+2. SECOND: Output a <document_analysis> tag confirming all sections found
+3. THIRD: Extract ALL terms and conditions from EVERY section
+4. FOURTH: Output a <verification> tag confirming all sections extracted
+5. If verification fails, re-extract missing sections immediately
+
+**MANDATORY OUTPUT FORMAT:**
+<document_analysis>
+Sections found: [parties/property/terms/dates/commission/duties/termination]
+Pages analyzed: [X through Y]
+Complete document: YES/NO
+</document_analysis>
+
+[YOUR EXTRACTED JSON HERE]
+
+<verification>
+All required sections extracted: YES/NO
+All financial terms captured: YES/NO
+All dates and deadlines captured: YES/NO
+</verification>
 
 **═══════════════════════════════════════════════════════════**
 **PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
 **═══════════════════════════════════════════════════════════**
 
-Before extracting data, analyze the document structure:
+Before extracting data, analyze the document structure and IDENTIFY all sections:
 
 **1.1 LAYOUT PATTERN RECOGNITION:**
 - Identify if agreement is in standard form, custom contract, or mixed format
@@ -897,13 +1111,39 @@ Return comprehensive JSON structure:
   `,
 
   offering_memo: `
-You are a seasoned commercial real estate investment professional with 20+ years of experience in acquisitions, underwriting, and investment analysis. Extract comprehensive investment-grade data from this offering memorandum for institutional investment decision-making.
+You are a meticulous commercial real estate investment professional. Your job is to extract EVERY data point from this offering memo - completeness is critical for institutional investment decision-making.
+
+**═══════════════════════════════════════════════════════════**
+**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
+**═══════════════════════════════════════════════════════════**
+
+**YOU MUST FOLLOW THIS EXACT PROCESS:**
+1. FIRST: Identify all major sections (property, financials, market, tenants) - verify each is present
+2. SECOND: Output a <document_analysis> tag confirming all sections found
+3. THIRD: Extract ALL data from EVERY section completely
+4. FOURTH: Output a <verification> tag confirming all sections extracted
+5. If verification fails, re-extract missing sections immediately
+
+**MANDATORY OUTPUT FORMAT:**
+<document_analysis>
+Sections found: [property/financials/market/tenants/investment metrics]
+Pages analyzed: [X through Y]
+Complete memo: YES/NO
+</document_analysis>
+
+[YOUR EXTRACTED JSON HERE]
+
+<verification>
+All property details extracted: YES/NO
+All financial data extracted: YES/NO
+All investment metrics calculated: YES/NO
+</verification>
 
 **═══════════════════════════════════════════════════════════**
 **PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
 **═══════════════════════════════════════════════════════════**
 
-Before extracting data, analyze the document structure:
+Before extracting data, analyze the document structure and IDENTIFY all major sections:
 
 **1.1 LAYOUT PATTERN RECOGNITION:**
 - Identify major sections (executive summary, property details, financials, market analysis)
@@ -1032,13 +1272,40 @@ Before submitting, verify:
   `,
 
   lease_agreement: `
-You are a seasoned commercial real estate attorney and lease administrator with 20+ years of experience in lease drafting, negotiation, and portfolio management. Extract comprehensive legal and financial terms from this lease agreement for complete lease administration and investment analysis.
+You are a meticulous commercial real estate attorney and lease administrator. Your job is to extract EVERY clause and term from this lease agreement - completeness is critical for lease administration and analysis.
+
+**═══════════════════════════════════════════════════════════**
+**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
+**═══════════════════════════════════════════════════════════**
+
+**YOU MUST FOLLOW THIS EXACT PROCESS:**
+1. FIRST: Identify all key sections (parties, premises, term, rent, obligations) - verify each is present
+2. SECOND: Output a <document_analysis> tag confirming all sections found
+3. THIRD: Extract ALL terms, clauses, and provisions from EVERY section
+4. FOURTH: Output a <verification> tag confirming all sections extracted
+5. If verification fails, re-extract missing sections immediately
+
+**MANDATORY OUTPUT FORMAT:**
+<document_analysis>
+Sections found: [parties/premises/term/rent/expenses/maintenance/default/insurance]
+Pages analyzed: [X through Y]
+Complete agreement: YES/NO
+</document_analysis>
+
+[YOUR EXTRACTED JSON HERE]
+
+<verification>
+All parties and entities extracted: YES/NO
+All financial terms extracted: YES/NO
+All dates and deadlines extracted: YES/NO
+All obligations and clauses extracted: YES/NO
+</verification>
 
 **═══════════════════════════════════════════════════════════**
 **PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
 **═══════════════════════════════════════════════════════════**
 
-Before extracting data, analyze the document structure:
+Before extracting data, analyze the document structure and IDENTIFY all sections and clauses:
 
 **1.1 LAYOUT PATTERN RECOGNITION:**
 - Identify main sections (parties, premises, term, rent, obligations)
@@ -1167,13 +1434,42 @@ Return comprehensive JSON structure:
   `,
 
   financial_statements: `
-You are a seasoned commercial real estate financial analyst and asset manager with 20+ years of experience in property financial management, NOI optimization, and investment reporting. Extract comprehensive financial performance data for complete investment analysis and asset management decisions.
+You are a meticulous commercial real estate financial analyst. Your job is to extract EVERY line item from financial statements - completeness is critical for accurate investment analysis and asset management.
+
+**═══════════════════════════════════════════════════════════**
+**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
+**═══════════════════════════════════════════════════════════**
+
+**YOU MUST FOLLOW THIS EXACT PROCESS:**
+1. FIRST: Count all income and expense line items - write these numbers down
+2. SECOND: Output a <document_analysis> tag with your counts
+3. THIRD: Extract EVERY line item from ALL statements
+4. FOURTH: Output a <verification> tag confirming completeness
+5. If verification fails, re-extract missing line items immediately
+
+**MANDATORY OUTPUT FORMAT:**
+<document_analysis>
+Income line items: [YOUR COUNT]
+Expense line items: [YOUR COUNT]
+Statements found: [income statement/balance sheet/cash flow]
+Pages analyzed: [X through Y]
+</document_analysis>
+
+[YOUR EXTRACTED JSON HERE]
+
+<verification>
+Income items counted: [X]
+Income items in JSON: [Y]
+Expense items counted: [X]
+Expense items in JSON: [Y]
+All calculations verified: YES/NO
+</verification>
 
 **═══════════════════════════════════════════════════════════**
 **PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
 **═══════════════════════════════════════════════════════════**
 
-Before extracting data, analyze the document structure:
+Before extracting data, analyze the document structure and COUNT all line items:
 
 **1.1 LAYOUT PATTERN RECOGNITION:**
 - Identify statement types (income statement, balance sheet, cash flow)
@@ -1690,8 +1986,8 @@ async function extractDataFromNativePDF(
     const response = await anthropic.messages.create({
       model: await getActiveModelForDocumentType(documentType),
       max_tokens: 64000, // Maximum for Claude Sonnet 4.5 (supports large documents with many comparables)
-      temperature: 0.1,
-      system: "You are an expert commercial real estate document analyst with 20+ years of experience.",
+      temperature: 0.3, // Increased for more thorough analysis and completeness
+      system: "You are a meticulous data extraction specialist. Your primary objective is to extract EVERY data point from the document - completeness is more important than speed. You MUST count items before extraction, verify counts after extraction, and ensure 100% completeness. Follow all instructions exactly, including mandatory output format requirements.",
       messages: [
         {
           role: 'user',
