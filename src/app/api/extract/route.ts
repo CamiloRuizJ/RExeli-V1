@@ -162,7 +162,11 @@ export async function POST(request: NextRequest) {
       ...(warnings.length > 0 && { warnings })
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      }
+    });
 
   } catch (error) {
     console.error('Extraction API error:', error);
