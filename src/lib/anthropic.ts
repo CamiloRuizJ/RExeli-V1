@@ -1809,7 +1809,7 @@ async function extractDataFromNativePDF(
     console.log(`║  Temperature: 0.7 (increased for variation)`);
     console.log(`║  top_p: 0.95 (nucleus sampling enabled)`);
     console.log(`║  max_tokens: 64000`);
-    console.log(`║  Prompt length: ${promptText.length} chars`);
+    console.log(`║  Prompt length: ${prompt.length} chars`);
     console.log('╚════════════════════════════════════════════════════════════╝');
 
     const response = await anthropic.messages.create({
