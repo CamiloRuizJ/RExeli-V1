@@ -46,7 +46,8 @@
       "Bash(git rm:*)",
       "Bash(git show:*)",
       "Bash(find:*)",
-      "Bash(timeout 60 bash:*)"
+      "Bash(timeout 60 bash:*)",
+      "Bash(timeout 120 bash:*)"
     ],
     "deny": [],
     "ask": []

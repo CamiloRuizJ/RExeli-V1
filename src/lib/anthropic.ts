@@ -1497,7 +1497,6 @@ export async function classifyDocument(imageDataUrls: string[]): Promise<Documen
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 500,
       temperature: 0.7,
-      top_p: 0.95,
       stop_sequences: ['</verification>'],
       system: 'You are an expert commercial real estate professional with 20+ years of experience analyzing property investment documents. Respond only with valid JSON.',
       messages: [
@@ -1634,7 +1633,6 @@ export async function extractData(
     console.log('╠════════════════════════════════════════════════════════════╣');
     console.log(`║  Model: ${modelToUse}`);
     console.log(`║  Temperature: 0.7 (increased for variation)`);
-    console.log(`║  top_p: 0.95 (nucleus sampling enabled)`);
     console.log(`║  max_tokens: 64000 (matching PDF path)`);
     console.log(`║  Prompt length: ${promptText.length} chars`);
     console.log('╚════════════════════════════════════════════════════════════╝');
@@ -1648,7 +1646,6 @@ export async function extractData(
         model: modelToUse,
         max_tokens: 64000, // Increased to match native PDF path (was 16K, causing truncation)
         temperature: 0.7, // Increased for variation and non-deterministic output
-        top_p: 0.95, // Enable nucleus sampling for diverse responses
         stop_sequences: ['</verification>'],
         system: "You are a meticulous data extraction specialist. Your primary objective is to extract EVERY data point from the document - completeness is more important than speed. You MUST count items before extraction, verify counts after extraction, and ensure 100% completeness. Follow all instructions exactly, including mandatory output format requirements.",
         messages: [
@@ -1807,7 +1804,6 @@ async function extractDataFromNativePDF(
     console.log('╠════════════════════════════════════════════════════════════╣');
     console.log(`║  Model: ${await getActiveModelForDocumentType(documentType)}`);
     console.log(`║  Temperature: 0.7 (increased for variation)`);
-    console.log(`║  top_p: 0.95 (nucleus sampling enabled)`);
     console.log(`║  max_tokens: 64000`);
     console.log(`║  Prompt length: ${prompt.length} chars`);
     console.log('╚════════════════════════════════════════════════════════════╝');
@@ -1816,7 +1812,6 @@ async function extractDataFromNativePDF(
       model: await getActiveModelForDocumentType(documentType),
       max_tokens: 64000, // Maximum for Claude Sonnet 4.5 (supports large documents with many comparables)
       temperature: 0.7, // Increased for variation and non-deterministic output
-      top_p: 0.95, // Enable nucleus sampling for diverse responses
       stop_sequences: ['</verification>'],
       system: "You are a meticulous data extraction specialist. Your primary objective is to extract EVERY data point from the document - completeness is more important than speed. You MUST count items before extraction, verify counts after extraction, and ensure 100% completeness. Follow all instructions exactly, including mandatory output format requirements.",
       messages: [
