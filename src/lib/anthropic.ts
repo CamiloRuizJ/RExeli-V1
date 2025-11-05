@@ -558,9 +558,25 @@ Pages analyzed: [X through Y]
 [YOUR EXTRACTED JSON HERE]
 
 <verification>
+TRANSACTION COUNT CHECK:
 Properties counted in document: [X]
 Properties in my JSON array: [Y]
-Completeness check: [X = Y? YES/NO]
+Count match: [X = Y? YES/NO]
+
+FIELD COMPLETENESS CHECK (sample first and last property):
+Property #1 fields present: [propertyAddress: YES/NO, propertyType: YES/NO, saleDate: YES/NO, salePrice: YES/NO, pricePerSF: YES/NO, buildingSize: YES/NO, occupancyAtSale: YES/NO]
+Property #[last] fields present: [same check for last property]
+
+CRITICAL FIELDS AUDIT (check ALL properties):
+- propertyAddress missing in properties: [NONE or list property numbers]
+- propertyType missing in properties: [NONE or list property numbers]
+- saleDate missing in properties: [NONE or list property numbers]
+- salePrice missing in properties: [NONE or list property numbers]
+- pricePerSF missing in properties: [NONE or list property numbers]
+- buildingSize missing in properties: [NONE or list property numbers]
+- occupancyAtSale missing in properties: [NONE or list property numbers]
+
+OVERALL COMPLETENESS: [100% COMPLETE or list what's missing]
 </verification>
 
 **═══════════════════════════════════════════════════════════**
@@ -599,17 +615,33 @@ Before extracting data, analyze the document structure and COUNT total propertie
 - Write down this number - you MUST extract this exact number
 - Identify where each property appears (table row numbers, page numbers)
 
-**STEP 2 - EXTRACT SYSTEMATICALLY:**
+**STEP 2 - EXTRACT SYSTEMATICALLY WITH COMPLETE FIELDS:**
 - Process EVERY row/entry in order (Property 1, 2, 3... up to your count)
-- Extract data for EACH property using the schema below
-- Do NOT skip any properties, even if data is incomplete
-- Mark your progress: "Extracted property X of Y"
+- For EACH property, extract ALL 7 required fields:
+  1. propertyAddress (REQUIRED - street, city, state)
+  2. propertyType (REQUIRED - Industrial/Office/Retail/Multifamily/etc)
+  3. saleDate (REQUIRED - YYYY-MM-DD format)
+  4. salePrice (REQUIRED - number in dollars)
+  5. pricePerSF (REQUIRED - calculated: salePrice ÷ buildingSize)
+  6. buildingSize (REQUIRED - number in square feet)
+  7. occupancyAtSale (REQUIRED - percentage 0-100)
+- Optional but recommended: yearBuilt, capRate, buyer, seller
+- Do NOT skip any properties OR any required fields
+- If a field value is not visible, use reasonable defaults: 0 for numbers, "Not specified" for text
+- Mark progress: "Extracted property X of Y with ALL fields"
 
-**STEP 3 - VERIFY COMPLETENESS:**
+**STEP 3 - VERIFY COMPLETENESS AT TWO LEVELS:**
+Level 1 - Transaction Count:
 - Count your JSON array length
 - Compare: JSON array length = total properties counted?
-- If NO: identify which properties are missing and extract them
-- If YES: proceed to output
+- If NO: identify missing properties and extract them immediately
+
+Level 2 - Field Completeness (NEW):
+- Check property #1: does it have ALL 7 required fields with real values?
+- Check property #last: does it have ALL 7 required fields with real values?
+- Scan through ALL properties: identify any with missing fields
+- If ANY field is missing: go back and extract that specific field for that property
+- If YES to all: proceed to output
 
 **EXTRACTION APPROACH FOR EACH PROPERTY:**
 1. **COMPLETE PROPERTY DATA**: Extract ALL visible fields for this property
@@ -661,10 +693,24 @@ Before extracting data, analyze the document structure and COUNT total propertie
 **═══════════════════════════════════════════════════════════**
 
 **3.1 COMPLETENESS VERIFICATION:**
+
+**Transaction Count:**
 - ✓ Extracted ALL visible sales comparables (not just first page)?
 - ✓ Captured data from ALL tables and sections?
+- ✓ Count in <document_analysis> matches JSON array length?
+
+**Field-Level Completeness (ALL 7 required fields per property):**
+- ✓ propertyAddress present in EVERY property (street, city, state)?
+- ✓ propertyType present in EVERY property (Industrial/Office/Retail/Multifamily)?
+- ✓ saleDate present in EVERY property (YYYY-MM-DD format)?
+- ✓ salePrice present in EVERY property (actual dollar amount)?
+- ✓ pricePerSF present in EVERY property (calculated: salePrice ÷ buildingSize)?
+- ✓ buildingSize present in EVERY property (square feet)?
+- ✓ occupancyAtSale present in EVERY property (percentage 0-100)?
+
+**Additional Data Points:**
 - ✓ Included both buyer AND seller information for each sale?
-- ✓ Extracted complete property addresses and characteristics?
+- ✓ Extracted yearBuilt, capRate, NOI where visible?
 
 **3.2 ACCURACY VALIDATION:**
 - ✓ Price per SF = sale price ÷ total SF?
@@ -804,9 +850,27 @@ Pages analyzed: [X through Y]
 [YOUR EXTRACTED JSON HERE]
 
 <verification>
+TRANSACTION COUNT CHECK:
 Leases counted in document: [X]
 Leases in my JSON array: [Y]
-Completeness check: [X = Y? YES/NO]
+Count match: [X = Y? YES/NO]
+
+FIELD COMPLETENESS CHECK (sample first and last lease):
+Lease #1 fields present: [propertyAddress: YES/NO, propertyType: YES/NO, leaseCommencementDate: YES/NO, tenantIndustry: YES/NO, leaseTerm: YES/NO, squareFootage: YES/NO, baseRent: YES/NO, leaseType: YES/NO, effectiveRent: YES/NO]
+Lease #[last] fields present: [same check for last lease]
+
+CRITICAL FIELDS AUDIT (check ALL leases):
+- propertyAddress missing in leases: [NONE or list lease numbers]
+- propertyType missing in leases: [NONE or list lease numbers]
+- leaseCommencementDate missing in leases: [NONE or list lease numbers]
+- tenantIndustry missing in leases: [NONE or list lease numbers]
+- leaseTerm missing in leases: [NONE or list lease numbers]
+- squareFootage missing in leases: [NONE or list lease numbers]
+- baseRent missing in leases: [NONE or list lease numbers]
+- leaseType missing in leases: [NONE or list lease numbers]
+- effectiveRent missing in leases: [NONE or list lease numbers]
+
+OVERALL COMPLETENESS: [100% COMPLETE or list what's missing]
 </verification>
 
 **═══════════════════════════════════════════════════════════**
@@ -844,17 +908,34 @@ Before extracting data, analyze the document structure and COUNT total lease com
 - Write down this number - you MUST extract this exact number
 - Identify where each lease appears (row numbers, page numbers)
 
-**STEP 2 - EXTRACT SYSTEMATICALLY:**
+**STEP 2 - EXTRACT SYSTEMATICALLY WITH COMPLETE FIELDS:**
 - Process EVERY lease in order (Lease 1, 2, 3... up to your count)
-- Extract data for EACH lease using the schema below
-- Do NOT skip any leases, even if data is incomplete
-- Mark progress: "Extracted lease X of Y"
+- For EACH lease, extract ALL 9 required fields:
+  1. propertyAddress (REQUIRED - street, city, state)
+  2. propertyType (REQUIRED - Industrial/Office/Retail/etc)
+  3. leaseCommencementDate (REQUIRED - YYYY-MM-DD format)
+  4. tenantIndustry (REQUIRED - industry/business type)
+  5. leaseTerm (REQUIRED - number in months)
+  6. squareFootage (REQUIRED - number)
+  7. baseRent (REQUIRED - number per SF per month)
+  8. leaseType (REQUIRED - must be 'NNN', 'Gross', or 'Modified Gross')
+  9. effectiveRent (REQUIRED - number per SF per month)
+- Do NOT skip any leases OR any fields
+- If a field value is not visible, use reasonable defaults: 0 for numbers, "Not specified" for text
+- Mark progress: "Extracted lease X of Y with ALL fields"
 
-**STEP 3 - VERIFY COMPLETENESS:**
+**STEP 3 - VERIFY COMPLETENESS AT TWO LEVELS:**
+Level 1 - Transaction Count:
 - Count your JSON array length
 - Compare: JSON array length = total leases counted?
 - If NO: identify missing leases and extract them immediately
-- If YES: proceed to output
+
+Level 2 - Field Completeness (NEW):
+- Check lease #1: does it have ALL 9 required fields with real values?
+- Check lease #last: does it have ALL 9 required fields with real values?
+- Scan through ALL leases: identify any with missing fields
+- If ANY field is missing: go back and extract that specific field for that lease
+- If YES to all: proceed to output
 
 **EXTRACTION METHODOLOGY FOR EACH LEASE:**
 1. **COMPLETE LEASE DATABASE**: Extract ALL lease comparables, not just selected examples
@@ -927,12 +1008,21 @@ Before extracting data, analyze the document structure and COUNT total lease com
 
 **QUALITY ASSURANCE CHECKLIST:**
 Before submitting, verify:
-[ ] Did you examine every visible row and page in the document?
-[ ] Did you extract data for ALL lease comparables, not just the first page?
-[ ] Did you calculate effective rents accounting for ALL concessions?
-[ ] Did you capture complete property addresses and tenant names?
-[ ] Did you extract ALL financial terms (rent, escalations, type, concessions)?
-[ ] Are all monetary amounts and dates in correct formats?
+[ ] TRANSACTION COUNT: Did you extract ALL [X] lease comparables (not just first page)?
+[ ] FIELD COMPLETENESS: Does EVERY lease have ALL 9 required fields?
+  - propertyAddress (no nulls, no empty strings)
+  - propertyType (valid type, not "Not specified")
+  - leaseCommencementDate (valid date in YYYY-MM-DD format)
+  - tenantIndustry (actual industry, not null)
+  - leaseTerm (number > 0)
+  - squareFootage (number > 0)
+  - baseRent (number > 0)
+  - leaseType ('NNN' or 'Gross' or 'Modified Gross' - no other values)
+  - effectiveRent (number > 0)
+[ ] Did you check lease #1 has ALL fields complete?
+[ ] Did you check last lease has ALL fields complete?
+[ ] Did you scan ALL leases for any missing fields?
+[ ] Are all dates in YYYY-MM-DD format and chronologically valid?
 [ ] Are summary calculations mathematically accurate?
 [ ] Is the extracted data consistent and ready for market analysis?
 
