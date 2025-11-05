@@ -44,7 +44,8 @@
       "Bash(tee:*)",
       "Bash(git log:*)",
       "Bash(git rm:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

@@ -100,7 +100,7 @@ export async function uploadFileDirectly(
     const { data, error } = await client.storage
       .from(bucket)
       .upload(fileName, file, {
-        cacheControl: '3600',
+        cacheControl: '0',
         upsert: false,
       });
 
