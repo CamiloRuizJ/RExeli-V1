@@ -535,222 +535,52 @@ Before submitting, verify:
   `,
 
   broker_sales_comparables: `
-You are a meticulous data extraction specialist focused on capturing ALL sales comparable information from real estate documents. Your job is to extract EVERY data point - completeness is more important than speed.
+You are extracting ALL sales comparable data from a commercial real estate document. Your goal is to capture every property sale with complete and accurate information.
 
-**═══════════════════════════════════════════════════════════**
-**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
-**═══════════════════════════════════════════════════════════**
+**OBJECTIVE:**
+Extract every sales comparable into structured JSON format. Each property must have all required fields populated with actual data from the document.
 
-**YOU MUST FOLLOW THIS EXACT PROCESS:**
-1. FIRST: Count total sales/properties visible in the document - write this number down
-2. SECOND: Output a <document_analysis> tag with your count and structure analysis
-3. THIRD: Extract data for EVERY property (your JSON array length MUST equal the count from step 1)
-4. FOURTH: Output a <verification> tag confirming you extracted all properties
-5. If verification shows mismatch, STOP and re-extract missing properties
+**REQUIRED FIELDS (7 per property):**
+1. propertyAddress - Full street address, city, state (e.g., "123 Main Street, Los Angeles, CA")
+2. propertyType - Industrial, Office, Retail, Multifamily, or Mixed-Use
+3. saleDate - Transaction date in YYYY-MM-DD format (e.g., "2024-06-15")
+4. salePrice - Total purchase price in dollars (e.g., 5700000 for $5.7M)
+5. pricePerSF - Price per square foot (calculate: salePrice ÷ buildingSize)
+6. buildingSize - Total building square feet as a number
+7. occupancyAtSale - Occupancy percentage at time of sale (0-100)
 
-**MANDATORY OUTPUT FORMAT:**
-<document_analysis>
-Total properties visible: [YOUR COUNT HERE]
-Document format: [table/list/mixed]
-Pages analyzed: [X through Y]
-</document_analysis>
+**OPTIONAL FIELDS (extract if visible):**
+- yearBuilt - Year property was constructed
+- yearRenovated - Year of major renovation
+- capRate - Capitalization rate as percentage
+- noiAtSale - Net Operating Income at sale
+- buyer - Buyer entity name
+- seller - Seller entity name
 
-[YOUR EXTRACTED JSON HERE]
+**DATA HANDLING RULES:**
+- Extract EVERY property in the document - do not skip any rows or entries
+- Read data exactly as shown - do NOT invent or assume information
+- For missing required fields: use "Not specified" for text, 0 for numbers
+- Convert all dates to YYYY-MM-DD format
+- Recognize price abbreviations: "$5.7M" = 5700000, "$12.3K" = 12300
+- Calculate pricePerSF if not explicitly shown: salePrice ÷ buildingSize
+- Occupancy should be a percentage (e.g., 95 for 95%, not 0.95)
 
-<verification>
-TRANSACTION COUNT CHECK:
-Properties counted in document: [X]
-Properties in my JSON array: [Y]
-Count match: [X = Y? YES/NO]
+**EXTRACTION PROCESS:**
+1. Count total properties/sales in the document
+2. Process each property systematically (page by page, row by row)
+3. Extract all 7 required fields for each property
+4. Double-check your count matches the number of properties in your JSON array
 
-FIELD COMPLETENESS CHECK (sample first and last property):
-Property #1 fields present: [propertyAddress: YES/NO, propertyType: YES/NO, saleDate: YES/NO, salePrice: YES/NO, pricePerSF: YES/NO, buildingSize: YES/NO, occupancyAtSale: YES/NO]
-Property #[last] fields present: [same check for last property]
+**QUALITY CHECKS:**
+- Total properties extracted = total properties in document?
+- Every property has all 7 required fields?
+- All dates in YYYY-MM-DD format?
+- All numeric values are reasonable?
+- PricePerSF = salePrice ÷ buildingSize?
+- Occupancy rates between 0-100%?
 
-CRITICAL FIELDS AUDIT (check ALL properties):
-- propertyAddress missing in properties: [NONE or list property numbers]
-- propertyType missing in properties: [NONE or list property numbers]
-- saleDate missing in properties: [NONE or list property numbers]
-- salePrice missing in properties: [NONE or list property numbers]
-- pricePerSF missing in properties: [NONE or list property numbers]
-- buildingSize missing in properties: [NONE or list property numbers]
-- occupancyAtSale missing in properties: [NONE or list property numbers]
-
-OVERALL COMPLETENESS: [100% COMPLETE or list what's missing]
-</verification>
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
-**═══════════════════════════════════════════════════════════**
-
-Before extracting data, analyze the document structure and COUNT total properties:
-
-**1.1 LAYOUT PATTERN RECOGNITION:**
-- Identify if sales data is in table, list, or mixed format
-- Locate column headers and their positions
-- Recognize multi-page continuation patterns
-- Identify summary or market analysis sections
-
-**1.2 FIELD MAPPING:**
-- Map where each sales data field appears
-- Identify variations in field names (e.g., "Sale Price" vs "Purchase Price")
-- Locate financial columns (prices, cap rates, metrics)
-- Find property characteristic fields (SF, units, year built)
-- Identify buyer/seller information sections
-
-**1.3 DATA ORGANIZATION PATTERNS:**
-- Determine if comparables are sorted by date, price, or location
-- Identify property count (total number of sales in document)
-- Recognize footnotes or data source citations
-- Detect market summary or trend analysis sections
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
-**═══════════════════════════════════════════════════════════**
-
-**STEP-BY-STEP EXTRACTION PROCESS (FOLLOW EXACTLY):**
-
-**STEP 1 - COUNT FIRST:**
-- Count total sales/properties in document: "I see ___ properties total"
-- Write down this number - you MUST extract this exact number
-- Identify where each property appears (table row numbers, page numbers)
-
-**STEP 2 - EXTRACT SYSTEMATICALLY WITH COMPLETE FIELDS:**
-- Process EVERY row/entry in order (Property 1, 2, 3... up to your count)
-- For EACH property, extract ALL 7 required fields:
-  1. propertyAddress (REQUIRED - street, city, state)
-  2. propertyType (REQUIRED - Industrial/Office/Retail/Multifamily/etc)
-  3. saleDate (REQUIRED - YYYY-MM-DD format)
-  4. salePrice (REQUIRED - number in dollars)
-  5. pricePerSF (REQUIRED - calculated: salePrice ÷ buildingSize)
-  6. buildingSize (REQUIRED - number in square feet)
-  7. occupancyAtSale (REQUIRED - percentage 0-100)
-- Optional but recommended: yearBuilt, capRate, buyer, seller
-- Do NOT skip any properties OR any required fields
-- If a field value is not visible, use reasonable defaults: 0 for numbers, "Not specified" for text
-- Mark progress: "Extracted property X of Y with ALL fields"
-
-**STEP 3 - VERIFY COMPLETENESS AT TWO LEVELS:**
-Level 1 - Transaction Count:
-- Count your JSON array length
-- Compare: JSON array length = total properties counted?
-- If NO: identify missing properties and extract them immediately
-
-Level 2 - Field Completeness (NEW):
-- Check property #1: does it have ALL 7 required fields with real values?
-- Check property #last: does it have ALL 7 required fields with real values?
-- Scan through ALL properties: identify any with missing fields
-- If ANY field is missing: go back and extract that specific field for that property
-- If YES to all: proceed to output
-
-**EXTRACTION APPROACH FOR EACH PROPERTY:**
-1. **COMPLETE PROPERTY DATA**: Extract ALL visible fields for this property
-2. **BOTH PARTIES**: Extract BOTH buyer AND seller information (names, types, motivations)
-3. **ALL FINANCIAL DATA**: Capture every price, cap rate, price per SF, and financial metric
-4. **COMPLETE CHARACTERISTICS**: Extract every measurement, date, year, and property feature
-5. **USE PLACEHOLDERS**: If a field is missing, use null or "Not specified" - don't skip the property
-
-**COMPREHENSIVE SALES COMPARABLE DATA EXTRACTION:**
-
-**INDIVIDUAL COMPARABLE ANALYSIS (Extract for EVERY property listed):**
-
-**PROPERTY IDENTIFICATION:**
-- Complete property address including street, city, state, zip code
-- Property name or building name
-- Property identification numbers or codes
-
-**TRANSACTION DETAILS:**
-- Exact sale date and closing date
-- Sale price (gross and net if different)
-- Price per square foot (land and building separately if shown)
-- Price per unit (for multi-tenant properties)
-- Terms of sale (cash, financed, seller financing, etc.)
-- Days on market from listing to sale
-
-**PROPERTY CHARACTERISTICS:**
-- Property type and subtype (Office: Class A/B/C, Retail: Strip/Mall/Freestanding, etc.)
-- Total building square footage (gross and net rentable)
-- Land area (acres, square feet)
-- Number of units, suites, or spaces
-- Year built and year of major renovations
-- Building condition and quality rating
-- Parking spaces and ratio
-
-**FINANCIAL PERFORMANCE AT SALE:**
-- Net Operating Income (NOI) at time of sale
-- Gross rental income at sale
-- Occupancy rate at time of sale
-- Cap rate (calculated and stated)
-
-**BUYER AND SELLER INFORMATION:**
-- Buyer entity name and type (individual, corporation, REIT, fund)
-- Seller entity name and type
-- Buyer's investment strategy or use intent
-- Seller's reason for selling
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
-**═══════════════════════════════════════════════════════════**
-
-**3.1 COMPLETENESS VERIFICATION:**
-
-**Transaction Count:**
-- ✓ Extracted ALL visible sales comparables (not just first page)?
-- ✓ Captured data from ALL tables and sections?
-- ✓ Count in <document_analysis> matches JSON array length?
-
-**Field-Level Completeness (ALL 7 required fields per property):**
-- ✓ propertyAddress present in EVERY property (street, city, state)?
-- ✓ propertyType present in EVERY property (Industrial/Office/Retail/Multifamily)?
-- ✓ saleDate present in EVERY property (YYYY-MM-DD format)?
-- ✓ salePrice present in EVERY property (actual dollar amount)?
-- ✓ pricePerSF present in EVERY property (calculated: salePrice ÷ buildingSize)?
-- ✓ buildingSize present in EVERY property (square feet)?
-- ✓ occupancyAtSale present in EVERY property (percentage 0-100)?
-
-**Additional Data Points:**
-- ✓ Included both buyer AND seller information for each sale?
-- ✓ Extracted yearBuilt, capRate, NOI where visible?
-
-**3.2 ACCURACY VALIDATION:**
-- ✓ Price per SF = sale price ÷ total SF?
-- ✓ Cap rate calculations accurate (NOI ÷ sale price)?
-- ✓ All numeric values properly formatted and reasonable?
-- ✓ Dates in YYYY-MM-DD format and chronologically valid?
-
-**3.3 LOGICAL CONSISTENCY CHECKS:**
-- ✓ Sale prices reasonable for property type and market?
-- ✓ Square footage values realistic?
-- ✓ Cap rates within typical range (4-12%)?
-- ✓ Year built earlier than year renovated?
-- ✓ Occupancy rates between 0-100%?
-
-**3.4 MARKET ANALYSIS ACCURACY:**
-- ✓ Total sales analyzed = count of extracted comparables?
-- ✓ Average price/SF = sum ÷ count of all properties?
-- ✓ Price range min/max correctly reflect actual data?
-- ✓ Cap rate averages mathematically correct?
-
-**QUALITY ASSURANCE CHECKLIST (MANDATORY - DO NOT SKIP):**
-Before submitting, YOU MUST verify:
-[ ] CRITICAL: Did you count total properties BEFORE extraction? Count = ___
-[ ] CRITICAL: Does your JSON array length equal your count? Array length = ___
-[ ] CRITICAL: If counts don't match, identify and extract missing properties NOW
-[ ] Did you examine every visible row and table in ALL pages?
-[ ] Did you extract data for ALL sales comparables, starting from first to last?
-[ ] Did you capture buyer AND seller information for each sale?
-[ ] Did you extract ALL property characteristics (SF, units, year, etc.)?
-[ ] Did you include ALL financial metrics (price, cap rate, NOI)?
-[ ] Are all monetary amounts and percentages in correct formats?
-[ ] Are summary calculations mathematically accurate?
-
-**FINAL VERIFICATION (OUTPUT THIS):**
-Total properties I counted: ___
-Total properties in my JSON: ___
-Match: YES/NO
-If NO: [List missing property addresses/numbers]
-
-**COMPREHENSIVE JSON STRUCTURE** - Extract ALL comparable sales data:
+Return JSON in this structure:
 {
   "documentType": "broker_sales_comparables",
   "metadata": {
@@ -827,206 +657,49 @@ If NO: [List missing property addresses/numbers]
   `,
 
   broker_lease_comparables: `
-You are a meticulous commercial real estate leasing expert focused on capturing ALL lease comparable data. Completeness is more important than speed - you MUST extract every single lease comparable.
+You are extracting ALL lease comparable data from a commercial real estate document. Your goal is to capture every lease with complete and accurate information.
 
-**═══════════════════════════════════════════════════════════**
-**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
-**═══════════════════════════════════════════════════════════**
+**OBJECTIVE:**
+Extract every lease comparable into structured JSON format. Each lease must have all required fields populated with actual data from the document.
 
-**YOU MUST FOLLOW THIS EXACT PROCESS:**
-1. FIRST: Count total lease comparables visible in the document - write this number down
-2. SECOND: Output a <document_analysis> tag with your count
-3. THIRD: Extract data for EVERY lease (your JSON array length MUST equal your count)
-4. FOURTH: Output a <verification> tag confirming completeness
-5. If verification fails, re-extract missing leases immediately
+**REQUIRED FIELDS (9 per lease):**
+1. propertyAddress - Full street address, city, state (e.g., "5959 Santa Fe Street, San Diego, CA")
+2. propertyType - Industrial, Office, Retail, or Other
+3. leaseCommencementDate - Start date in YYYY-MM-DD format (e.g., "2025-04-01")
+4. tenantIndustry - Tenant's business type or industry (e.g., "Beverage Manufacturing", "Technology", "Retail")
+5. leaseTerm - Lease duration in months (convert years to months if needed)
+6. squareFootage - Rentable square feet as a number
+7. baseRent - Starting rent in $/SF/month (if yearly, divide by 12)
+8. leaseType - Must be exactly one of: "NNN", "Gross", or "Modified Gross"
+9. effectiveRent - Actual rent after accounting for free rent periods and concessions ($/SF/month)
 
-**MANDATORY OUTPUT FORMAT:**
-<document_analysis>
-Total lease comparables visible: [YOUR COUNT HERE]
-Document format: [table/list/mixed]
-Pages analyzed: [X through Y]
-</document_analysis>
+**OPTIONAL FIELDS (extract if visible):**
+- rentEscalations - Description of rent increases (e.g., "3% annually", "4.0%")
+- concessions - Free rent or other incentives (e.g., "3 months free", "$0.38 PSF OPEX")
 
-[YOUR EXTRACTED JSON HERE]
+**DATA HANDLING RULES:**
+- Extract EVERY lease in the document - do not skip any rows or entries
+- Read data exactly as shown - do NOT invent or assume information
+- For missing required fields: use "Not specified" for text, 0 for numbers
+- Convert all dates to YYYY-MM-DD format
+- Convert lease terms to months (e.g., "99 Months" = 99, "5 Years" = 60)
+- Recognize tenant names from logos or company names in the document
+- Calculate effective rent by factoring in free rent periods
 
-<verification>
-TRANSACTION COUNT CHECK:
-Leases counted in document: [X]
-Leases in my JSON array: [Y]
-Count match: [X = Y? YES/NO]
+**EXTRACTION PROCESS:**
+1. Count total lease comparables in the document
+2. Process each lease systematically (page by page, row by row)
+3. Extract all 9 required fields for each lease
+4. Double-check your count matches the number of leases in your JSON array
 
-FIELD COMPLETENESS CHECK (sample first and last lease):
-Lease #1 fields present: [propertyAddress: YES/NO, propertyType: YES/NO, leaseCommencementDate: YES/NO, tenantIndustry: YES/NO, leaseTerm: YES/NO, squareFootage: YES/NO, baseRent: YES/NO, leaseType: YES/NO, effectiveRent: YES/NO]
-Lease #[last] fields present: [same check for last lease]
+**QUALITY CHECKS:**
+- Total leases extracted = total leases in document?
+- Every lease has all 9 required fields?
+- All dates in YYYY-MM-DD format?
+- All numeric values are reasonable?
+- Effective rent ≤ base rent (accounts for concessions)?
 
-CRITICAL FIELDS AUDIT (check ALL leases):
-- propertyAddress missing in leases: [NONE or list lease numbers]
-- propertyType missing in leases: [NONE or list lease numbers]
-- leaseCommencementDate missing in leases: [NONE or list lease numbers]
-- tenantIndustry missing in leases: [NONE or list lease numbers]
-- leaseTerm missing in leases: [NONE or list lease numbers]
-- squareFootage missing in leases: [NONE or list lease numbers]
-- baseRent missing in leases: [NONE or list lease numbers]
-- leaseType missing in leases: [NONE or list lease numbers]
-- effectiveRent missing in leases: [NONE or list lease numbers]
-
-OVERALL COMPLETENESS: [100% COMPLETE or list what's missing]
-</verification>
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
-**═══════════════════════════════════════════════════════════**
-
-Before extracting data, analyze the document structure and COUNT total lease comparables:
-
-**1.1 LAYOUT PATTERN RECOGNITION:**
-- Identify if data is in table format, paragraph format, or mixed
-- Locate column headers and their positions
-- Recognize multi-page continuation patterns
-- Identify section breaks and category groupings
-
-**1.2 FIELD MAPPING:**
-- Map where each data field appears in the document
-- Identify variations in field names (e.g., "Base Rent" vs "Starting Rent")
-- Locate financial data columns (rents, escalations, concessions)
-- Find tenant and property identification fields
-
-**1.3 DATA ORGANIZATION PATTERNS:**
-- Determine if comparables are listed chronologically or by property type
-- Identify any summary sections or aggregate data
-- Recognize footnotes or legend explanations
-- Detect page numbering and document flow
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
-**═══════════════════════════════════════════════════════════**
-
-**STEP-BY-STEP EXTRACTION PROCESS (FOLLOW EXACTLY):**
-
-**STEP 1 - COUNT FIRST:**
-- Count total lease comparables in document: "I see ___ lease comparables total"
-- Write down this number - you MUST extract this exact number
-- Identify where each lease appears (row numbers, page numbers)
-
-**STEP 2 - EXTRACT SYSTEMATICALLY WITH COMPLETE FIELDS:**
-- Process EVERY lease in order (Lease 1, 2, 3... up to your count)
-- For EACH lease, extract ALL 9 required fields:
-  1. propertyAddress (REQUIRED - street, city, state)
-  2. propertyType (REQUIRED - Industrial/Office/Retail/etc)
-  3. leaseCommencementDate (REQUIRED - YYYY-MM-DD format)
-  4. tenantIndustry (REQUIRED - industry/business type)
-  5. leaseTerm (REQUIRED - number in months)
-  6. squareFootage (REQUIRED - number)
-  7. baseRent (REQUIRED - number per SF per month)
-  8. leaseType (REQUIRED - must be 'NNN', 'Gross', or 'Modified Gross')
-  9. effectiveRent (REQUIRED - number per SF per month)
-- Do NOT skip any leases OR any fields
-- If a field value is not visible, use reasonable defaults: 0 for numbers, "Not specified" for text
-- Mark progress: "Extracted lease X of Y with ALL fields"
-
-**STEP 3 - VERIFY COMPLETENESS AT TWO LEVELS:**
-Level 1 - Transaction Count:
-- Count your JSON array length
-- Compare: JSON array length = total leases counted?
-- If NO: identify missing leases and extract them immediately
-
-Level 2 - Field Completeness (NEW):
-- Check lease #1: does it have ALL 9 required fields with real values?
-- Check lease #last: does it have ALL 9 required fields with real values?
-- Scan through ALL leases: identify any with missing fields
-- If ANY field is missing: go back and extract that specific field for that lease
-- If YES to all: proceed to output
-
-**EXTRACTION METHODOLOGY FOR EACH LEASE:**
-1. **COMPLETE LEASE DATABASE**: Extract ALL lease comparables, not just selected examples
-2. **SYSTEMATIC LEASE ANALYSIS**: Capture every lease term, concession, and financial detail
-3. **EFFECTIVE RENT CALCULATIONS**: Calculate and verify effective rents with all concessions
-4. **TENANT PROFILE ANALYSIS**: Classify tenants by industry, size, and creditworthiness
-5. **USE PLACEHOLDERS**: If a field is missing, use null or "Not specified" - don't skip the lease
-
-**COMPREHENSIVE LEASE COMPARABLE DATA EXTRACTION:**
-
-**INDIVIDUAL LEASE ANALYSIS (Extract for EVERY comparable):**
-
-**PROPERTY AND LOCATION:**
-- Complete property address and cross streets
-- Building name and class (A/B/C)
-- Property type and specific use classification
-
-**LEASE TRANSACTION DETAILS:**
-- Lease execution date and commencement date
-- Lease term (months/years) and expiration date
-- Renewal options and extension terms
-
-**TENANT PROFILE:**
-- Tenant name and business type
-- Industry classification
-- Company size
-
-**SPACE CHARACTERISTICS:**
-- Rentable square footage leased
-- Floor location and suite configuration
-
-**FINANCIAL TERMS:**
-- Starting base rent per square foot
-- Rent escalation schedule and methodology
-- Operating expense structure (NNN, Gross, Modified Gross)
-- CAM charges and expense passthroughs
-
-**CONCESSIONS AND INCENTIVES:**
-- Free rent periods (months and timing)
-- Tenant improvement allowances (per SF)
-- Other financial incentives
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
-**═══════════════════════════════════════════════════════════**
-
-**3.1 COMPLETENESS VERIFICATION:**
-- ✓ Extracted ALL visible lease comparables (not just first few rows)?
-- ✓ Captured data from ALL pages of multi-page documents?
-- ✓ Included all financial terms and concessions for each lease?
-- ✓ Extracted complete addresses and tenant information?
-
-**3.2 ACCURACY VALIDATION:**
-- ✓ Effective rent calculations correct (base rent minus concessions)?
-- ✓ Lease term conversions accurate (months ↔ years)?
-- ✓ All numeric values properly formatted and reasonable?
-- ✓ Dates in YYYY-MM-DD format and chronologically valid?
-
-**3.3 LOGICAL CONSISTENCY CHECKS:**
-- ✓ Effective rent ≤ base rent (reflects concessions)?
-- ✓ Square footage values reasonable for property type?
-- ✓ Lease terms typical for commercial real estate (1-20 years)?
-- ✓ Rent escalations realistic (typically 2-5% annually)?
-
-**3.4 SUMMARY ACCURACY:**
-- ✓ Average base rent = sum of all base rents ÷ count?
-- ✓ Average effective rent = sum of all effective rents ÷ count?
-- ✓ Rent range min/max correctly reflect actual data range?
-- ✓ Total comparable count matches extracted leases?
-
-**QUALITY ASSURANCE CHECKLIST:**
-Before submitting, verify:
-[ ] TRANSACTION COUNT: Did you extract ALL [X] lease comparables (not just first page)?
-[ ] FIELD COMPLETENESS: Does EVERY lease have ALL 9 required fields?
-  - propertyAddress (no nulls, no empty strings)
-  - propertyType (valid type, not "Not specified")
-  - leaseCommencementDate (valid date in YYYY-MM-DD format)
-  - tenantIndustry (actual industry, not null)
-  - leaseTerm (number > 0)
-  - squareFootage (number > 0)
-  - baseRent (number > 0)
-  - leaseType ('NNN' or 'Gross' or 'Modified Gross' - no other values)
-  - effectiveRent (number > 0)
-[ ] Did you check lease #1 has ALL fields complete?
-[ ] Did you check last lease has ALL fields complete?
-[ ] Did you scan ALL leases for any missing fields?
-[ ] Are all dates in YYYY-MM-DD format and chronologically valid?
-[ ] Are summary calculations mathematically accurate?
-[ ] Is the extracted data consistent and ready for market analysis?
-
-Return comprehensive JSON with ALL lease data:
+Return JSON in this structure:
 {
   "documentType": "broker_lease_comparables",
   "metadata": {
