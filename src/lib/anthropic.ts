@@ -70,19 +70,37 @@ async function getActiveModelForDocumentType(documentType: DocumentType): Promis
  */
 function extractJSONFromResponse(content: string): any {
   try {
-    // STEP 1: Remove verification tags (new enforcement mechanism)
-    // These tags are used for Claude's internal verification but should not be in final JSON
+    // STEP 1: Extract and log verification tag content BEFORE removal
+    // These tags contain critical debugging info (counts, completeness checks)
     let cleanedContent = content;
 
-    // Remove <document_analysis> tags and content
-    cleanedContent = cleanedContent.replace(/<document_analysis>[\s\S]*?<\/document_analysis>/gi, '');
+    // Extract <document_analysis> content
+    const docAnalysisMatch = content.match(/<document_analysis>([\s\S]*?)<\/document_analysis>/i);
+    if (docAnalysisMatch) {
+      const analysisContent = docAnalysisMatch[1].trim();
+      console.log('═══════════════════════════════════════════════════════════');
+      console.log('[DOCUMENT ANALYSIS] Claude counted items before extraction:');
+      console.log(analysisContent);
+      console.log('═══════════════════════════════════════════════════════════');
+      cleanedContent = cleanedContent.replace(/<document_analysis>[\s\S]*?<\/document_analysis>/gi, '');
+    }
 
-    // Remove <verification> tags and content
-    cleanedContent = cleanedContent.replace(/<verification>[\s\S]*?<\/verification>/gi, '');
+    // Extract <verification> content
+    const verificationMatch = content.match(/<verification>([\s\S]*?)<\/verification>/i);
+    if (verificationMatch) {
+      const verificationContent = verificationMatch[1].trim();
+      console.log('═══════════════════════════════════════════════════════════');
+      console.log('[VERIFICATION CHECK] Claude verified extraction completeness:');
+      console.log(verificationContent);
+      console.log('═══════════════════════════════════════════════════════════');
+      cleanedContent = cleanedContent.replace(/<verification>[\s\S]*?<\/verification>/gi, '');
+    }
 
-    // Log if we found and removed verification tags (indicates Claude followed instructions)
-    if (content.includes('<document_analysis>') || content.includes('<verification>')) {
-      console.log('[JSON Parser] Found and removed verification tags - Claude followed enforcement instructions ✓');
+    // Log if verification tags were found
+    if (docAnalysisMatch || verificationMatch) {
+      console.log('[JSON Parser] ✓ Claude followed enforcement instructions and provided verification data');
+    } else {
+      console.warn('[JSON Parser] ⚠ No verification tags found - Claude may not have followed counting instructions');
     }
 
     // STEP 2: Try parsing as JSON first
@@ -1785,6 +1803,9 @@ export async function extractData(
   imageDataUrls: string[]
 ): Promise<ExtractedData> {
   try {
+    console.log('╔════════════════════════════════════════════════════════════╗');
+    console.log('║  EXTRACTION PATH: IMAGE/MULTI-PAGE (16K tokens, temp 0.3) ║');
+    console.log('╚════════════════════════════════════════════════════════════╝');
     console.log(`Claude: Starting data extraction for ${documentType} with ${imageDataUrls.length} page(s)...`);
 
     // Get extraction prompt for document type
@@ -1851,9 +1872,9 @@ export async function extractData(
     try {
       response = await anthropic.messages.create({
         model: modelToUse,
-        max_tokens: 16000, // Claude supports larger context than GPT-4o-mini's 15K
-        temperature: 0.1,
-        system: 'You are an expert commercial real estate professional specializing in data extraction. Extract ALL visible data comprehensively and return ONLY valid JSON with no additional text or markdown formatting.',
+        max_tokens: 16000, // Image path uses 16K (vs 64K for native PDF) - consider upgrading if needed
+        temperature: 0.3, // Match native PDF path for consistency (increased for thoroughness)
+        system: "You are a meticulous data extraction specialist. Your primary objective is to extract EVERY data point from the document - completeness is more important than speed. You MUST count items before extraction, verify counts after extraction, and ensure 100% completeness. Follow all instructions exactly, including mandatory output format requirements.",
         messages: [
           {
             role: 'user',
@@ -1865,9 +1886,24 @@ export async function extractData(
       const duration = Date.now() - startTime;
       console.log(`Claude API call completed in ${duration}ms for ${imageDataUrls.length} page(s) (${(duration / 1000).toFixed(1)}s)`);
 
-      // Log token usage if available
+      // Log token usage with truncation detection
       if (response.usage) {
-        console.log(`Token usage - Input: ${response.usage.input_tokens}, Output: ${response.usage.output_tokens}`);
+        const inputTokens = response.usage.input_tokens;
+        const outputTokens = response.usage.output_tokens;
+        const maxTokens = 16000; // Image path uses 16K max_tokens
+
+        console.log(`Token usage: ${inputTokens} input, ${outputTokens} output (max: ${maxTokens})`);
+
+        // Warn if output is close to max_tokens (likely truncation)
+        if (outputTokens >= maxTokens * 0.95) {
+          console.error(`⚠️  WARNING: Output tokens (${outputTokens}) near max_tokens limit (${maxTokens})!`);
+          console.error('⚠️  Response may be TRUNCATED - Claude may not have finished extraction!');
+          console.error('⚠️  This explains missing properties/line items in extraction results!');
+          console.error('⚠️  NOTE: Image path uses only 16K tokens (vs 64K for native PDF)');
+        } else if (outputTokens >= maxTokens * 0.85) {
+          console.warn(`⚠️  CAUTION: Output tokens (${outputTokens}) at 85% of max_tokens (${maxTokens})`);
+          console.warn('⚠️  Large document - verify all items were extracted');
+        }
       }
 
     } catch (apiError) {
@@ -1885,7 +1921,11 @@ export async function extractData(
     }
 
     const content_text = textContent.text;
-    console.log('Claude extraction response length:', content_text.length);
+    console.log(`[Image Path] Raw response length: ${content_text.length} characters`);
+    console.log(`[Image Path] Raw response preview (first 500 chars):`);
+    console.log(content_text.substring(0, 500));
+    console.log(`[Image Path] Raw response preview (last 500 chars):`);
+    console.log(content_text.substring(Math.max(0, content_text.length - 500)));
 
     // Parse JSON response with error recovery
     let extractedData;
@@ -1978,6 +2018,9 @@ async function extractDataFromNativePDF(
   const startTime = Date.now();
 
   try {
+    console.log('╔════════════════════════════════════════════════════════════╗');
+    console.log('║  EXTRACTION PATH: NATIVE PDF (64K tokens, temp 0.3)       ║');
+    console.log('╚════════════════════════════════════════════════════════════╝');
     console.log(`Calling Claude with native PDF for ${documentType}...`);
 
     // Build content array with PDF document using native PDF support
@@ -2012,9 +2055,23 @@ async function extractDataFromNativePDF(
     const duration = Date.now() - startTime;
     console.log(`Claude native PDF response received in ${duration}ms (${(duration / 1000).toFixed(2)}s)`);
 
-    // Log token usage
+    // Log token usage with truncation detection
     if (response.usage) {
-      console.log(`Tokens: ${response.usage.input_tokens} input, ${response.usage.output_tokens} output`);
+      const inputTokens = response.usage.input_tokens;
+      const outputTokens = response.usage.output_tokens;
+      const maxTokens = 64000;
+
+      console.log(`Token usage: ${inputTokens} input, ${outputTokens} output (max: ${maxTokens})`);
+
+      // Warn if output is close to max_tokens (likely truncation)
+      if (outputTokens >= maxTokens * 0.95) {
+        console.error(`⚠️  WARNING: Output tokens (${outputTokens}) near max_tokens limit (${maxTokens})!`);
+        console.error('⚠️  Response may be TRUNCATED - Claude may not have finished extraction!');
+        console.error('⚠️  This explains missing properties/line items in extraction results!');
+      } else if (outputTokens >= maxTokens * 0.85) {
+        console.warn(`⚠️  CAUTION: Output tokens (${outputTokens}) at 85% of max_tokens (${maxTokens})`);
+        console.warn('⚠️  Large document - verify all items were extracted');
+      }
     }
 
     // Extract text content
@@ -2023,7 +2080,15 @@ async function extractDataFromNativePDF(
       throw new Error('Unexpected response type from Claude');
     }
 
-    const extractedJson = extractJSONFromResponse(content.text) as ExtractedData;
+    // Log raw response preview for debugging
+    const rawResponse = content.text;
+    console.log(`[Native PDF] Raw response length: ${rawResponse.length} characters`);
+    console.log(`[Native PDF] Raw response preview (first 500 chars):`);
+    console.log(rawResponse.substring(0, 500));
+    console.log(`[Native PDF] Raw response preview (last 500 chars):`);
+    console.log(rawResponse.substring(Math.max(0, rawResponse.length - 500)));
+
+    const extractedJson = extractJSONFromResponse(rawResponse) as ExtractedData;
 
     // Merge user metadata if provided
     if (userMetadata) {
