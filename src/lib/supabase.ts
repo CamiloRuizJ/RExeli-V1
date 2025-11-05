@@ -59,7 +59,7 @@ export async function uploadFileToSupabase(
     const { data, error } = await supabase.storage
       .from(bucket)
       .upload(fileName, file, {
-        cacheControl: '3600',
+        cacheControl: '0',
         upsert: false,
       });
 
