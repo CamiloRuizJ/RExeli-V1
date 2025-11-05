@@ -142,6 +142,35 @@ const EXTRACTION_PROMPTS = {
   rent_roll: `
 You are an expert commercial real estate professional analyzing a rent roll for investment analysis and property management decisions. Extract comprehensive rent roll data with the precision required for NOI calculations and investment underwriting.
 
+**═══════════════════════════════════════════════════════════**
+**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
+**═══════════════════════════════════════════════════════════**
+
+Before extracting data, analyze the document structure:
+
+**1.1 LAYOUT PATTERN RECOGNITION:**
+- Identify if rent roll is in spreadsheet, table, or list format
+- Locate column headers and their order
+- Recognize multi-page continuation patterns
+- Identify summary sections or totals
+
+**1.2 FIELD MAPPING:**
+- Map where each tenant data field appears
+- Identify variations in field names (e.g., "Unit" vs "Suite" vs "Space")
+- Locate financial columns (rent, CAM, deposits, concessions)
+- Find lease date columns (start, end, commencement)
+- Identify vacant unit indicators
+
+**1.3 DATA ORGANIZATION PATTERNS:**
+- Determine if tenants are grouped by floor, building, or type
+- Identify subtotal rows or section breaks
+- Recognize occupancy status indicators (occupied/vacant/notice)
+- Detect footnotes or special notations
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
+**═══════════════════════════════════════════════════════════**
+
 Focus on extracting ALL relevant data points that real estate professionals need:
 - Tenant name & suite/unit number
 - Lease start & expiration dates
@@ -154,6 +183,49 @@ Focus on extracting ALL relevant data points that real estate professionals need
 - Free rent or concessions
 - Square footage leased
 - Occupancy status
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
+**═══════════════════════════════════════════════════════════**
+
+**3.1 COMPLETENESS VERIFICATION:**
+- ✓ Extracted ALL tenant rows (occupied AND vacant)?
+- ✓ Captured data from ALL pages of multi-page rent rolls?
+- ✓ Included all financial fields for each tenant?
+- ✓ Extracted complete suite/unit numbers and tenant names?
+
+**3.2 ACCURACY VALIDATION:**
+- ✓ Total rent = sum of all tenant rents?
+- ✓ Occupancy rate = occupied units ÷ total units?
+- ✓ Average rent PSF = total rent ÷ total occupied SF?
+- ✓ Vacant units count matches units with no tenant name?
+- ✓ All numeric values properly formatted and reasonable?
+- ✓ Dates in YYYY-MM-DD format and chronologically valid?
+
+**3.3 LOGICAL CONSISTENCY CHECKS:**
+- ✓ Square footage per unit reasonable for property type?
+- ✓ Base rent values consistent with market expectations?
+- ✓ Lease end dates after lease start dates?
+- ✓ CAM reimbursements reasonable for NNN leases?
+- ✓ Occupancy status matches presence of tenant name?
+
+**3.4 SUMMARY ACCURACY:**
+- ✓ Total SF = sum of all unit square footages?
+- ✓ Total units = occupied + vacant units?
+- ✓ Total rent matches sum of all base rents?
+- ✓ Metrics support NOI calculations and underwriting?
+
+**QUALITY ASSURANCE CHECKLIST:**
+Before submitting, verify:
+[ ] Did you examine every visible row and column in all tables?
+[ ] Did you extract data for ALL tenants listed, not just the first few?
+[ ] Did you identify and extract all vacant spaces?
+[ ] Did you capture all financial data including rent, CAM, deposits, etc?
+[ ] Did you extract all lease terms including options, escalations, and special clauses?
+[ ] Did you calculate occupancy rates, average rents, and other summary metrics?
+[ ] Is the extracted data consistent and logical?
+[ ] Are all monetary amounts and dates in correct formats?
+[ ] Does the data support investment decision-making and NOI calculations?
 
 Return JSON with this structure:
 {
@@ -195,16 +267,6 @@ Return JSON with this structure:
   }
 }
 
-**QUALITY ASSURANCE CHECKLIST:**
-- Did you examine every visible row and column in all tables?
-- Did you extract data for ALL tenants listed, not just the first few?
-- Did you identify and extract all vacant spaces?
-- Did you capture all financial data including rent, CAM, deposits, etc?
-- Did you extract all lease terms including options, escalations, and special clauses?
-- Did you calculate occupancy rates, average rents, and other summary metrics?
-- Is the extracted data consistent and logical?
-- Are all monetary amounts and dates in correct formats?
-
 **IMPORTANT INSTRUCTIONS:**
 - Extract data from EVERY visible page and section
 - If information is unclear or illegible, note it in additionalNotes
@@ -216,6 +278,35 @@ Return JSON with this structure:
 
   operating_budget: `
 You are a seasoned commercial real estate financial analyst and asset manager with 20+ years of experience in investment underwriting, NOI optimization, and property financial management. Your task is to perform a systematic, comprehensive extraction of ALL financial data visible in this operating budget document.
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
+**═══════════════════════════════════════════════════════════**
+
+Before extracting data, analyze the document structure:
+
+**1.1 LAYOUT PATTERN RECOGNITION:**
+- Identify if budget is in spreadsheet, table, or narrative format
+- Locate income and expense section headers
+- Recognize multi-column layouts (actual, budget, variance, prior year)
+- Identify subtotal and total calculation rows
+
+**1.2 FIELD MAPPING:**
+- Map where each financial category appears
+- Identify variations in account names (e.g., "Property Taxes" vs "Real Estate Taxes")
+- Locate income line items and revenue categories
+- Find expense categories and operating cost sections
+- Identify NOI calculation and cash flow sections
+
+**1.3 DATA ORGANIZATION PATTERNS:**
+- Determine budget period (annual, monthly, quarterly)
+- Identify variance analysis columns (actual vs budget)
+- Recognize multi-year comparison sections
+- Detect footnotes explaining assumptions or calculations
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
+**═══════════════════════════════════════════════════════════**
 
 **EXTRACTION METHODOLOGY:**
 1. **COMPLETE DOCUMENT ANALYSIS**: Examine every line item, table, chart, graph, and financial detail
@@ -258,6 +349,47 @@ You are a seasoned commercial real estate financial analyst and asset manager wi
 - Major building system replacements
 - Reserve fund contributions
 
+**═══════════════════════════════════════════════════════════**
+**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
+**═══════════════════════════════════════════════════════════**
+
+**3.1 COMPLETENESS VERIFICATION:**
+- ✓ Extracted ALL income line items visible in document?
+- ✓ Captured ALL expense categories and line items?
+- ✓ Included vacancy allowances and loss factors?
+- ✓ Extracted capital expenditure forecasts if present?
+
+**3.2 ACCURACY VALIDATION:**
+- ✓ Total income = sum of all income line items?
+- ✓ Total expenses = sum of all expense categories?
+- ✓ NOI = total income - total operating expenses?
+- ✓ Cash flow = NOI - capital expenditures (if applicable)?
+- ✓ All numeric values properly formatted and reasonable?
+
+**3.3 LOGICAL CONSISTENCY CHECKS:**
+- ✓ Gross rental income reasonable for property size/type?
+- ✓ Vacancy allowance realistic (typically 5-15%)?
+- ✓ Property taxes consistent with market expectations?
+- ✓ Management fees typical (usually 3-5% of EGI)?
+- ✓ All percentages and calculations mathematically sound?
+
+**3.4 BUDGET COMPLETENESS:**
+- ✓ All major expense categories represented?
+- ✓ Income and expense totals balance to NOI?
+- ✓ Budget period clearly identified?
+- ✓ Data supports underwriting and investment analysis?
+
+**QUALITY ASSURANCE CHECKLIST:**
+Before submitting, verify:
+[ ] Did you examine every line item in the budget?
+[ ] Did you extract ALL income categories (not just rental income)?
+[ ] Did you capture ALL expense categories (not just major ones)?
+[ ] Did you include vacancy allowances and other adjustments?
+[ ] Are all totals and subtotals mathematically correct?
+[ ] Is NOI calculated correctly (income - expenses)?
+[ ] Are all monetary amounts in proper format?
+[ ] Does the extracted data support NOI analysis and valuation?
+
 **COMPREHENSIVE JSON STRUCTURE** - Extract ALL financial data into this detailed format:
 {
   "documentType": "operating_budget",
@@ -295,6 +427,35 @@ You are a seasoned commercial real estate financial analyst and asset manager wi
 
   broker_sales_comparables: `
 You are a data extraction specialist focused on capturing ALL sales comparable information from real estate documents. Your primary task is to systematically extract every data point visible in the document FIRST, then organize and analyze it.
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
+**═══════════════════════════════════════════════════════════**
+
+Before extracting data, analyze the document structure:
+
+**1.1 LAYOUT PATTERN RECOGNITION:**
+- Identify if sales data is in table, list, or mixed format
+- Locate column headers and their positions
+- Recognize multi-page continuation patterns
+- Identify summary or market analysis sections
+
+**1.2 FIELD MAPPING:**
+- Map where each sales data field appears
+- Identify variations in field names (e.g., "Sale Price" vs "Purchase Price")
+- Locate financial columns (prices, cap rates, metrics)
+- Find property characteristic fields (SF, units, year built)
+- Identify buyer/seller information sections
+
+**1.3 DATA ORGANIZATION PATTERNS:**
+- Determine if comparables are sorted by date, price, or location
+- Identify property count (total number of sales in document)
+- Recognize footnotes or data source citations
+- Detect market summary or trend analysis sections
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
+**═══════════════════════════════════════════════════════════**
 
 **EXTRACTION APPROACH:**
 1. **DOCUMENT SCAN**: Examine EVERY section, table, row, column, and text block in the document
@@ -342,6 +503,46 @@ You are a data extraction specialist focused on capturing ALL sales comparable i
 - Seller entity name and type
 - Buyer's investment strategy or use intent
 - Seller's reason for selling
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
+**═══════════════════════════════════════════════════════════**
+
+**3.1 COMPLETENESS VERIFICATION:**
+- ✓ Extracted ALL visible sales comparables (not just first page)?
+- ✓ Captured data from ALL tables and sections?
+- ✓ Included both buyer AND seller information for each sale?
+- ✓ Extracted complete property addresses and characteristics?
+
+**3.2 ACCURACY VALIDATION:**
+- ✓ Price per SF = sale price ÷ total SF?
+- ✓ Cap rate calculations accurate (NOI ÷ sale price)?
+- ✓ All numeric values properly formatted and reasonable?
+- ✓ Dates in YYYY-MM-DD format and chronologically valid?
+
+**3.3 LOGICAL CONSISTENCY CHECKS:**
+- ✓ Sale prices reasonable for property type and market?
+- ✓ Square footage values realistic?
+- ✓ Cap rates within typical range (4-12%)?
+- ✓ Year built earlier than year renovated?
+- ✓ Occupancy rates between 0-100%?
+
+**3.4 MARKET ANALYSIS ACCURACY:**
+- ✓ Total sales analyzed = count of extracted comparables?
+- ✓ Average price/SF = sum ÷ count of all properties?
+- ✓ Price range min/max correctly reflect actual data?
+- ✓ Cap rate averages mathematically correct?
+
+**QUALITY ASSURANCE CHECKLIST:**
+Before submitting, verify:
+[ ] Did you examine every visible row and table in the document?
+[ ] Did you extract data for ALL sales comparables, not just the first few?
+[ ] Did you capture buyer AND seller information where available?
+[ ] Did you extract ALL property characteristics (SF, units, year, etc.)?
+[ ] Did you include ALL financial metrics (price, cap rate, NOI)?
+[ ] Are all monetary amounts and percentages in correct formats?
+[ ] Are summary calculations mathematically accurate?
+[ ] Does total count match number of comparables extracted?
 
 **COMPREHENSIVE JSON STRUCTURE** - Extract ALL comparable sales data:
 {
@@ -422,6 +623,34 @@ You are a data extraction specialist focused on capturing ALL sales comparable i
   broker_lease_comparables: `
 You are a seasoned commercial real estate leasing expert with 20+ years of experience in market analysis, lease negotiations, and rental rate determination. Your task is to perform comprehensive extraction of ALL lease comparable data for market positioning and leasing strategy development.
 
+**═══════════════════════════════════════════════════════════**
+**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
+**═══════════════════════════════════════════════════════════**
+
+Before extracting data, analyze the document structure:
+
+**1.1 LAYOUT PATTERN RECOGNITION:**
+- Identify if data is in table format, paragraph format, or mixed
+- Locate column headers and their positions
+- Recognize multi-page continuation patterns
+- Identify section breaks and category groupings
+
+**1.2 FIELD MAPPING:**
+- Map where each data field appears in the document
+- Identify variations in field names (e.g., "Base Rent" vs "Starting Rent")
+- Locate financial data columns (rents, escalations, concessions)
+- Find tenant and property identification fields
+
+**1.3 DATA ORGANIZATION PATTERNS:**
+- Determine if comparables are listed chronologically or by property type
+- Identify any summary sections or aggregate data
+- Recognize footnotes or legend explanations
+- Detect page numbering and document flow
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
+**═══════════════════════════════════════════════════════════**
+
 **EXTRACTION METHODOLOGY:**
 1. **COMPLETE LEASE DATABASE SCAN**: Extract ALL lease comparables, not just selected examples
 2. **SYSTEMATIC LEASE ANALYSIS**: Capture every lease term, concession, and financial detail
@@ -461,6 +690,45 @@ You are a seasoned commercial real estate leasing expert with 20+ years of exper
 - Free rent periods (months and timing)
 - Tenant improvement allowances (per SF)
 - Other financial incentives
+
+**═══════════════════════════════════════════════════════════**
+**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
+**═══════════════════════════════════════════════════════════**
+
+**3.1 COMPLETENESS VERIFICATION:**
+- ✓ Extracted ALL visible lease comparables (not just first few rows)?
+- ✓ Captured data from ALL pages of multi-page documents?
+- ✓ Included all financial terms and concessions for each lease?
+- ✓ Extracted complete addresses and tenant information?
+
+**3.2 ACCURACY VALIDATION:**
+- ✓ Effective rent calculations correct (base rent minus concessions)?
+- ✓ Lease term conversions accurate (months ↔ years)?
+- ✓ All numeric values properly formatted and reasonable?
+- ✓ Dates in YYYY-MM-DD format and chronologically valid?
+
+**3.3 LOGICAL CONSISTENCY CHECKS:**
+- ✓ Effective rent ≤ base rent (reflects concessions)?
+- ✓ Square footage values reasonable for property type?
+- ✓ Lease terms typical for commercial real estate (1-20 years)?
+- ✓ Rent escalations realistic (typically 2-5% annually)?
+
+**3.4 SUMMARY ACCURACY:**
+- ✓ Average base rent = sum of all base rents ÷ count?
+- ✓ Average effective rent = sum of all effective rents ÷ count?
+- ✓ Rent range min/max correctly reflect actual data range?
+- ✓ Total comparable count matches extracted leases?
+
+**QUALITY ASSURANCE CHECKLIST:**
+Before submitting, verify:
+[ ] Did you examine every visible row and page in the document?
+[ ] Did you extract data for ALL lease comparables, not just the first page?
+[ ] Did you calculate effective rents accounting for ALL concessions?
+[ ] Did you capture complete property addresses and tenant names?
+[ ] Did you extract ALL financial terms (rent, escalations, type, concessions)?
+[ ] Are all monetary amounts and dates in correct formats?
+[ ] Are summary calculations mathematically accurate?
+[ ] Is the extracted data consistent and ready for market analysis?
 
 Return comprehensive JSON with ALL lease data:
 {
@@ -1124,12 +1392,20 @@ function estimatePdfPageCount(file: File): number {
  * @param documentType - Type of document
  * @param pdfBase64 - Base64 encoded PDF
  * @param prompt - Extraction prompt
+ * @param userMetadata - Optional user metadata to merge with extracted data
  * @returns Extracted structured data
  */
 async function extractDataFromNativePDF(
   documentType: DocumentType,
   pdfBase64: string,
-  prompt: string
+  prompt: string,
+  userMetadata?: {
+    pdfFileName: string;
+    rexeliUserName: string;
+    rexeliUserEmail: string;
+    extractionTimestamp: string;
+    documentId: string;
+  }
 ): Promise<ExtractedData> {
   const startTime = Date.now();
 
@@ -1179,8 +1455,18 @@ async function extractDataFromNativePDF(
       throw new Error('Unexpected response type from Claude');
     }
 
-    const extractedJson = extractJSONFromResponse(content.text);
-    return extractedJson as ExtractedData;
+    const extractedJson = extractJSONFromResponse(content.text) as ExtractedData;
+
+    // Merge user metadata if provided
+    if (userMetadata) {
+      extractedJson.metadata = {
+        ...extractedJson.metadata,
+        ...userMetadata
+      };
+      console.log('[extractDataFromNativePDF] Merged user metadata into extraction result');
+    }
+
+    return extractedJson;
 
   } catch (error) {
     console.error('Native PDF extraction error:', error);
@@ -1207,18 +1493,26 @@ async function extractDataFromNativePDF(
  *
  * @param file - Document file (PDF, image, or multi-page JSON)
  * @param documentType - Type of document to extract
+ * @param userMetadata - User and system metadata to merge with extraction
  * @returns Extracted structured data matching document type schema
  *
  * @example
  * // Single image
- * const data = await extractDocumentData(imageFile, 'rent_roll');
+ * const data = await extractDocumentData(imageFile, 'rent_roll', userMetadata);
  *
  * // Multi-page PDF (converted to JSON client-side)
- * const data = await extractDocumentData(jsonFile, 'operating_budget');
+ * const data = await extractDocumentData(jsonFile, 'operating_budget', userMetadata);
  */
 export async function extractDocumentData(
   file: File,
-  documentType: DocumentType
+  documentType: DocumentType,
+  userMetadata?: {
+    pdfFileName: string;
+    rexeliUserName: string;
+    rexeliUserEmail: string;
+    extractionTimestamp: string;
+    documentId: string;
+  }
 ): Promise<ExtractedData> {
   try {
     console.log(`Claude: Starting data extraction for ${documentType}...`);
@@ -1267,8 +1561,8 @@ export async function extractDocumentData(
       console.log('Using NATIVE PDF processing for all pages');
       const pdfBase64 = await fileToBase64(file);
 
-      // Call Claude with native PDF - returns ExtractedData directly
-      return await extractDataFromNativePDF(documentType, pdfBase64, prompt);
+      // Call Claude with native PDF - returns ExtractedData directly with merged user metadata
+      return await extractDataFromNativePDF(documentType, pdfBase64, prompt, userMetadata);
     }
     // SCENARIO 3: Image file
     else if (file.type.startsWith('image/')) {

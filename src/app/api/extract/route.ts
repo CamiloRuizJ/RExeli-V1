@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractDocumentData } from '@/lib/anthropic';
 import { transformExtractedData } from '@/lib/data-transformers';
+import { auth } from '@/lib/auth';
 import type { ApiResponse, ExtractionResponse, DocumentType, ExtractedData } from '@/lib/types';
 
 // Route segment config - optimize for long-running Claude API calls
@@ -9,6 +10,8 @@ export const maxDuration = 300; // 5 minutes for large PDF processing
 
 export async function POST(request: NextRequest) {
   try {
+    // Get user session for metadata
+    const session = await auth();
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -98,12 +101,23 @@ export async function POST(request: NextRequest) {
 
     console.log(`Starting data extraction for manually selected document type: ${documentType}`);
 
+    // Create user metadata for extraction
+    const userMetadata = {
+      pdfFileName: fileToProcess.name,
+      rexeliUserName: session?.user?.name || 'Unknown User',
+      rexeliUserEmail: session?.user?.email || 'unknown@rexeli.com',
+      extractionTimestamp: new Date().toISOString(),
+      documentId: `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    };
+
+    console.log('[Extract API] User metadata:', userMetadata);
+
     let extractedData;
     let partialSuccess = false;
     let warnings: string[] = [];
 
     try {
-      extractedData = await extractDocumentData(fileToProcess, documentType);
+      extractedData = await extractDocumentData(fileToProcess, documentType, userMetadata);
       console.log('Raw data extraction completed:', extractedData);
 
       // Transform the extracted data to match display component expectations
@@ -120,9 +134,12 @@ export async function POST(request: NextRequest) {
         extractedData = {
           documentType,
           metadata: {
+            // Document metadata (failed extraction)
             extractedDate: new Date().toISOString().split('T')[0],
             propertyName: 'Unable to extract',
-            propertyAddress: 'Unable to extract'
+            propertyAddress: 'Unable to extract',
+            // User metadata (from system)
+            ...userMetadata
           },
           data: {} as any // Empty data object with type assertion - client should handle gracefully
         } as ExtractedData;

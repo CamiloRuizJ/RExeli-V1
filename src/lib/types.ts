@@ -42,11 +42,19 @@ export type DocumentType =
 export interface ExtractedData {
   documentType: DocumentType;
   metadata: {
+    // Document metadata (extracted from PDF content):
     propertyName?: string;
     propertyAddress?: string;
     totalSquareFeet?: number;
     totalUnits?: number;
     extractedDate: string;
+
+    // User metadata (system-generated):
+    pdfFileName: string;
+    rexeliUserName: string;
+    rexeliUserEmail: string;
+    extractionTimestamp: string;
+    documentId: string;
   };
   data: RentRollData | OperatingBudgetData | BrokerSalesComparablesData | BrokerLeaseComparablesData | BrokerListingData | OfferingMemoData | LeaseData | FinancialStatementsData | ComparableData | FinancialData;
 }
