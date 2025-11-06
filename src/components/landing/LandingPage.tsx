@@ -390,7 +390,7 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    <a href="mailto:admin@rexeli.com">
+                    <a href="mailto:sales@rexeli.com">
                       <Button variant="outline" className="w-full">Contact Sales</Button>
                     </a>
                   </CardContent>
@@ -543,7 +543,7 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    <a href="mailto:admin@rexeli.com">
+                    <a href="mailto:sales@rexeli.com">
                       <Button variant="outline" className="w-full">Contact Sales</Button>
                     </a>
                   </CardContent>
@@ -700,7 +700,7 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    <a href="mailto:admin@rexeli.com">
+                    <a href="mailto:sales@rexeli.com">
                       <Button variant="outline" className="w-full">Contact Sales</Button>
                     </a>
                   </CardContent>
@@ -815,7 +815,7 @@ export default function LandingPage() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <a href="mailto:admin@rexeli.com">
+              <a href="mailto:sales@rexeli.com">
                 <Button
                   variant="contrast"
                   size="lg"
@@ -827,8 +827,8 @@ export default function LandingPage() {
             </div>
             <p className="text-sm text-primary-foreground/70 mt-4">
               Questions? Email us at{' '}
-              <a href="mailto:admin@rexeli.com" className="text-primary-foreground underline hover:text-primary-foreground/90">
-                admin@rexeli.com
+              <a href="mailto:support@rexeli.com" className="text-primary-foreground underline hover:text-primary-foreground/90">
+                support@rexeli.com
               </a>
             </p>
           </div>
