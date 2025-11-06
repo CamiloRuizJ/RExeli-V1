@@ -328,63 +328,69 @@ export function FileUpload({
 
       {/* File Upload Section - hide when showing document type selection */}
       {!showDocumentTypeSelection && (
-        <Card className={`card-hover transition-all duration-300 ${
+        <Card className={`card-hover transition-all duration-500 ${
           isDragActive
-            ? 'border-2 border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg'
-            : 'border-2 border-dashed border-gray-200 hover:border-blue-300'
+            ? 'border-2 border-blue-500 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 shadow-2xl scale-[1.02] ring-4 ring-blue-200 ring-opacity-50'
+            : 'border-2 border-dashed border-gray-300 hover:border-emerald-400 hover:shadow-lg hover:scale-[1.01]'
         }`}>
-        <CardContent className="p-10">
+        <CardContent className="p-10 sm:p-12">
           <div
             {...getRootProps()}
             className={`text-center cursor-pointer transition-all duration-300 ${
-              isDragActive ? 'text-blue-600 scale-105' : 'text-gray-600'
+              isDragActive ? 'text-blue-600' : 'text-gray-600'
             } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'hover:text-blue-600'}`}
           >
             <input {...getInputProps()} />
 
-            {/* Upload Icon with Animation */}
-            <div className={`mx-auto mb-6 transition-all duration-300 ${
-              isDragActive ? 'scale-110' : 'hover:scale-105'
+            {/* Upload Icon with Enhanced Animation */}
+            <div className={`mx-auto mb-6 transition-all duration-500 ${
+              isDragActive ? 'scale-125 rotate-6' : 'hover:scale-110 hover:-rotate-3'
             }`}>
-              <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${
+              <div className={`relative w-20 h-20 mx-auto rounded-2xl flex items-center justify-center transition-all duration-500 ${
                 isDragActive
-                  ? 'bg-blue-100 border-2 border-blue-300'
-                  : 'bg-gray-50 border-2 border-gray-200'
+                  ? 'bg-gradient-to-br from-blue-100 to-indigo-200 border-2 border-blue-400 shadow-lg'
+                  : 'bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 hover:border-emerald-300 hover:shadow-md'
               }`}>
-                <Upload className={`w-8 h-8 ${
-                  isDragActive ? 'animate-bounce text-blue-600' : 'text-gray-400'
+                {isDragActive && (
+                  <div className="absolute inset-0 rounded-2xl bg-blue-400 animate-ping opacity-20"></div>
+                )}
+                <Upload className={`w-10 h-10 transition-all duration-300 ${
+                  isDragActive ? 'animate-bounce text-blue-600' : 'text-gray-400 group-hover:text-emerald-600'
                 }`} />
               </div>
             </div>
 
             {isDragActive ? (
-              <div className="space-y-2">
-                <p className="text-xl font-semibold text-blue-600">Drop your document here</p>
-                <p className="text-sm text-blue-500">We&apos;ll process it instantly</p>
+              <div className="space-y-3 animate-in fade-in-50 slide-in-from-top-2 duration-300">
+                <p className="text-2xl font-bold text-blue-600 animate-pulse">Drop your document here! 🎯</p>
+                <p className="text-base text-blue-500">Release to start processing instantly</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <p className="text-2xl font-semibold text-gray-900 mb-2">
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 bg-gradient-to-r from-gray-900 via-emerald-800 to-gray-900 bg-clip-text text-transparent">
                     {isProcessing ? 'Processing your document...' : 'Upload Your Real Estate Document'}
                   </p>
-                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                  <p className="text-base text-gray-600 mb-6 max-w-lg mx-auto leading-relaxed">
                     Drag & drop your file here, or click to browse. We support rent rolls,
                     offering memos, lease agreements, and more.
                   </p>
                 </div>
 
                 <Button
-                  className="px-8 py-3 text-lg font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus-ring"
+                  className="px-8 py-3 text-lg font-semibold bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-600 hover:from-emerald-700 hover:via-emerald-800 hover:to-teal-700 focus-ring shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
                   disabled={isProcessing}
                 >
                   {isProcessing ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                       Processing...
                     </>
                   ) : (
-                    'Choose File'
+                    <>
+                      <Upload className="w-5 h-5 mr-2" />
+                      Choose File
+                    </>
                   )}
                 </Button>
 
@@ -416,16 +422,16 @@ export function FileUpload({
 
       {/* Upload Progress - show when not in document type selection mode */}
       {!showDocumentTypeSelection && uploadingFiles.size > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in slide-in-from-bottom-4 fade-in-50 duration-500">
           {Array.from(uploadingFiles.values()).map((file) => (
-            <Card key={file.id} className="p-6 card-hover border border-gray-100 shadow-sm">
+            <Card key={file.id} className="p-6 card-hover border border-gray-200 shadow-md hover:shadow-lg transition-all duration-300 animate-in slide-in-from-left-2 fade-in-50">
               <div className="flex items-center space-x-4">
-                <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+                <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
                   file.status === 'uploading'
-                    ? 'bg-blue-100'
+                    ? 'bg-gradient-to-br from-blue-100 to-blue-200 ring-2 ring-blue-300 ring-opacity-50'
                     : file.status === 'uploaded'
-                    ? 'bg-green-100'
-                    : 'bg-red-100'
+                    ? 'bg-gradient-to-br from-green-100 to-emerald-200 ring-2 ring-green-300 ring-opacity-50 animate-in zoom-in-50 duration-500'
+                    : 'bg-gradient-to-br from-red-100 to-red-200 ring-2 ring-red-300 ring-opacity-50'
                 }`}>
                   {getStatusIcon(file.status)}
                 </div>
