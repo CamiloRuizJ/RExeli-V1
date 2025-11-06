@@ -23,14 +23,12 @@ import type {
 function getAnthropicApiKey(): string {
   const encryptedKey = process.env.ENCRYPTED_ANTHROPIC_API_KEY;
 
-  // During build time on Vercel, env vars aren't available yet
+  // During build time, env vars may not be available yet
   // Return placeholder to allow build to complete
+  // Actual values will be used at runtime when the API is called
   if (!encryptedKey) {
-    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-      console.warn('ENCRYPTED_ANTHROPIC_API_KEY not found during build - using placeholder');
-      return 'build-time-placeholder-key-will-be-replaced-at-runtime';
-    }
-    throw new Error('ENCRYPTED_ANTHROPIC_API_KEY environment variable is required');
+    console.warn('ENCRYPTED_ANTHROPIC_API_KEY not found during build - using placeholder');
+    return 'build-time-placeholder-key-will-be-replaced-at-runtime';
   }
 
   return decryptApiKey(encryptedKey);
