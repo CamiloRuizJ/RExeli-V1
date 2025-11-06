@@ -173,140 +173,27 @@ Respond with this exact JSON structure:
  */
 const EXTRACTION_PROMPTS = {
   rent_roll: `
-You are a meticulous commercial real estate professional analyzing rent rolls. Your job is to extract EVERY tenant row - completeness is critical for accurate NOI calculations and investment underwriting.
+You are a commercial real estate analyst extracting rent roll data. Extract EVERY tenant row (occupied AND vacant) - completeness is critical for NOI calculations.
 
-**═══════════════════════════════════════════════════════════**
-**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
-**═══════════════════════════════════════════════════════════**
+**EXTRACTION REQUIREMENTS:**
+1. Count all tenant rows (occupied + vacant) across all pages
+2. Extract complete data for every tenant/unit
+3. Verify your JSON array length matches your count
+4. Calculate accurate summary metrics
 
-**YOU MUST FOLLOW THIS EXACT PROCESS:**
-1. FIRST: Count total tenant rows (occupied + vacant) - write this number down
-2. SECOND: Output a <document_analysis> tag with your count
-3. THIRD: Extract data for EVERY tenant/unit (your JSON array length MUST equal your count)
-4. FOURTH: Output a <verification> tag confirming completeness
-5. If verification fails, re-extract missing tenants immediately
-
-**MANDATORY OUTPUT FORMAT:**
-<document_analysis>
-Total tenant rows visible: [YOUR COUNT HERE]
-Occupied units: [X]
-Vacant units: [Y]
-Pages analyzed: [X through Y]
-</document_analysis>
-
-[YOUR EXTRACTED JSON HERE]
-
-<verification>
-Tenants counted in document: [X]
-Tenants in my JSON array: [Y]
-Completeness check: [X = Y? YES/NO]
-</verification>
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
-**═══════════════════════════════════════════════════════════**
-
-Before extracting data, analyze the document structure and COUNT total tenant rows (including vacant):
-
-**1.1 LAYOUT PATTERN RECOGNITION:**
-- Identify if rent roll is in spreadsheet, table, or list format
-- Locate column headers and their order
-- Recognize multi-page continuation patterns
-- Identify summary sections or totals
-
-**1.2 FIELD MAPPING:**
-- Map where each tenant data field appears
-- Identify variations in field names (e.g., "Unit" vs "Suite" vs "Space")
-- Locate financial columns (rent, CAM, deposits, concessions)
-- Find lease date columns (start, end, commencement)
-- Identify vacant unit indicators
-
-**1.3 DATA ORGANIZATION PATTERNS:**
-- Determine if tenants are grouped by floor, building, or type
-- Identify subtotal rows or section breaks
-- Recognize occupancy status indicators (occupied/vacant/notice)
-- Detect footnotes or special notations
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
-**═══════════════════════════════════════════════════════════**
-
-**STEP-BY-STEP EXTRACTION PROCESS (FOLLOW EXACTLY):**
-
-**STEP 1 - COUNT FIRST:**
-- Count total tenant rows including vacant units: "I see ___ total units"
-- Count occupied: "I see ___ occupied units"
-- Count vacant: "I see ___ vacant units"
-- Write down these numbers - you MUST extract all units
-
-**STEP 2 - EXTRACT SYSTEMATICALLY:**
-- Process EVERY row in order (Row 1, 2, 3... up to your count)
-- Extract data for occupied AND vacant units
-- Do NOT skip any rows, even if data is incomplete
-- For vacant units, capture unit number and SF, use null for tenant data
-
-**STEP 3 - VERIFY COMPLETENESS:**
-- Count your JSON array length
-- Compare: JSON array length = total units counted?
-- If NO: identify missing units and extract them immediately
-- If YES: proceed to output
-
-**COMPREHENSIVE DATA EXTRACTION FOR EACH TENANT/UNIT:**
-Extract ALL relevant data points that real estate professionals need:
-- Tenant name & suite/unit number (or "VACANT" for vacant units)
-- Lease start & expiration dates
-- Rent commencement date
-- Base rent (current & escalations)
+**DATA TO EXTRACT PER TENANT:**
+- Tenant name & suite/unit (use "VACANT" for vacant units)
+- Lease dates (start, end, commencement)
+- Financial terms (base rent, escalations, CAM, deposits, concessions)
 - Lease type (NNN, Gross, Modified Gross)
-- CAM / Operating expense reimbursements
-- Security deposit
-- Renewal/extension options
-- Free rent or concessions
-- Square footage leased
-- Occupancy status
+- Square footage & occupancy status
+- Renewal options and special terms
 
-**═══════════════════════════════════════════════════════════**
-**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
-**═══════════════════════════════════════════════════════════**
-
-**3.1 COMPLETENESS VERIFICATION:**
-- ✓ Extracted ALL tenant rows (occupied AND vacant)?
-- ✓ Captured data from ALL pages of multi-page rent rolls?
-- ✓ Included all financial fields for each tenant?
-- ✓ Extracted complete suite/unit numbers and tenant names?
-
-**3.2 ACCURACY VALIDATION:**
-- ✓ Total rent = sum of all tenant rents?
-- ✓ Occupancy rate = occupied units ÷ total units?
-- ✓ Average rent PSF = total rent ÷ total occupied SF?
-- ✓ Vacant units count matches units with no tenant name?
-- ✓ All numeric values properly formatted and reasonable?
-- ✓ Dates in YYYY-MM-DD format and chronologically valid?
-
-**3.3 LOGICAL CONSISTENCY CHECKS:**
-- ✓ Square footage per unit reasonable for property type?
-- ✓ Base rent values consistent with market expectations?
-- ✓ Lease end dates after lease start dates?
-- ✓ CAM reimbursements reasonable for NNN leases?
-- ✓ Occupancy status matches presence of tenant name?
-
-**3.4 SUMMARY ACCURACY:**
-- ✓ Total SF = sum of all unit square footages?
-- ✓ Total units = occupied + vacant units?
-- ✓ Total rent matches sum of all base rents?
-- ✓ Metrics support NOI calculations and underwriting?
-
-**QUALITY ASSURANCE CHECKLIST:**
-Before submitting, verify:
-[ ] Did you examine every visible row and column in all tables?
-[ ] Did you extract data for ALL tenants listed, not just the first few?
-[ ] Did you identify and extract all vacant spaces?
-[ ] Did you capture all financial data including rent, CAM, deposits, etc?
-[ ] Did you extract all lease terms including options, escalations, and special clauses?
-[ ] Did you calculate occupancy rates, average rents, and other summary metrics?
-[ ] Is the extracted data consistent and logical?
-[ ] Are all monetary amounts and dates in correct formats?
-[ ] Does the data support investment decision-making and NOI calculations?
+**SUMMARY CALCULATIONS:**
+- Total rent (sum all base rents)
+- Occupancy rate (occupied ÷ total units)
+- Average rent PSF (total rent ÷ occupied SF)
+- Total/vacant units counts
 
 Return JSON with this structure:
 {
@@ -348,163 +235,52 @@ Return JSON with this structure:
   }
 }
 
-**IMPORTANT INSTRUCTIONS:**
-- Extract data from EVERY visible page and section
-- If information is unclear or illegible, note it in additionalNotes
-- Use "N/A" for fields where data is not available
-- Use 0 for numeric fields where data is not available
-- Provide professional analysis and insights in summary sections
-- Ensure all extracted data supports investment decision-making
+**IMPORTANT:**
+- Process all pages - multi-page rent rolls must be complete
+- Use "N/A" for unavailable text fields, 0 for unavailable numeric fields
+- Dates in YYYY-MM-DD format
+- Ensure totals and metrics are accurate
   `,
 
   operating_budget: `
-You are a meticulous commercial real estate financial analyst. Your job is to extract EVERY line item from this operating budget - completeness is critical for accurate NOI calculations and investment analysis.
+You are a commercial real estate financial analyst extracting operating budget data. Extract EVERY line item - completeness is critical for NOI calculations and investment analysis.
 
-**═══════════════════════════════════════════════════════════**
-**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
-**═══════════════════════════════════════════════════════════**
+**EXTRACTION REQUIREMENTS:**
+1. Count all income and expense line items across all pages
+2. Extract complete data for every line item
+3. Verify totals match document calculations
+4. Calculate accurate NOI and cash flow metrics
 
-**YOU MUST FOLLOW THIS EXACT PROCESS:**
-1. FIRST: Count total income line items and expense line items - write these numbers down
-2. SECOND: Output a <document_analysis> tag with your counts
-3. THIRD: Extract EVERY line item (your JSON must contain all items)
-4. FOURTH: Output a <verification> tag confirming completeness
-5. If verification fails, re-extract missing line items immediately
-
-**MANDATORY OUTPUT FORMAT:**
-<document_analysis>
-Total income line items: [YOUR COUNT]
-Total expense line items: [YOUR COUNT]
-Pages analyzed: [X through Y]
-</document_analysis>
-
-[YOUR EXTRACTED JSON HERE]
-
-<verification>
-Income items counted: [X]
-Income items in JSON: [Y]
-Expense items counted: [X]
-Expense items in JSON: [Y]
-Completeness check: YES/NO
-</verification>
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
-**═══════════════════════════════════════════════════════════**
-
-Before extracting data, analyze the document structure and COUNT all line items:
-
-**1.1 LAYOUT PATTERN RECOGNITION:**
-- Identify if budget is in spreadsheet, table, or narrative format
-- Locate income and expense section headers
-- Recognize multi-column layouts (actual, budget, variance, prior year)
-- Identify subtotal and total calculation rows
-
-**1.2 FIELD MAPPING:**
-- Map where each financial category appears
-- Identify variations in account names (e.g., "Property Taxes" vs "Real Estate Taxes")
-- Locate income line items and revenue categories
-- Find expense categories and operating cost sections
-- Identify NOI calculation and cash flow sections
-
-**1.3 DATA ORGANIZATION PATTERNS:**
-- Determine budget period (annual, monthly, quarterly)
-- Identify variance analysis columns (actual vs budget)
-- Recognize multi-year comparison sections
-- Detect footnotes explaining assumptions or calculations
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
-**═══════════════════════════════════════════════════════════**
-
-**EXTRACTION METHODOLOGY:**
-1. **COMPLETE DOCUMENT ANALYSIS**: Examine every line item, table, chart, graph, and financial detail
-2. **SYSTEMATIC PROCESSING**: Analyze document from header to footer, capturing all numerical data
-3. **BUDGET STRUCTURE RECOGNITION**: Understand budget format, categories, and calculation methods
-4. **VARIANCE ANALYSIS**: Extract actual vs. budget comparisons where available
-5. **HISTORICAL COMPARISON**: Capture multi-year data and trend analysis
-6. **PROFESSIONAL VALIDATION**: Apply real estate financial expertise to validate extracted data
-7. **COMPREHENSIVE CATEGORIZATION**: Properly classify all income and expense line items
-
-**COMPREHENSIVE FINANCIAL DATA EXTRACTION:**
-
-**INCOME ANALYSIS (Extract ALL revenue streams):**
-- Base rental income by tenant type/category
-- Percentage rent from retail tenants
-- Parking income (monthly, daily, validation)
-- Storage income and miscellaneous space rental
+**INCOME DATA TO EXTRACT:**
+- Gross rental income (by category/tenant type)
+- Parking, storage, and miscellaneous income
 - Tenant reimbursements (CAM, taxes, insurance, utilities)
-- Operating expense recoveries
-- Late fees and penalty income
-- Vacancy allowance and loss factor
-- Effective gross income calculations
+- Vacancy allowance and loss factors
+- Effective gross income
 
-**OPERATING EXPENSE ANALYSIS (Extract ALL expense categories):**
-- Real estate taxes (current and projected increases)
-- Property insurance (general liability, property, environmental)
-- Property management fees (base and incentive)
-- Utilities (electric, gas, water, sewer, trash, telecommunications)
-- Maintenance and repairs (preventive and reactive)
-- Cleaning and janitorial services
-- Landscaping and grounds maintenance
-- Professional fees (legal, accounting, consulting)
+**EXPENSE DATA TO EXTRACT:**
+- Real estate taxes
+- Property insurance
+- Property management fees
+- Utilities (electric, gas, water, sewer, trash)
+- Maintenance and repairs
+- Cleaning and janitorial
+- Landscaping and grounds
+- Professional fees (legal, accounting)
 - Marketing and leasing commissions
 - General and administrative expenses
 
-**CAPITAL EXPENDITURE PLANNING:**
-- Current year capital expenditure budget
-- 5-year capital expenditure forecast
-- Tenant improvement allowance budget
-- Major building system replacements
-- Reserve fund contributions
+**CAPEX & NOI CALCULATIONS:**
+- Capital expenditure budget and forecasts
+- NOI = Total Income - Total Operating Expenses
+- Cash Flow = NOI - Capital Expenditures
 
-**═══════════════════════════════════════════════════════════**
-**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
-**═══════════════════════════════════════════════════════════**
-
-**3.1 COMPLETENESS VERIFICATION:**
-- ✓ Extracted ALL income line items visible in document?
-- ✓ Captured ALL expense categories and line items?
-- ✓ Included vacancy allowances and loss factors?
-- ✓ Extracted capital expenditure forecasts if present?
-
-**3.2 ACCURACY VALIDATION:**
-- ✓ Total income = sum of all income line items?
-- ✓ Total expenses = sum of all expense categories?
-- ✓ NOI = total income - total operating expenses?
-- ✓ Cash flow = NOI - capital expenditures (if applicable)?
-- ✓ All numeric values properly formatted and reasonable?
-
-**3.3 LOGICAL CONSISTENCY CHECKS:**
-- ✓ Gross rental income reasonable for property size/type?
-- ✓ Vacancy allowance realistic (typically 5-15%)?
-- ✓ Property taxes consistent with market expectations?
-- ✓ Management fees typical (usually 3-5% of EGI)?
-- ✓ All percentages and calculations mathematically sound?
-
-**3.4 BUDGET COMPLETENESS:**
-- ✓ All major expense categories represented?
-- ✓ Income and expense totals balance to NOI?
-- ✓ Budget period clearly identified?
-- ✓ Data supports underwriting and investment analysis?
-
-**QUALITY ASSURANCE CHECKLIST:**
-Before submitting, verify:
-[ ] Did you examine every line item in the budget?
-[ ] Did you extract ALL income categories (not just rental income)?
-[ ] Did you capture ALL expense categories (not just major ones)?
-[ ] Did you include vacancy allowances and other adjustments?
-[ ] Are all totals and subtotals mathematically correct?
-[ ] Is NOI calculated correctly (income - expenses)?
-[ ] Are all monetary amounts in proper format?
-[ ] Does the extracted data support NOI analysis and valuation?
-
-**COMPREHENSIVE JSON STRUCTURE** - Extract ALL financial data into this detailed format:
+Return JSON with this structure:
 {
   "documentType": "operating_budget",
   "metadata": {
-    "propertyName": "Complete property name from document",
-    "propertyAddress": "Full street address, city, state, zip",
+    "propertyName": "Complete property name",
+    "propertyAddress": "Full address",
     "propertyType": "Office/Retail/Industrial/Multifamily/Mixed-Use",
     "totalSquareFeet": 0,
     "extractedDate": "2025-01-15"
@@ -532,6 +308,12 @@ Before submitting, verify:
     "cashFlow": 0
   }
 }
+
+**IMPORTANT:**
+- Process all pages - multi-page budgets must be complete
+- Use 0 for unavailable numeric fields
+- Ensure all totals are mathematically correct
+- Include variance analysis and prior year data if present
   `,
 
   broker_sales_comparables: `
@@ -735,127 +517,38 @@ Return JSON in this structure:
   `,
 
   broker_listing: `
-You are a meticulous commercial real estate broker focused on extracting ALL terms from listing agreements. Completeness is critical for transaction tracking and commission management.
+You are a commercial real estate broker extracting listing agreement data. Extract all terms and conditions - completeness is critical for transaction tracking and commission management.
 
-**═══════════════════════════════════════════════════════════**
-**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
-**═══════════════════════════════════════════════════════════**
+**EXTRACTION REQUIREMENTS:**
+1. Extract all parties (owner, broker, agents) and contact information
+2. Capture complete property identification and characteristics
+3. Extract all financial terms (listing price, commission structure, fees)
+4. Record all dates and deadlines (commencement, expiration, key milestones)
 
-**YOU MUST FOLLOW THIS EXACT PROCESS:**
-1. FIRST: Identify all key sections (parties, property, financial terms, dates) - verify each is present
-2. SECOND: Output a <document_analysis> tag confirming all sections found
-3. THIRD: Extract ALL terms and conditions from EVERY section
-4. FOURTH: Output a <verification> tag confirming all sections extracted
-5. If verification fails, re-extract missing sections immediately
+**PARTIES AND REPRESENTATION DATA:**
+- Property owner name and contact information
+- Brokerage firm name, license number, and contact details
+- Individual broker/agent names and license numbers
 
-**MANDATORY OUTPUT FORMAT:**
-<document_analysis>
-Sections found: [parties/property/terms/dates/commission/duties/termination]
-Pages analyzed: [X through Y]
-Complete document: YES/NO
-</document_analysis>
-
-[YOUR EXTRACTED JSON HERE]
-
-<verification>
-All required sections extracted: YES/NO
-All financial terms captured: YES/NO
-All dates and deadlines captured: YES/NO
-</verification>
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
-**═══════════════════════════════════════════════════════════**
-
-Before extracting data, analyze the document structure and IDENTIFY all sections:
-
-**1.1 LAYOUT PATTERN RECOGNITION:**
-- Identify if agreement is in standard form, custom contract, or mixed format
-- Locate main sections (parties, property details, terms, commission)
-- Recognize signature blocks and date fields
-- Identify addendums or special provisions sections
-
-**1.2 FIELD MAPPING:**
-- Map where party information appears (owner, broker, agents)
-- Identify property description and address locations
-- Locate financial terms (listing price, commission structure)
-- Find date fields (commencement, expiration, key deadlines)
-- Identify broker duties and termination provisions
-
-**1.3 DATA ORGANIZATION PATTERNS:**
-- Determine listing type (sale, lease, or both)
-- Identify exclusive vs non-exclusive arrangement
-- Recognize commission structure (percentage, flat fee, tiered)
-- Detect special clauses or non-standard terms
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
-**═══════════════════════════════════════════════════════════**
-
-**EXTRACTION METHODOLOGY:**
-1. **COMPLETE AGREEMENT ANALYSIS**: Extract ALL terms, conditions, and obligations from the entire document
-2. **SYSTEMATIC DATA CAPTURE**: Process every section including fine print and addendums
-3. **FINANCIAL DETAIL EXTRACTION**: Extract all commission structures, fees, and financial obligations
-
-**COMPREHENSIVE LISTING AGREEMENT EXTRACTION:**
-
-**PARTIES AND REPRESENTATION:**
-- Complete property owner information
-- Brokerage firm name, license information, and contact details
-- Individual broker/agent names and licenses
-
-**PROPERTY IDENTIFICATION:**
-- Complete legal property description
-- Property address
+**PROPERTY IDENTIFICATION DATA:**
+- Complete legal property description and address
 - Property type and use classification
-- Building and land square footage/acreage
+- Building square footage and lot size/acreage
+- Year built, parking details, zoning classification
 
-**LISTING DETAILS:**
+**LISTING TERMS DATA:**
 - Listing type (exclusive right to sell/lease, exclusive agency, open listing)
 - Listing commencement date and expiration date
-- Asking price for sales or rent for leasing
+- Asking price (sale) or asking rent (lease)
 - Commission structure and payment terms
+- Listing term duration
 
-**═══════════════════════════════════════════════════════════**
-**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
-**═══════════════════════════════════════════════════════════**
+**BROKER OBLIGATIONS DATA:**
+- Complete list of broker duties and responsibilities
+- Marketing obligations and requirements
+- Termination provisions and conditions
 
-**3.1 COMPLETENESS VERIFICATION:**
-- ✓ Extracted all party names and contact information?
-- ✓ Captured complete property description and address?
-- ✓ Included all financial terms (price, commission, fees)?
-- ✓ Extracted all important dates (start, end, deadlines)?
-
-**3.2 ACCURACY VALIDATION:**
-- ✓ Listing dates chronologically valid (start before end)?
-- ✓ Commission percentages reasonable (typically 3-6%)?
-- ✓ Property details complete and consistent?
-- ✓ All monetary amounts properly formatted?
-
-**3.3 LOGICAL CONSISTENCY CHECKS:**
-- ✓ Listing type matches extracted terms?
-- ✓ Commission structure clear and unambiguous?
-- ✓ Property use aligns with zoning/type?
-- ✓ Termination provisions present?
-
-**3.4 AGREEMENT COMPLETENESS:**
-- ✓ All required parties identified?
-- ✓ Broker duties clearly defined?
-- ✓ Key terms and conditions captured?
-- ✓ Data supports transaction management?
-
-**QUALITY ASSURANCE CHECKLIST:**
-Before submitting, verify:
-[ ] Did you extract all party information (owner, broker, agents)?
-[ ] Did you capture complete property identification?
-[ ] Did you include all financial terms (price, commission)?
-[ ] Did you extract all important dates and deadlines?
-[ ] Are commission structures clearly defined?
-[ ] Did you capture broker duties and obligations?
-[ ] Are termination provisions included?
-[ ] Is all data accurate and ready for transaction tracking?
-
-Return comprehensive JSON structure:
+Return JSON with this structure:
 {
   "documentType": "broker_listing",
   "metadata": {
@@ -889,119 +582,51 @@ Return comprehensive JSON structure:
     "terminationProvisions": ["All termination provisions"]
   }
 }
+
+**IMPORTANT:**
+- Process all pages including addendums and special provisions
+- Use "N/A" for unavailable text fields, 0 for unavailable numeric fields
+- Dates in YYYY-MM-DD format
+- Verify commission structures are complete and unambiguous
   `,
 
   offering_memo: `
-You are a meticulous commercial real estate investment professional. Your job is to extract EVERY data point from this offering memo - completeness is critical for institutional investment decision-making.
+You are a commercial real estate investment analyst extracting offering memorandum data. Extract every data point - completeness is critical for institutional investment decision-making.
 
-**═══════════════════════════════════════════════════════════**
-**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
-**═══════════════════════════════════════════════════════════**
+**EXTRACTION REQUIREMENTS:**
+1. Extract property overview and characteristics
+2. Capture financial performance (income, expenses, NOI)
+3. Extract investment metrics (pricing, cap rate)
+4. Record tenant summaries and occupancy data
 
-**YOU MUST FOLLOW THIS EXACT PROCESS:**
-1. FIRST: Identify all major sections (property, financials, market, tenants) - verify each is present
-2. SECOND: Output a <document_analysis> tag confirming all sections found
-3. THIRD: Extract ALL data from EVERY section completely
-4. FOURTH: Output a <verification> tag confirming all sections extracted
-5. If verification fails, re-extract missing sections immediately
+**PROPERTY DATA:**
+- Property name, address, location
+- Property type (Office/Retail/Industrial/Multifamily/Mixed-Use)
+- Year built, year renovated, square footage, lot size
+- Investment highlights
 
-**MANDATORY OUTPUT FORMAT:**
-<document_analysis>
-Sections found: [property/financials/market/tenants/investment metrics]
-Pages analyzed: [X through Y]
-Complete memo: YES/NO
-</document_analysis>
+**FINANCIAL DATA:**
+- Gross rental income and other income
+- Operating expenses by category
+- Net Operating Income (NOI)
 
-[YOUR EXTRACTED JSON HERE]
+**TENANT DATA:**
+- Total units and occupancy rate
+- Average rent per unit/SF
+- Key lease terms
+- Major tenant information
 
-<verification>
-All property details extracted: YES/NO
-All financial data extracted: YES/NO
-All investment metrics calculated: YES/NO
-</verification>
+**MARKET DATA:**
+- Market overview
+- Neighborhood description
+- Demographics and transportation
 
-**═══════════════════════════════════════════════════════════**
-**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
-**═══════════════════════════════════════════════════════════**
+**INVESTMENT METRICS:**
+- Asking price and cap rate
+- Price per square foot
+- Comparable properties
 
-Before extracting data, analyze the document structure and IDENTIFY all major sections:
-
-**1.1 LAYOUT PATTERN RECOGNITION:**
-- Identify major sections (executive summary, property details, financials, market analysis)
-- Locate investment highlights and key selling points
-- Recognize financial statement tables and pro forma sections
-- Identify comparable sales/leases sections
-
-**1.2 FIELD MAPPING:**
-- Map property overview and description locations
-- Identify financial performance data (NOI, income, expenses)
-- Locate pricing information (asking price, cap rate)
-- Find tenant and lease summary sections
-- Identify market analysis and demographics
-
-**1.3 DATA ORGANIZATION PATTERNS:**
-- Determine if organized by topic or chronologically
-- Identify summary vs detailed sections
-- Recognize assumptions and projections
-- Detect risk factors and disclaimers
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
-**═══════════════════════════════════════════════════════════**
-
-**EXTRACTION METHODOLOGY:**
-1. **COMPLETE DOCUMENT ANALYSIS**: Extract ALL sections including executive summary, financial data, market analysis
-2. **INVESTMENT FOCUS**: Capture all data points required for investment committee approval
-3. **RISK ASSESSMENT**: Extract all risk factors, assumptions, and market conditions
-4. **FINANCIAL MODELING**: Capture all data needed for DCF analysis and return projections
-
-**COMPREHENSIVE OFFERING MEMO EXTRACTION:**
-
-**EXECUTIVE SUMMARY AND INVESTMENT THESIS**
-**PROPERTY OVERVIEW AND DESCRIPTION**
-**FINANCIAL PERFORMANCE AND PROJECTIONS**
-**MARKET ANALYSIS AND POSITIONING**
-**TENANT AND LEASE ANALYSIS**
-**INVESTMENT RETURNS AND PRICING**
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
-**═══════════════════════════════════════════════════════════**
-
-**3.1 COMPLETENESS VERIFICATION:**
-- ✓ Extracted all property overview details?
-- ✓ Captured complete financial performance data (income, expenses, NOI)?
-- ✓ Included all investment metrics (cap rate, price per SF)?
-- ✓ Extracted tenant and occupancy information?
-
-**3.2 ACCURACY VALIDATION:**
-- ✓ NOI = gross income - operating expenses?
-- ✓ Cap rate = NOI ÷ asking price?
-- ✓ Occupancy rate between 0-100%?
-- ✓ All numeric values properly formatted?
-
-**3.3 LOGICAL CONSISTENCY CHECKS:**
-- ✓ Asking price reasonable for property type/market?
-- ✓ Cap rate within market range (typically 4-10%)?
-- ✓ Financial projections realistic?
-- ✓ Investment highlights supported by data?
-
-**3.4 INVESTMENT DATA COMPLETENESS:**
-- ✓ All required underwriting data present?
-- ✓ Market analysis comprehensive?
-- ✓ Risk factors identified?
-- ✓ Data supports investment decision-making?
-
-**QUALITY ASSURANCE CHECKLIST:**
-Before submitting, verify:
-[ ] Did you extract all property details and characteristics?
-[ ] Did you capture complete financial performance data?
-[ ] Did you include all investment metrics (cap rate, pricing)?
-[ ] Did you extract tenant and lease summaries?
-[ ] Did you capture market analysis and comparables?
-[ ] Are all calculations accurate (NOI, cap rate)?
-[ ] Is all data ready for institutional underwriting?
-
+Return JSON with this structure:
 {
   "documentType": "offering_memo",
   "metadata": {
@@ -1050,123 +675,59 @@ Before submitting, verify:
     }
   }
 }
+
+**IMPORTANT:**
+- Process all pages including executive summary and financial exhibits
+- Use "N/A" for unavailable text fields, 0 for unavailable numeric fields
+- Verify NOI = gross income - operating expenses and cap rate = NOI ÷ asking price
   `,
 
   lease_agreement: `
-You are a meticulous commercial real estate attorney and lease administrator. Your job is to extract EVERY clause and term from this lease agreement - completeness is critical for lease administration and analysis.
+You are a commercial real estate lease administrator extracting lease agreement data. Extract every clause and term - completeness is critical for lease administration and portfolio management.
 
-**═══════════════════════════════════════════════════════════**
-**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
-**═══════════════════════════════════════════════════════════**
+**EXTRACTION REQUIREMENTS:**
+1. Extract all parties (tenant, landlord) and legal entity names
+2. Capture complete premises description, address, and square footage
+3. Extract all financial terms (rent, escalations, deposits, expense allocations)
+4. Record all dates (start, end, renewal options, key deadlines)
 
-**YOU MUST FOLLOW THIS EXACT PROCESS:**
-1. FIRST: Identify all key sections (parties, premises, term, rent, obligations) - verify each is present
-2. SECOND: Output a <document_analysis> tag confirming all sections found
-3. THIRD: Extract ALL terms, clauses, and provisions from EVERY section
-4. FOURTH: Output a <verification> tag confirming all sections extracted
-5. If verification fails, re-extract missing sections immediately
+**PARTIES DATA:**
+- Complete tenant legal entity name
+- Complete landlord legal entity name
 
-**MANDATORY OUTPUT FORMAT:**
-<document_analysis>
-Sections found: [parties/premises/term/rent/expenses/maintenance/default/insurance]
-Pages analyzed: [X through Y]
-Complete agreement: YES/NO
-</document_analysis>
+**PREMISES DATA:**
+- Complete property address and legal description
+- Rentable square footage
+- Detailed premises description (suite/floor/building)
 
-[YOUR EXTRACTED JSON HERE]
+**LEASE TERM DATA:**
+- Lease commencement date
+- Lease expiration date
+- Total term in months
+- Renewal options and terms
 
-<verification>
-All parties and entities extracted: YES/NO
-All financial terms extracted: YES/NO
-All dates and deadlines extracted: YES/NO
-All obligations and clauses extracted: YES/NO
-</verification>
+**RENT AND FINANCIAL DATA:**
+- Monthly base rent
+- Rent per square foot
+- Rent escalation schedule (percentage or fixed amounts)
+- Security deposit amount
+- Rent commencement date if different from lease start
 
-**═══════════════════════════════════════════════════════════**
-**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
-**═══════════════════════════════════════════════════════════**
+**OPERATING EXPENSES DATA:**
+- Expense responsibility type (NNN, Gross, Modified Gross)
+- CAM charges and allocation method
+- Utility responsibilities (tenant vs landlord)
+- Real estate tax responsibilities
+- Insurance responsibilities
 
-Before extracting data, analyze the document structure and IDENTIFY all sections and clauses:
+**OBLIGATIONS AND PROVISIONS DATA:**
+- Landlord maintenance responsibilities
+- Tenant maintenance responsibilities
+- Assignment and subletting provisions
+- Default remedies and cure periods
+- Insurance requirements and coverage types
 
-**1.1 LAYOUT PATTERN RECOGNITION:**
-- Identify main sections (parties, premises, term, rent, obligations)
-- Locate signature blocks and execution dates
-- Recognize exhibits, addendums, and amendments
-- Identify special provisions or non-standard clauses
-
-**1.2 FIELD MAPPING:**
-- Map party identification sections (tenant, landlord)
-- Identify premises description and square footage
-- Locate financial terms (rent, escalations, deposits)
-- Find dates (commencement, expiration, renewal options)
-- Identify obligation sections (maintenance, insurance, defaults)
-
-**1.3 DATA ORGANIZATION PATTERNS:**
-- Determine lease type (NNN, Gross, Modified Gross)
-- Identify renewal and termination provisions
-- Recognize default and remedy clauses
-- Detect assignment and subletting restrictions
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
-**═══════════════════════════════════════════════════════════**
-
-**EXTRACTION METHODOLOGY:**
-1. **COMPLETE LEGAL DOCUMENT ANALYSIS**: Extract ALL clauses, terms, conditions, and legal provisions
-2. **SYSTEMATIC CLAUSE PROCESSING**: Analyze every section including exhibits, addendums, and amendments
-3. **FINANCIAL OBLIGATION MAPPING**: Capture all financial responsibilities and payment obligations
-4. **RISK ASSESSMENT**: Identify default provisions, remedies, and risk allocation between parties
-
-**COMPREHENSIVE LEASE AGREEMENT EXTRACTION:**
-
-**PARTIES AND LEGAL STRUCTURE**
-**PREMISES AND PROPERTY DESCRIPTION**
-**LEASE TERM AND RENEWAL PROVISIONS**
-**RENT AND FINANCIAL OBLIGATIONS**
-**OPERATING EXPENSES AND COST ALLOCATION**
-**MAINTENANCE AND REPAIR OBLIGATIONS**
-**DEFAULT AND REMEDIES**
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
-**═══════════════════════════════════════════════════════════**
-
-**3.1 COMPLETENESS VERIFICATION:**
-- ✓ Extracted all party names and legal entities?
-- ✓ Captured complete premises description and SF?
-- ✓ Included all financial terms (rent, escalations, deposits)?
-- ✓ Extracted all dates (start, end, renewals)?
-
-**3.2 ACCURACY VALIDATION:**
-- ✓ Lease dates chronologically valid (start before end)?
-- ✓ Rent per SF = base rent ÷ square footage?
-- ✓ Term months correct from start to end date?
-- ✓ All monetary amounts properly formatted?
-
-**3.3 LOGICAL CONSISTENCY CHECKS:**
-- ✓ Lease type matches expense allocation?
-- ✓ Security deposit reasonable (typically 1-3 months rent)?
-- ✓ Renewal options clearly defined?
-- ✓ Default remedies and cure periods present?
-
-**3.4 LEASE ADMINISTRATION READINESS:**
-- ✓ All critical dates extracted?
-- ✓ Financial obligations clear and complete?
-- ✓ Maintenance responsibilities defined?
-- ✓ Data supports lease management and analysis?
-
-**QUALITY ASSURANCE CHECKLIST:**
-Before submitting, verify:
-[ ] Did you extract all party information?
-[ ] Did you capture complete premises details (address, SF)?
-[ ] Did you include all financial terms (rent, escalations)?
-[ ] Did you extract all important dates and deadlines?
-[ ] Are expense responsibilities clearly defined?
-[ ] Did you capture renewal and termination provisions?
-[ ] Are default remedies included?
-[ ] Is all data ready for lease administration?
-
-Return comprehensive JSON structure:
+Return JSON with this structure:
 {
   "documentType": "lease_agreement",
   "metadata": {
@@ -1212,123 +773,58 @@ Return comprehensive JSON structure:
     "insuranceRequirements": ["Insurance coverage requirements"]
   }
 }
+
+**IMPORTANT:**
+- Process all pages including exhibits, addendums, and amendments
+- Use "N/A" for unavailable text fields, 0 for unavailable numeric fields
+- Dates in YYYY-MM-DD format
+- Calculate rent per SF = base rent ÷ square footage
+- Verify lease dates are chronologically valid (start before end)
   `,
 
   financial_statements: `
-You are a meticulous commercial real estate financial analyst. Your job is to extract EVERY line item from financial statements - completeness is critical for accurate investment analysis and asset management.
+You are a commercial real estate financial analyst extracting financial statement data. Extract every line item - completeness is critical for accurate investment analysis and asset management.
 
-**═══════════════════════════════════════════════════════════**
-**CRITICAL INSTRUCTIONS - READ BEFORE STARTING**
-**═══════════════════════════════════════════════════════════**
+**EXTRACTION REQUIREMENTS:**
+1. Count all income and expense line items before extraction
+2. Extract complete income statement data (all revenue and expense categories)
+3. Extract balance sheet data if present (assets, liabilities, equity)
+4. Calculate and verify NOI and cash flow metrics
 
-**YOU MUST FOLLOW THIS EXACT PROCESS:**
-1. FIRST: Count all income and expense line items - write these numbers down
-2. SECOND: Output a <document_analysis> tag with your counts
-3. THIRD: Extract EVERY line item from ALL statements
-4. FOURTH: Output a <verification> tag confirming completeness
-5. If verification fails, re-extract missing line items immediately
+**INCOME STATEMENT DATA:**
+- Rental income by category
+- Other income sources (parking, storage, fees, etc.)
+- Total gross income
+- Vacancy loss and credit loss
+- Effective gross income
 
-**MANDATORY OUTPUT FORMAT:**
-<document_analysis>
-Income line items: [YOUR COUNT]
-Expense line items: [YOUR COUNT]
-Statements found: [income statement/balance sheet/cash flow]
-Pages analyzed: [X through Y]
-</document_analysis>
+**OPERATING EXPENSES DATA:**
+- Property taxes
+- Insurance (property, liability)
+- Utilities (electric, gas, water, sewer, trash)
+- Maintenance and repairs
+- Property management fees
+- Professional fees (legal, accounting)
+- Marketing and leasing costs
+- Administrative expenses
+- Other operating expenses
+- Total operating expenses
 
-[YOUR EXTRACTED JSON HERE]
+**FINANCIAL PERFORMANCE METRICS:**
+- Net Operating Income (NOI = effective gross income - total operating expenses)
+- Debt service (if applicable)
+- Cash flow (NOI - debt service)
 
-<verification>
-Income items counted: [X]
-Income items in JSON: [Y]
-Expense items counted: [X]
-Expense items in JSON: [Y]
-All calculations verified: YES/NO
-</verification>
+**BALANCE SHEET DATA (if present):**
+- Assets: Real estate value, cash, other assets, total assets
+- Liabilities: Mortgage balance, other liabilities, total liabilities
+- Equity: Owner's equity
 
-**═══════════════════════════════════════════════════════════**
-**PHASE 1: DOCUMENT STRUCTURE ANALYSIS**
-**═══════════════════════════════════════════════════════════**
+**CAPITAL EXPENDITURE DATA:**
+- Current year capital expenditures
+- Forecasted capital expenditures (multi-year if available)
 
-Before extracting data, analyze the document structure and COUNT all line items:
-
-**1.1 LAYOUT PATTERN RECOGNITION:**
-- Identify statement types (income statement, balance sheet, cash flow)
-- Locate period headers and date ranges
-- Recognize multi-column layouts (current period, prior period, budget)
-- Identify subtotal and total calculation rows
-
-**1.2 FIELD MAPPING:**
-- Map income line items and revenue categories
-- Identify expense categories and line items
-- Locate balance sheet accounts (assets, liabilities, equity)
-- Find cash flow sections (operating, investing, financing)
-- Identify NOI and cash flow calculations
-
-**1.3 DATA ORGANIZATION PATTERNS:**
-- Determine statement period and frequency
-- Identify comparative periods (YoY, QoQ)
-- Recognize variance analysis columns
-- Detect footnotes and accounting policies
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 2: COMPREHENSIVE DATA EXTRACTION**
-**═══════════════════════════════════════════════════════════**
-
-**EXTRACTION METHODOLOGY:**
-1. **COMPLETE FINANCIAL STATEMENT ANALYSIS**: Extract ALL line items from income statement, balance sheet, and cash flow statement
-2. **MULTI-PERIOD DATA CAPTURE**: Extract historical trends and comparative period data where available
-3. **DETAILED CATEGORIZATION**: Properly classify all income and expense items by category and nature
-4. **RATIO CALCULATION**: Calculate and extract all relevant financial ratios and metrics
-
-**COMPREHENSIVE FINANCIAL STATEMENT EXTRACTION:**
-
-**INCOME STATEMENT COMPONENTS**
-**BALANCE SHEET ELEMENTS**
-**FINANCIAL RATIOS AND METRICS**
-**CAPITAL EXPENDITURE TRACKING**
-
-**═══════════════════════════════════════════════════════════**
-**PHASE 3: DATA VALIDATION & QUALITY ASSURANCE**
-**═══════════════════════════════════════════════════════════**
-
-**3.1 COMPLETENESS VERIFICATION:**
-- ✓ Extracted ALL income line items?
-- ✓ Captured ALL expense categories?
-- ✓ Included balance sheet accounts (assets, liabilities, equity)?
-- ✓ Extracted capital expenditure data?
-
-**3.2 ACCURACY VALIDATION:**
-- ✓ Total income = sum of all income line items?
-- ✓ Total expenses = sum of all expense categories?
-- ✓ NOI = effective gross income - total operating expenses?
-- ✓ Cash flow = NOI - debt service (if applicable)?
-- ✓ Total assets = total liabilities + equity?
-
-**3.3 LOGICAL CONSISTENCY CHECKS:**
-- ✓ All income and expense values positive?
-- ✓ Vacancy loss reasonable (typically 5-15%)?
-- ✓ Operating expense ratios typical for property type?
-- ✓ Balance sheet balances correctly?
-
-**3.4 FINANCIAL REPORTING COMPLETENESS:**
-- ✓ All major income/expense categories represented?
-- ✓ Financial calculations mathematically correct?
-- ✓ Statement period clearly identified?
-- ✓ Data supports investment analysis and asset management?
-
-**QUALITY ASSURANCE CHECKLIST:**
-Before submitting, verify:
-[ ] Did you extract all income line items?
-[ ] Did you capture all expense categories?
-[ ] Did you include balance sheet data (if present)?
-[ ] Are all totals and subtotals mathematically correct?
-[ ] Is NOI calculated correctly (income - expenses)?
-[ ] Did you extract capital expenditure data?
-[ ] Are all monetary amounts in proper format?
-[ ] Does the data support financial analysis and reporting?
-
-Return comprehensive JSON structure:
+Return JSON with this structure:
 {
   "documentType": "financial_statements",
   "metadata": {
@@ -1378,6 +874,14 @@ Return comprehensive JSON structure:
     }
   }
 }
+
+**IMPORTANT:**
+- Process all pages including all statement types and schedules
+- Use 0 for unavailable numeric fields
+- Verify total income = sum of all income line items
+- Verify total expenses = sum of all expense categories
+- Verify NOI = effective gross income - total operating expenses
+- Verify balance sheet balances: total assets = total liabilities + equity
   `,
 
   // Legacy prompts for backward compatibility
