@@ -170,11 +170,11 @@ export default function LandingPage() {
             <Card className="border-emerald-100 hover:shadow-lg transition-shadow">
               <CardContent className="p-4 sm:p-6 space-y-4">
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                  <Brain className="w-6 h-6 text-emerald-600" />
+                  <FileText className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">AI Document Classification</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Multi-Document Support</h3>
                 <p className="text-sm sm:text-base text-gray-600">
-                  Automatically identify rent rolls, offering memos, lease agreements, and financial statements with 99% accuracy.
+                  Process rent rolls, offering memos, lease agreements, financial statements, and more. Support for PDF, Excel, and image formats.
                 </p>
               </CardContent>
             </Card>
