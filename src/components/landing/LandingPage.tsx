@@ -49,11 +49,16 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-center lg:justify-start">
-              <Link href="/tool">
-                <Button size="lg" className="px-6 sm:px-8 text-base sm:text-lg">
-                  Try RExeli Now
-                  <ArrowRight className="w-4 h-4 ml-2" />
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+              <Link href="/auth/signup" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto px-6 sm:px-8 text-base sm:text-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg hover:shadow-xl">
+                  Get Started Free
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/auth/signin" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto px-6 sm:px-8 text-base sm:text-lg border-emerald-200 hover:bg-emerald-50">
+                  Sign In
                 </Button>
               </Link>
             </div>
@@ -805,13 +810,13 @@ export default function LandingPage() {
               Join real estate professionals who are already saving hours with RExeli&apos;s AI-powered document analysis.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
-              <Link href="/tool">
+              <Link href="/auth/signup">
                 <Button
                   variant="inverted"
                   size="lg"
                   className="px-6 sm:px-8 w-full sm:w-auto"
                 >
-                  Start Processing Documents
+                  Get Started Free
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
