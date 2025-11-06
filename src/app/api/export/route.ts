@@ -106,6 +106,119 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// ============================================================================
+// DYNAMIC EXCEL EXPORT HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Convert camelCase field name to Title Case header
+ * Example: "propertyAddress" → "Property Address"
+ */
+function camelCaseToTitleCase(str: string): string {
+  return str
+    .replace(/([A-Z])/g, ' $1') // Add space before capitals
+    .replace(/^./, (char) => char.toUpperCase()) // Capitalize first letter
+    .trim();
+}
+
+/**
+ * Flatten nested objects using dot notation
+ * Example: {propertyCharacteristics: {address: "123 Main"}} → {"propertyCharacteristics.address": "123 Main"}
+ */
+function flattenObject(obj: any, prefix: string = ''): Record<string, any> {
+  const flattened: Record<string, any> = {};
+
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const value = obj[key];
+      const newKey = prefix ? `${prefix}.${key}` : key;
+
+      if (value === null || value === undefined) {
+        flattened[newKey] = 'N/A';
+      } else if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+        // Recursively flatten nested objects
+        Object.assign(flattened, flattenObject(value, newKey));
+      } else if (Array.isArray(value)) {
+        // Convert arrays to comma-separated strings
+        flattened[newKey] = value.join(', ');
+      } else {
+        flattened[newKey] = value;
+      }
+    }
+  }
+
+  return flattened;
+}
+
+/**
+ * Generate dynamic Excel sheet from array of objects
+ * Automatically detects all fields and creates columns for each
+ */
+function generateDynamicArraySheet(
+  sheet: ExcelJS.Worksheet,
+  data: any[],
+  options: {
+    sheetTitle?: string;
+    excludeFields?: string[];
+    fieldOrder?: string[];
+  } = {}
+): void {
+  if (!data || data.length === 0) {
+    sheet.addRow(['No data available']);
+    return;
+  }
+
+  // Flatten first item to get all possible fields
+  const firstItem = flattenObject(data[0]);
+  let allFields = Object.keys(firstItem);
+
+  // Apply field exclusions if specified
+  if (options.excludeFields) {
+    allFields = allFields.filter(field => !options.excludeFields!.includes(field));
+  }
+
+  // Apply field ordering if specified
+  if (options.fieldOrder) {
+    const orderedFields = options.fieldOrder.filter(field => allFields.includes(field));
+    const remainingFields = allFields.filter(field => !options.fieldOrder!.includes(field));
+    allFields = [...orderedFields, ...remainingFields];
+  }
+
+  // Generate headers with Title Case
+  const headers = allFields.map(field => camelCaseToTitleCase(field));
+
+  // Add optional title row
+  if (options.sheetTitle) {
+    sheet.addRow([options.sheetTitle]);
+    sheet.addRow([]); // Empty row for spacing
+  }
+
+  // Add header row
+  const headerRow = sheet.addRow(headers);
+  headerRow.font = { bold: true };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' }
+  };
+
+  // Add data rows
+  data.forEach(item => {
+    const flatItem = flattenObject(item);
+    const rowValues = allFields.map(field => {
+      const value = flatItem[field];
+      return value !== undefined && value !== null ? value : 'N/A';
+    });
+    sheet.addRow(rowValues);
+  });
+
+  // Auto-size columns
+  sheet.columns.forEach((column, index) => {
+    const headerLength = headers[index]?.length || 10;
+    column.width = Math.max(headerLength + 2, 15); // Minimum 15, or header length + padding
+  });
+}
+
 async function generateExcelByType(
   workbook: ExcelJS.Workbook, 
   extractedData: ExtractedData,
@@ -151,49 +264,30 @@ async function generateExcelByType(
 
 async function generateRentRollExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const rentRollData = data.data as RentRollData;
-  
+
   // Summary Sheet
   const summarySheet = workbook.addWorksheet('Summary');
   summarySheet.addRow(['Property Summary']);
-  summarySheet.addRow(['Property Name', data.metadata.propertyName || 'N/A']);
-  summarySheet.addRow(['Property Address', data.metadata.propertyAddress || 'N/A']);
-  summarySheet.addRow(['Total Square Feet', data.metadata.totalSquareFeet || 'N/A']);
-  summarySheet.addRow(['Total Units', data.metadata.totalUnits || 'N/A']);
+  if (data.metadata) {
+    const metadataFlat = flattenObject(data.metadata);
+    Object.entries(metadataFlat).forEach(([key, value]) => {
+      summarySheet.addRow([camelCaseToTitleCase(key), value]);
+    });
+  }
   summarySheet.addRow([]);
-  
+
   summarySheet.addRow(['Financial Summary']);
-  summarySheet.addRow(['Total Monthly Rent', rentRollData.summary.totalRent]);
-  summarySheet.addRow(['Total Units', rentRollData.summary.totalUnits]);
-  summarySheet.addRow(['Vacant Units', rentRollData.summary.vacantUnits]);
-  summarySheet.addRow(['Occupancy Rate', `${(rentRollData.summary.occupancyRate * 100).toFixed(1)}%`]);
-  summarySheet.addRow(['Average Rent PSF', `$${rentRollData.summary.averageRentPsf.toFixed(2)}`]);
-  
-  // Rent Roll Detail Sheet
+  if (rentRollData.summary) {
+    const summaryFlat = flattenObject(rentRollData.summary);
+    Object.entries(summaryFlat).forEach(([key, value]) => {
+      summarySheet.addRow([camelCaseToTitleCase(key), value]);
+    });
+  }
+
+  // Rent Roll Detail Sheet - Use dynamic generation for ALL fields
   const detailSheet = workbook.addWorksheet('Rent Roll Details');
-  const headers = ['Suite/Unit', 'Tenant Name', 'Square Feet', 'Base Rent', 'Lease Start', 'Lease End', 'Status'];
-  detailSheet.addRow(headers);
-  
-  // Style headers
-  const headerRow = detailSheet.getRow(1);
-  headerRow.font = { bold: true };
-  headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6F3FF' } };
-  
-  // Add data rows
-  rentRollData.tenants.forEach(tenant => {
-    detailSheet.addRow([
-      tenant.suiteUnit,
-      tenant.tenantName,
-      tenant.squareFootage,
-      tenant.baseRent,
-      tenant.leaseStart,
-      tenant.leaseEnd,
-      tenant.occupancyStatus
-    ]);
-  });
-  
-  // Auto-fit columns
-  detailSheet.columns.forEach(column => {
-    column.width = 15;
+  generateDynamicArraySheet(detailSheet, rentRollData.tenants, {
+    sheetTitle: 'Rent Roll - All Tenant Fields'
   });
 }
 
@@ -423,108 +517,63 @@ async function generateOperatingBudgetExcel(workbook: ExcelJS.Workbook, data: Ex
 
 async function generateBrokerSalesComparablesExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const sheet = workbook.addWorksheet('Sales Comparables');
-  const compData = data.data as any; // Use any type to handle the new structure
+  const compData = data.data as any;
 
-  // Add metadata sheet
+  // Add metadata section if available
   if (data.metadata) {
     sheet.addRow(['Document Information']);
-    sheet.addRow(['Report Title', (data.metadata as any).reportTitle || 'N/A']);
-    sheet.addRow(['Market Area', (data.metadata as any).marketArea || 'N/A']);
-    sheet.addRow(['Report Date', (data.metadata as any).reportDate || 'N/A']);
+    const metadataFlat = flattenObject(data.metadata);
+    Object.entries(metadataFlat).forEach(([key, value]) => {
+      sheet.addRow([camelCaseToTitleCase(key), value]);
+    });
     sheet.addRow([]);
   }
 
-  // Market Summary
+  // Market Summary section if available
   if (compData.marketSummary) {
     sheet.addRow(['Market Summary']);
-    sheet.addRow(['Total Sales Analyzed', compData.marketSummary.totalSalesAnalyzed || 'N/A']);
-    sheet.addRow(['Market Conditions', compData.marketSummary.marketConditions || 'N/A']);
-    sheet.addRow(['Sales Velocity', compData.marketSummary.salesVelocity || 'N/A']);
-    sheet.addRow(['Buyer Demand', compData.marketSummary.buyerDemand || 'N/A']);
-    sheet.addRow([]);
-  }
-
-  // Comparable Sales Details
-  if (compData.comparableSales && Array.isArray(compData.comparableSales)) {
-    sheet.addRow(['Comparable Sales']);
-    sheet.addRow(['Property Name', 'Address', 'Sale Date', 'Sale Price', 'Price per SF', 'Building SF', 'Units', 'Year Built', 'Buyer']);
-
-    compData.comparableSales.forEach((comp: any) => {
-      sheet.addRow([
-        comp.propertyName || 'N/A',
-        comp.propertyAddress || 'N/A',
-        comp.transactionDetails?.saleDate || 'N/A',
-        comp.transactionDetails?.salePrice || 0,
-        comp.pricingMetrics?.pricePerSquareFoot || 0,
-        comp.propertyCharacteristics?.totalBuildingSquareFeet || 0,
-        comp.propertyCharacteristics?.numberOfUnits || 0,
-        comp.propertyCharacteristics?.yearBuilt || 'N/A',
-        comp.transactionParties?.buyerName || 'N/A'
-      ]);
+    const summaryFlat = flattenObject(compData.marketSummary);
+    Object.entries(summaryFlat).forEach(([key, value]) => {
+      sheet.addRow([camelCaseToTitleCase(key), value]);
     });
     sheet.addRow([]);
   }
 
-  // Market Analysis Summary
+  // Use dynamic sheet generation for comparable sales - exports ALL fields
+  const salesData = compData.comparableSales || compData.comparables || [];
+  if (Array.isArray(salesData) && salesData.length > 0) {
+    generateDynamicArraySheet(sheet, salesData, {
+      sheetTitle: 'Comparable Sales - All Extracted Fields'
+    });
+  }
+
+  // Market Analysis section if available
   if (compData.marketAnalysis) {
+    sheet.addRow([]);
     sheet.addRow(['Market Analysis']);
-    if (compData.marketAnalysis.pricingAnalysis) {
-      sheet.addRow(['Average Price per SF', compData.marketAnalysis.pricingAnalysis.averagePricePerSF || 0]);
-      sheet.addRow(['Median Price per SF', compData.marketAnalysis.pricingAnalysis.medianPricePerSF || 0]);
-    }
-    if (compData.marketAnalysis.capRateAnalysis) {
-      sheet.addRow(['Average Cap Rate', compData.marketAnalysis.capRateAnalysis.averageCapRate || 0]);
-      sheet.addRow(['Median Cap Rate', compData.marketAnalysis.capRateAnalysis.medianCapRate || 0]);
-    }
-  }
-
-  // Fallback for legacy or missing data
-  if (!compData.comparableSales && compData.comparables) {
-    sheet.addRow(['Legacy Comparables Data']);
-    compData.comparables.forEach((comp: any) => {
-      sheet.addRow([
-        comp.propertyAddress || 'N/A',
-        comp.propertyType || 'N/A',
-        comp.saleDate || 'N/A',
-        comp.salePrice || 0,
-        comp.pricePerSF || 0,
-        comp.buildingSize || 0,
-        comp.capRate || 0
-      ]);
+    const analysisFlat = flattenObject(compData.marketAnalysis);
+    Object.entries(analysisFlat).forEach(([key, value]) => {
+      sheet.addRow([camelCaseToTitleCase(key), value]);
     });
   }
-
-  sheet.columns.forEach(column => { column.width = 20; });
 }
 
 async function generateBrokerLeaseComparablesExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const sheet = workbook.addWorksheet('Lease Comparables');
   const compData = data.data as BrokerLeaseComparablesData;
 
-  // Headers
-  sheet.addRow(['Property Address', 'Property Type', 'Lease Date', 'Tenant Industry', 'Square Footage', 'Base Rent', 'Lease Type', 'Effective Rent']);
-
-  compData.comparables.forEach(comp => {
-    sheet.addRow([
-      comp.propertyAddress,
-      comp.propertyType,
-      comp.leaseCommencementDate,
-      comp.tenantIndustry,
-      comp.squareFootage,
-      comp.baseRent,
-      comp.leaseType,
-      comp.effectiveRent
-    ]);
+  // Use dynamic sheet generation to export ALL fields
+  generateDynamicArraySheet(sheet, compData.comparables, {
+    sheetTitle: 'Lease Comparables - All Extracted Fields'
   });
 
+  // Add summary section
   sheet.addRow([]);
   sheet.addRow(['Summary']);
-  sheet.addRow(['Average Base Rent', compData.summary.averageBaseRent]);
-  sheet.addRow(['Average Effective Rent', compData.summary.averageEffectiveRent]);
-  sheet.addRow(['Rent Range Min', compData.summary.rentRange.min]);
-  sheet.addRow(['Rent Range Max', compData.summary.rentRange.max]);
-
-  sheet.columns.forEach(column => { column.width = 20; });
+  sheet.addRow(['Average Base Rent', compData.summary.averageBaseRent || 'N/A']);
+  sheet.addRow(['Average Effective Rent', compData.summary.averageEffectiveRent || 'N/A']);
+  sheet.addRow(['Rent Range Min', compData.summary.rentRange?.min || 'N/A']);
+  sheet.addRow(['Rent Range Max', compData.summary.rentRange?.max || 'N/A']);
 }
 
 async function generateBrokerListingExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
