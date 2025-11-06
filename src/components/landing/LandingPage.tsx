@@ -242,89 +242,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="bg-gradient-to-br from-gray-50 to-slate-50 py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center space-y-4 lg:space-y-6 mb-12 lg:mb-16">
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Trusted by Real Estate Professionals</h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              See what our users are saying about RExeli
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {/* Testimonial 1 */}
-            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] card-hover">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center space-x-1 text-yellow-500">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-gray-700 italic">&quot;RExeli has transformed how we process rent rolls. What used to take hours now takes minutes!&quot;</p>
-                <div className="flex items-center space-x-3 pt-4 border-t border-gray-100">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    S
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Sarah Johnson</p>
-                    <p className="text-sm text-gray-500">Property Manager, NYC</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 2 */}
-            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] card-hover">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center space-x-1 text-yellow-500">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-gray-700 italic">&quot;The AI accuracy is incredible. It extracts data from complex documents that would take my team days to process manually.&quot;</p>
-                <div className="flex items-center space-x-3 pt-4 border-t border-gray-100">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    M
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Michael Chen</p>
-                    <p className="text-sm text-gray-500">Investment Analyst</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Testimonial 3 */}
-            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] card-hover">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center space-x-1 text-yellow-500">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-gray-700 italic">&quot;Easy to use, fast, and reliable. RExeli has become an essential tool for our brokerage firm.&quot;</p>
-                <div className="flex items-center space-x-3 pt-4 border-t border-gray-100">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                    E
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Emily Rodriguez</p>
-                    <p className="text-sm text-gray-500">Commercial Broker</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
       {/* Pricing Section */}
       <section className="bg-gray-50 py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto">
@@ -791,6 +708,89 @@ export default function LandingPage() {
               </div>
             </TabsContent>
           </Tabs>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="bg-gradient-to-br from-gray-50 to-slate-50 py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center space-y-4 lg:space-y-6 mb-12 lg:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Trusted by Real Estate Professionals</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+              See what our users are saying about RExeli
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Testimonial 1 */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] card-hover">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center space-x-1 text-yellow-500">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-gray-700 italic">&quot;RExeli has transformed how we process rent rolls. What used to take hours now takes minutes!&quot;</p>
+                <div className="flex items-center space-x-3 pt-4 border-t border-gray-100">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    S
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Sarah Johnson</p>
+                    <p className="text-sm text-gray-500">Property Manager, NYC</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 2 */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] card-hover">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center space-x-1 text-yellow-500">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-gray-700 italic">&quot;The AI accuracy is incredible. It extracts data from complex documents that would take my team days to process manually.&quot;</p>
+                <div className="flex items-center space-x-3 pt-4 border-t border-gray-100">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    M
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Michael Chen</p>
+                    <p className="text-sm text-gray-500">Investment Analyst</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Testimonial 3 */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] card-hover">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center space-x-1 text-yellow-500">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                      <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-gray-700 italic">&quot;Easy to use, fast, and reliable. RExeli has become an essential tool for our brokerage firm.&quot;</p>
+                <div className="flex items-center space-x-3 pt-4 border-t border-gray-100">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    E
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Emily Rodriguez</p>
+                    <p className="text-sm text-gray-500">Commercial Broker</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
