@@ -26,7 +26,7 @@ export default function LandingPage() {
               </h1>
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl">
                 Transform complex real estate documents into structured data with our AI-powered platform.
-                Extract insights from rent rolls, offering memos, and financial statements in seconds.
+                Extract insights from rent rolls, offering memos, and financial statements in minutes.
               </p>
             </div>
 
@@ -207,9 +207,9 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <Zap className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Lightning Fast Processing</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900">Efficient Processing</h3>
                 <p className="text-sm sm:text-base text-gray-600">
-                  Process documents up to 25MB in seconds with our optimized AI pipeline and real-time progress tracking.
+                  Process documents up to 25MB with our optimized AI pipeline and real-time progress tracking. Typical processing: 2-3 minutes.
                 </p>
               </CardContent>
             </Card>
@@ -262,14 +262,22 @@ export default function LandingPage() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <Button
-                variant="contrast"
-                size="lg"
-                className="w-full sm:w-auto"
-              >
-                Contact Sales
-              </Button>
+              <a href="mailto:admin@rexeli.com">
+                <Button
+                  variant="contrast"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
+                  Contact Sales
+                </Button>
+              </a>
             </div>
+            <p className="text-sm text-primary-foreground/70 mt-4">
+              Questions? Email us at{' '}
+              <a href="mailto:admin@rexeli.com" className="text-primary-foreground underline hover:text-primary-foreground/90">
+                admin@rexeli.com
+              </a>
+            </p>
           </div>
         </div>
       </section>

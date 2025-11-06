@@ -216,9 +216,13 @@ export default function ToolPage() {
         if (fetchError instanceof Error) {
           if (fetchError.name === 'AbortError') {
             throw new Error(
-              'Request timeout: PDF extraction took longer than 10 minutes. ' +
-              'This can happen with very large documents (20+ pages). ' +
-              'Consider splitting into smaller sections.'
+              '⚠️ Processing Timeout\n\n' +
+              'Your document is too complex to process within our time limit (5 minutes).\n\n' +
+              'Recommendations:\n' +
+              '• Split large PDFs into smaller sections (under 10 pages each)\n' +
+              '• Try processing during off-peak hours\n' +
+              '• For assistance, contact: admin@rexeli.com\n\n' +
+              'The document has been saved but extraction could not be completed.'
             );
           }
           throw fetchError;

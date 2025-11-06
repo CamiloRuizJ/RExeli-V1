@@ -52,31 +52,41 @@ export default function RootLayout({
           {/* Compact Footer */}
           <footer className="bg-slate-900 border-t border-slate-700/50 mt-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                {/* Brand and Copyright */}
-                <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">R</span>
+              <div className="flex flex-col space-y-4">
+                <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                  {/* Brand and Copyright */}
+                  <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">R</span>
+                      </div>
+                      <span className="text-white font-semibold">RExeli</span>
                     </div>
-                    <span className="text-white font-semibold">RExeli</span>
+                    <p className="text-slate-400 text-sm">© 2025 RExeli. All rights reserved.</p>
                   </div>
-                  <p className="text-slate-400 text-sm">© 2025 RExeli. All rights reserved.</p>
+
+                  {/* Links and Powered By */}
+                  <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
+                    <div className="flex items-center space-x-4 text-xs text-slate-400">
+                      <a href="#" className="hover:text-white transition-colors">Privacy</a>
+                      <a href="#" className="hover:text-white transition-colors">Terms</a>
+                      <a href="mailto:admin@rexeli.com" className="hover:text-white transition-colors">Contact</a>
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs text-slate-400">
+                      <span>Powered by</span>
+                      <span className="text-white">RExeli AI</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Links and Powered By */}
-                <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6">
-                  <div className="flex items-center space-x-4 text-xs text-slate-400">
-                    <a href="#" className="hover:text-white transition-colors">Privacy</a>
-                    <a href="#" className="hover:text-white transition-colors">Terms</a>
-                    <a href="#" className="hover:text-white transition-colors">Contact</a>
-                  </div>
-                  <div className="flex items-center space-x-2 text-xs text-slate-400">
-                    <span>Powered by</span>
-                    <span className="text-white">OpenAI</span>
-                    <span>•</span>
-                    <span className="text-white">Supabase</span>
-                  </div>
+                {/* Contact Information */}
+                <div className="text-center border-t border-slate-700/50 pt-4">
+                  <p className="text-sm text-slate-400">
+                    Need help? Contact us at{' '}
+                    <a href="mailto:admin@rexeli.com" className="text-blue-400 hover:text-blue-300 transition-colors underline">
+                      admin@rexeli.com
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>

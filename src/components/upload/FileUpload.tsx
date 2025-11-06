@@ -2,7 +2,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, ArrowRight, Info, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -166,7 +166,7 @@ export function FileUpload({
       } else if (errorMessage.includes('413') || errorMessage.includes('too large')) {
         userMessage = 'File size limit exceeded. Please use a smaller file (max 25MB).';
       } else if (errorMessage.includes('Supabase')) {
-        userMessage = 'Storage service error. Please try again in a moment.';
+        userMessage = 'Storage service error. Please try again later.';
       }
 
       onUploadError(userMessage);
@@ -225,6 +225,34 @@ export function FileUpload({
 
   return (
     <div className="w-full space-y-6">
+      {/* Info Card - Upload Warnings and Recommendations */}
+      {!showDocumentTypeSelection && (
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-sky-50">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Info className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1 space-y-3">
+                  <h3 className="font-semibold text-blue-900 text-lg">Before You Upload</h3>
+                  <div className="space-y-2 text-sm text-blue-800">
+                    <div className="flex items-start space-x-2">
+                      <FileText className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                      <p><span className="font-medium">Recommended:</span> PDFs under 10 pages for optimal processing speed</p>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                      <p><span className="font-medium">Processing time:</span> 1-3 minutes for simple documents, up to 5 minutes for complex multi-page files</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Document Type Selection Step */}
       {showDocumentTypeSelection && uploadedFile && (
         <Card className="card-hover border-2 border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg">
