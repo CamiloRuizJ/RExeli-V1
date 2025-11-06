@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, FileText, Brain, BarChart3, Download, Zap, Shield, Clock } from "lucide-react"
+import { ArrowRight, FileText, Brain, BarChart3, Download, Zap, Shield, Clock, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 export default function LandingPage() {

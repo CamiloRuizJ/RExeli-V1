@@ -1,15 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import Navbar from "@/components/navigation/Navbar";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
+// Use system fonts instead of Google Fonts to avoid build-time network issues
+const fontVariable = "";
 
 export const metadata: Metadata = {
   title: "RExeli V1 - Real Estate Document Processing",
@@ -36,8 +33,9 @@ export default function RootLayout({
       <body
         className={cn(
           "font-sans antialiased bg-background text-foreground min-h-screen",
-          inter.variable,
+          fontVariable,
         )}
+        style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
       >
         <SessionProvider>
           <div className="min-h-screen flex flex-col">
