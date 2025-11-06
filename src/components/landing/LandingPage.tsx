@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, FileText, Brain, BarChart3, Download, Zap, Shield, Clock } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ArrowRight, FileText, Brain, BarChart3, Download, Zap, Shield, Clock, Check } from "lucide-react"
 import Link from "next/link"
 
 export default function LandingPage() {
@@ -238,6 +239,475 @@ export default function LandingPage() {
               </CardContent>
             </Card>
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="bg-gray-50 py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center space-y-4 lg:space-y-6 mb-12 lg:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Simple, Transparent Pricing</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+              Choose the plan that fits your needs. No hidden fees, cancel anytime.
+            </p>
+          </div>
+
+          <Tabs defaultValue="monthly" className="w-full">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
+              <TabsTrigger value="monthly">Monthly</TabsTrigger>
+              <TabsTrigger value="annual">Annual (-20%)</TabsTrigger>
+              <TabsTrigger value="payg">Pay-as-you-go</TabsTrigger>
+            </TabsList>
+
+            {/* Monthly Plans */}
+            <TabsContent value="monthly" className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Entrepreneur Plan */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Entrepreneur</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-gray-900">$89</span>
+                        <span className="text-gray-500">/mo</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Perfect for getting started</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">50 documents/month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">1 user included</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">$1.50 per extra doc</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button variant="outline" className="w-full">Get Started</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Professional Plan */}
+                <Card className="border-emerald-500 border-2 hover:shadow-xl transition-shadow relative">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-emerald-600 text-white px-4 py-1">Most Popular</Badge>
+                  </div>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Professional</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-gray-900">$499</span>
+                        <span className="text-gray-500">/mo</span>
+                      </div>
+                      <p className="text-sm text-gray-600">For growing businesses</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">500 documents/month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">5 users included</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">$0.99 per extra doc</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button className="w-full">Get Started</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Business Plan */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Business</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-gray-900">$1,299</span>
+                        <span className="text-gray-500">/mo</span>
+                      </div>
+                      <p className="text-sm text-gray-600">For established teams</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">2,000 documents/month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">10 users included</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">$0.79 per extra doc</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button variant="outline" className="w-full">Get Started</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Enterprise Plan */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow bg-gradient-to-br from-gray-50 to-white">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Enterprise</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold text-gray-900">Custom</span>
+                      </div>
+                      <p className="text-sm text-gray-600">For large organizations</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">10,000+ documents/month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Unlimited users</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Negotiated pricing</span>
+                      </div>
+                    </div>
+
+                    <a href="mailto:admin@rexeli.com">
+                      <Button variant="outline" className="w-full">Contact Sales</Button>
+                    </a>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Annual Plans */}
+            <TabsContent value="annual" className="space-y-8">
+              <div className="text-center mb-6">
+                <Badge className="bg-emerald-100 text-emerald-800 text-sm px-4 py-2">
+                  Save up to $3,118/year with annual billing
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Entrepreneur Annual */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Entrepreneur</h3>
+                      <div className="space-y-1">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-bold text-gray-900">$854</span>
+                          <span className="text-gray-500">/yr</span>
+                        </div>
+                        <p className="text-sm text-emerald-600 font-medium">$71/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $214/year</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">50 documents/month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">1 user included</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Paid annually</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button variant="outline" className="w-full">Get Started</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Professional Annual */}
+                <Card className="border-emerald-500 border-2 hover:shadow-xl transition-shadow relative">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-emerald-600 text-white px-4 py-1">Most Popular</Badge>
+                  </div>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Professional</h3>
+                      <div className="space-y-1">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-bold text-gray-900">$4,790</span>
+                          <span className="text-gray-500">/yr</span>
+                        </div>
+                        <p className="text-sm text-emerald-600 font-medium">$399/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $1,198/year</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">500 documents/month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">5 users included</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Paid annually</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button className="w-full">Get Started</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Business Annual */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Business</h3>
+                      <div className="space-y-1">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-4xl font-bold text-gray-900">$12,470</span>
+                          <span className="text-gray-500">/yr</span>
+                        </div>
+                        <p className="text-sm text-emerald-600 font-medium">$1,039/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $3,118/year</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">2,000 documents/month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">10 users included</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Paid annually</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button variant="outline" className="w-full">Get Started</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Enterprise Annual */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow bg-gradient-to-br from-gray-50 to-white">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Enterprise</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold text-gray-900">Custom</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Annual contract</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">10,000+ documents/month</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Unlimited users</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Custom savings</span>
+                      </div>
+                    </div>
+
+                    <a href="mailto:admin@rexeli.com">
+                      <Button variant="outline" className="w-full">Contact Sales</Button>
+                    </a>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Pay-as-you-go Plans */}
+            <TabsContent value="payg" className="space-y-8">
+              <div className="text-center mb-6">
+                <Badge className="bg-blue-100 text-blue-800 text-sm px-4 py-2">
+                  One-time payment, no recurring charges
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Entrepreneur Pack */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Entrepreneur Pack</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-gray-900">$79</span>
+                      </div>
+                      <p className="text-sm text-gray-600">One-time payment</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">50 documents</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">1 user</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">$1.58 per doc</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">90 day expiration</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button variant="outline" className="w-full">Buy Now</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Professional Pack */}
+                <Card className="border-blue-500 border-2 hover:shadow-xl transition-shadow relative">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-blue-600 text-white px-4 py-1">Best Value</Badge>
+                  </div>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Professional Pack</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-gray-900">$499</span>
+                      </div>
+                      <p className="text-sm text-gray-600">One-time payment</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">500 documents</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">3 users</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-semibold">$0.99 per doc</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">6 month expiration</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button className="w-full">Buy Now</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Business Pack */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Business Pack</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-gray-900">$1,599</span>
+                      </div>
+                      <p className="text-sm text-gray-600">One-time payment</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">2,000 documents</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">5 users</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">$0.79 per doc</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">12 month expiration</span>
+                      </div>
+                    </div>
+
+                    <Link href="/tool">
+                      <Button variant="outline" className="w-full">Buy Now</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Enterprise Pack */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow bg-gradient-to-br from-gray-50 to-white">
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Enterprise Pack</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold text-gray-900">Custom</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Tailored for you</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">10,000+ documents</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Unlimited users</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">$0.50-$0.69 per doc</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">12 mo+ or no expiration</span>
+                      </div>
+                    </div>
+
+                    <a href="mailto:admin@rexeli.com">
+                      <Button variant="outline" className="w-full">Contact Sales</Button>
+                    </a>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </section>
 
