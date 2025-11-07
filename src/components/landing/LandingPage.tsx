@@ -281,7 +281,7 @@ export default function LandingPage() {
                         <span className="text-4xl font-bold text-gray-900">$29</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-gray-600">Perfect for getting started</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.58 per document</p>
                     </div>
 
                     <div className="space-y-3">
@@ -317,7 +317,7 @@ export default function LandingPage() {
                         <span className="text-4xl font-bold text-gray-900">$129</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-gray-600">For growing businesses</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.43 per document</p>
                     </div>
 
                     <div className="space-y-3">
@@ -350,7 +350,7 @@ export default function LandingPage() {
                         <span className="text-4xl font-bold text-gray-900">$399</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-gray-600">For established teams</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.27 per document</p>
                     </div>
 
                     <div className="space-y-3">
