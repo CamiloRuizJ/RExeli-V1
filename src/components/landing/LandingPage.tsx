@@ -267,16 +267,19 @@ export default function LandingPage() {
             {/* Monthly Plans */}
             <TabsContent value="monthly" className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Entrepreneur Plan */}
-                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+                {/* Starter Plan */}
+                <Card className="border-emerald-500 border-2 hover:shadow-xl transition-shadow relative">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-emerald-600 text-white px-4 py-1">BEST VALUE</Badge>
+                  </div>
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900">Entrepreneur</h3>
+                      <h3 className="text-xl font-bold text-gray-900">Starter</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$89</span>
+                        <span className="text-4xl font-bold text-gray-900">$29</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-gray-600">Perfect for getting started</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.58 per document</p>
                     </div>
 
                     <div className="space-y-3">
@@ -290,48 +293,45 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$1.50 per extra doc</span>
+                        <span className="text-sm">$0.75 per extra doc</span>
                       </div>
                     </div>
 
-                    <Link href="/tool">
-                      <Button variant="outline" className="w-full">Get Started</Button>
+                    <Link href="/auth/signup">
+                      <Button className="w-full">Get Started</Button>
                     </Link>
                   </CardContent>
                 </Card>
 
                 {/* Professional Plan */}
-                <Card className="border-emerald-500 border-2 hover:shadow-xl transition-shadow relative">
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-emerald-600 text-white px-4 py-1">Most Popular</Badge>
-                  </div>
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Professional</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$499</span>
+                        <span className="text-4xl font-bold text-gray-900">$129</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-gray-600">For growing businesses</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.43 per document</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">500 documents/month</span>
+                        <span className="text-sm">300 documents/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">5 users included</span>
+                        <span className="text-sm">3 users included</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.99 per extra doc</span>
+                        <span className="text-sm">$0.55 per extra doc</span>
                       </div>
                     </div>
 
-                    <Link href="/tool">
-                      <Button className="w-full">Get Started</Button>
+                    <Link href="/auth/signup">
+                      <Button variant="outline" className="w-full">Get Started</Button>
                     </Link>
                   </CardContent>
                 </Card>
@@ -342,16 +342,16 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Business</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$1,299</span>
+                        <span className="text-4xl font-bold text-gray-900">$399</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-gray-600">For established teams</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.27 per document</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">2,000 documents/month</span>
+                        <span className="text-sm">1,500 documents/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -359,11 +359,11 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.79 per extra doc</span>
+                        <span className="text-sm">$0.35 per extra doc</span>
                       </div>
                     </div>
 
-                    <Link href="/tool">
+                    <Link href="/auth/signup">
                       <Button variant="outline" className="w-full">Get Started</Button>
                     </Link>
                   </CardContent>
@@ -407,29 +407,32 @@ export default function LandingPage() {
             <TabsContent value="annual" className="space-y-8">
               <div className="text-center mb-6">
                 <Badge className="bg-emerald-100 text-emerald-800 text-sm px-4 py-2">
-                  Save up to $3,118/year with annual billing
+                  Save 20% with annual billing - Best value for committed teams
                 </Badge>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Entrepreneur Annual */}
-                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
+                {/* Starter Annual */}
+                <Card className="border-emerald-500 border-2 hover:shadow-xl transition-shadow relative">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-emerald-600 text-white px-4 py-1">BEST VALUE</Badge>
+                  </div>
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900">Entrepreneur</h3>
+                      <h3 className="text-xl font-bold text-gray-900">Starter</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$854</span>
+                          <span className="text-4xl font-bold text-gray-900">$278</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$71/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $214/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$23/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $70/year (20% off)</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">50 documents/month</span>
+                        <span className="text-sm">600 documents/year</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -437,51 +440,48 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">Paid annually</span>
+                        <span className="text-sm">$0.46 per document</span>
                       </div>
                     </div>
 
-                    <Link href="/tool">
-                      <Button variant="outline" className="w-full">Get Started</Button>
+                    <Link href="/auth/signup">
+                      <Button className="w-full">Get Started</Button>
                     </Link>
                   </CardContent>
                 </Card>
 
                 {/* Professional Annual */}
-                <Card className="border-emerald-500 border-2 hover:shadow-xl transition-shadow relative">
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-emerald-600 text-white px-4 py-1">Most Popular</Badge>
-                  </div>
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Professional</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$4,790</span>
+                          <span className="text-4xl font-bold text-gray-900">$1,238</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$399/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $1,198/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$103/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $310/year (20% off)</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">500 documents/month</span>
+                        <span className="text-sm">3,600 documents/year</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">5 users included</span>
+                        <span className="text-sm">3 users included</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">Paid annually</span>
+                        <span className="text-sm">$0.34 per document</span>
                       </div>
                     </div>
 
-                    <Link href="/tool">
-                      <Button className="w-full">Get Started</Button>
+                    <Link href="/auth/signup">
+                      <Button variant="outline" className="w-full">Get Started</Button>
                     </Link>
                   </CardContent>
                 </Card>
@@ -493,18 +493,18 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold text-gray-900">Business</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$12,470</span>
+                          <span className="text-4xl font-bold text-gray-900">$3,830</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$1,039/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $3,118/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$319/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $958/year (20% off)</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">2,000 documents/month</span>
+                        <span className="text-sm">18,000 documents/year</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -512,11 +512,11 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">Paid annually</span>
+                        <span className="text-sm">$0.21 per document</span>
                       </div>
                     </div>
 
-                    <Link href="/tool">
+                    <Link href="/auth/signup">
                       <Button variant="outline" className="w-full">Get Started</Button>
                     </Link>
                   </CardContent>
@@ -560,19 +560,19 @@ export default function LandingPage() {
             <TabsContent value="payg" className="space-y-8">
               <div className="text-center mb-6">
                 <Badge className="bg-blue-100 text-blue-800 text-sm px-4 py-2">
-                  One-time payment, no recurring charges
+                  One-time payment, no recurring charges - Premium pricing
                 </Badge>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Entrepreneur Pack */}
+                {/* Starter Pack */}
                 <Card className="border-gray-200 hover:shadow-lg transition-shadow">
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900">Entrepreneur Pack</h3>
+                      <h3 className="text-xl font-bold text-gray-900">Starter Pack</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$79</span>
+                        <span className="text-4xl font-bold text-gray-900">$49</span>
                       </div>
-                      <p className="text-sm text-gray-600">One-time payment</p>
+                      <p className="text-sm text-amber-600 font-medium">$0.98 per document</p>
                     </div>
 
                     <div className="space-y-3">
@@ -586,7 +586,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$1.58 per doc</span>
+                        <span className="text-sm">69% premium vs monthly</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -594,7 +594,7 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    <Link href="/tool">
+                    <Link href="/auth/signup">
                       <Button variant="outline" className="w-full">Buy Now</Button>
                     </Link>
                   </CardContent>
@@ -603,21 +603,21 @@ export default function LandingPage() {
                 {/* Professional Pack */}
                 <Card className="border-blue-500 border-2 hover:shadow-xl transition-shadow relative">
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-blue-600 text-white px-4 py-1">Best Value</Badge>
+                    <Badge className="bg-blue-600 text-white px-4 py-1">Flexible Option</Badge>
                   </div>
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Professional Pack</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$499</span>
+                        <span className="text-4xl font-bold text-gray-900">$159</span>
                       </div>
-                      <p className="text-sm text-gray-600">One-time payment</p>
+                      <p className="text-sm text-amber-600 font-medium">$0.64 per document</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">500 documents</span>
+                        <span className="text-sm">250 documents</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -625,7 +625,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-semibold">$0.99 per doc</span>
+                        <span className="text-sm">49% premium vs monthly</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -633,7 +633,7 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    <Link href="/tool">
+                    <Link href="/auth/signup">
                       <Button className="w-full">Buy Now</Button>
                     </Link>
                   </CardContent>
@@ -645,15 +645,15 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Business Pack</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$1,599</span>
+                        <span className="text-4xl font-bold text-gray-900">$549</span>
                       </div>
-                      <p className="text-sm text-gray-600">One-time payment</p>
+                      <p className="text-sm text-amber-600 font-medium">$0.44 per document</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">2,000 documents</span>
+                        <span className="text-sm">1,250 documents</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -661,7 +661,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.79 per doc</span>
+                        <span className="text-sm">63% premium vs monthly</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -669,7 +669,7 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    <Link href="/tool">
+                    <Link href="/auth/signup">
                       <Button variant="outline" className="w-full">Buy Now</Button>
                     </Link>
                   </CardContent>

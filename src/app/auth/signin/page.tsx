@@ -69,7 +69,9 @@ export default function SignInPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* OAuth Buttons */}
+          {/* TODO: Re-enable OAuth once credentials are configured */}
+          {/* OAuth Buttons - Temporarily disabled for deployment */}
+          {false && (
           <div className="space-y-3 mb-6">
             <button
               onClick={() => handleOAuthSignIn('google')}
@@ -100,8 +102,10 @@ export default function SignInPage() {
               <span className="text-sm font-medium text-gray-700">Continue with Microsoft</span>
             </button>
           </div>
+          )}
 
-          {/* Divider */}
+          {/* Divider - Only show if OAuth is enabled */}
+          {false && (
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
@@ -110,6 +114,7 @@ export default function SignInPage() {
               <span className="px-4 bg-white text-gray-500">Or continue with email</span>
             </div>
           </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
