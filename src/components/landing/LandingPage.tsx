@@ -261,11 +261,16 @@ export default function LandingPage() {
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
               <TabsTrigger value="monthly">Monthly</TabsTrigger>
               <TabsTrigger value="annual">Annual (-20%)</TabsTrigger>
-              <TabsTrigger value="payg">Pay-as-you-go</TabsTrigger>
+              <TabsTrigger value="payg">One-Time Purchase</TabsTrigger>
             </TabsList>
 
             {/* Monthly Plans */}
             <TabsContent value="monthly" className="space-y-8">
+              <div className="text-center mb-6">
+                <Badge className="bg-emerald-100 text-emerald-800 text-sm px-4 py-2">
+                  Flexible monthly billing - Cancel anytime, no commitments required
+                </Badge>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Entrepreneur Plan */}
                 <Card className="border-gray-200 hover:shadow-lg transition-shadow">
@@ -556,11 +561,11 @@ export default function LandingPage() {
               </div>
             </TabsContent>
 
-            {/* Pay-as-you-go Plans */}
+            {/* One-Time Purchase Plans */}
             <TabsContent value="payg" className="space-y-8">
               <div className="text-center mb-6">
                 <Badge className="bg-blue-100 text-blue-800 text-sm px-4 py-2">
-                  One-time payment, no recurring charges - Premium pricing
+                  Pay once and use anytime - No subscriptions, credits never expire
                 </Badge>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
