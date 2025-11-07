@@ -565,7 +565,7 @@ export default function LandingPage() {
             <TabsContent value="payg" className="space-y-8">
               <div className="text-center mb-6">
                 <Badge className="bg-blue-100 text-blue-800 text-sm px-4 py-2">
-                  Pay once and use anytime - No subscriptions, credits never expire
+                  One-time payment, no recurring charges - Perfect for occasional use
                 </Badge>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
