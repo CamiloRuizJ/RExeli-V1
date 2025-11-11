@@ -43,11 +43,11 @@ export default async function AdminPage() {
         </Link>
 
         {/* System Analytics */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 opacity-60">
+        <Link href="/admin/analytics" className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">System Analytics</h2>
-          <p className="text-gray-600 text-sm mb-4">View system performance and usage statistics.</p>
-          <span className="text-gray-400 text-sm">Coming soon</span>
-        </div>
+          <p className="text-gray-600 text-sm mb-4">View platform usage statistics and user growth metrics.</p>
+          <span className="text-blue-600 font-medium">Go to Analytics →</span>
+        </Link>
       </div>
     </div>
   );
