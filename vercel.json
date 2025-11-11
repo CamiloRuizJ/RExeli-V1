@@ -63,5 +63,15 @@
     }
   ],
   "regions": ["iad1"],
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/reset-monthly-credits",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/check-subscription-expiry",
+      "schedule": "0 1 * * *"
+    }
+  ]
 }
