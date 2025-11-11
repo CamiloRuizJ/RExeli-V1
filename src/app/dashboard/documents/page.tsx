@@ -159,7 +159,7 @@ export default async function DocumentsPage({
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-600 mb-2">No documents found</p>
           <p className="text-gray-500 text-sm mb-4">
-            {searchParams.type && searchParams.type !== 'all'
+            {type && type !== 'all'
               ? 'Try selecting a different document type'
               : 'Upload your first document to get started'}
           </p>
