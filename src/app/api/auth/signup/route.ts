@@ -54,16 +54,22 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user with free trial credits
+    const FREE_TRIAL_CREDITS = 25; // 5 documents × 5 pages average
+
     const { data: newUser, error: createError } = await supabase
       .from('users')
       .insert({
         name,
         email: email.toLowerCase(),
         password: hashedPassword,
-        role: 'user' // Default role
+        role: 'user', // Default role
+        credits: FREE_TRIAL_CREDITS,
+        subscription_type: 'free',
+        subscription_status: 'active',
+        is_active: true
       })
-      .select('id, name, email, role')
+      .select('id, name, email, role, credits')
       .single();
 
     if (createError) {
@@ -74,13 +80,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Log the free trial credit transaction
+    await supabase
+      .from('credit_transactions')
+      .insert({
+        user_id: newUser.id,
+        amount: FREE_TRIAL_CREDITS,
+        transaction_type: 'initial_signup',
+        description: `Free trial credits on signup (${FREE_TRIAL_CREDITS} credits = ~5 documents)`,
+      });
+
+    console.log(`[NEW USER] ${newUser.email} signed up with ${FREE_TRIAL_CREDITS} free trial credits`);
+
     return NextResponse.json({
       success: true,
+      message: `Account created successfully! You've received ${FREE_TRIAL_CREDITS} free trial credits to get started.`,
       user: {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        role: newUser.role
+        role: newUser.role,
+        credits: newUser.credits
       }
     }, { status: 201 });
 
