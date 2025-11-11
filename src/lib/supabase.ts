@@ -27,6 +27,28 @@ const { url: supabaseUrl, key: supabaseAnonKey } = getSupabaseConfig();
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Get service role configuration (for admin operations)
+function getServiceRoleConfig() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) {
+    // During build time, return dummy values to prevent build errors
+    console.warn('Service role keys not found during build - using placeholders');
+    return {
+      url: 'https://placeholder.supabase.co',
+      key: 'build-time-placeholder-service-key'
+    };
+  }
+
+  return { url, key: serviceKey };
+}
+
+const { url: serviceUrl, key: serviceKey } = getServiceRoleConfig();
+
+// Service role client for admin operations (bypasses RLS)
+export const supabaseAdmin = createClient(serviceUrl, serviceKey);
+
 // Log configuration for debugging (without exposing encrypted keys)
 if (typeof window === 'undefined') {
   console.log('Supabase configured:', {

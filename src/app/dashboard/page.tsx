@@ -5,13 +5,9 @@
 
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin as supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { FileText, Upload, Clock, CheckCircle, CreditCard, TrendingUp, AlertCircle } from 'lucide-react';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function getUserData(userId: string) {
   const { data: user, error } = await supabase

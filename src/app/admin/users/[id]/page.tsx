@@ -5,15 +5,11 @@
 
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin as supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { AddCreditsForm } from './AddCreditsForm';
 import { AssignPlanForm } from './AssignPlanForm';
 import { DeactivateUserButton } from './DeactivateUserButton';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 interface UserDetail {
   id: string;
