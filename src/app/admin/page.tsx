@@ -36,11 +36,11 @@ export default async function AdminPage() {
         </Link>
 
         {/* User Management */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 opacity-60">
+        <Link href="/admin/users" className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">User Management</h2>
-          <p className="text-gray-600 text-sm mb-4">Manage user accounts, roles, and permissions.</p>
-          <span className="text-gray-400 text-sm">Coming soon</span>
-        </div>
+          <p className="text-gray-600 text-sm mb-4">Manage user accounts, credits, and subscriptions.</p>
+          <span className="text-blue-600 font-medium">Go to User Management →</span>
+        </Link>
 
         {/* System Analytics */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 opacity-60">
