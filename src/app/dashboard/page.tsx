@@ -183,7 +183,7 @@ export default async function DashboardPage() {
             <p className="text-2xl font-bold text-gray-900 mb-1">
               {userData.subscription_type
                 .replace(/_/g, ' ')
-                .replace(/\b\w/g, (l) => l.toUpperCase())}
+                .replace(/\b\w/g, (l: string) => l.toUpperCase())}
             </p>
             <div className="flex items-center gap-2">
               <span

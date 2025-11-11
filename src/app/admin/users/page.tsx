@@ -238,7 +238,7 @@ export default async function AdminUsersPage({
                         <div className="text-sm font-medium text-gray-900">
                           {user.subscription_type
                             .replace(/_/g, ' ')
-                            .replace(/\b\w/g, (l) => l.toUpperCase())}
+                            .replace(/\b\w/g, (l: string) => l.toUpperCase())}
                         </div>
                         {user.billing_cycle_end && (
                           <div className="text-xs text-gray-500 mt-1">

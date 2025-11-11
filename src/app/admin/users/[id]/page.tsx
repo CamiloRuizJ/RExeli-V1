@@ -211,7 +211,7 @@ export default async function AdminUserDetailPage({
               <div className="pt-3 border-t border-gray-200">
                 <div className="text-xs text-gray-500 uppercase">Subscription</div>
                 <div className="text-sm font-medium text-gray-900">
-                  {user.subscription_type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                  {user.subscription_type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                 </div>
                 <div
                   className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1 ${

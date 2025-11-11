@@ -277,7 +277,7 @@ export default async function AdminAnalyticsPage() {
             {Object.entries(stats.subscriptions).map(([type, count]) => (
               <div key={type} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <span className="text-gray-900 font-medium">
-                  {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                 </span>
                 <span className="text-gray-600 font-semibold">{count} users</span>
               </div>
