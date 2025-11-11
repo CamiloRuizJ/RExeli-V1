@@ -6,7 +6,11 @@
  * Accuracy is essential as it determines credit deductions
  */
 
-import * as pdfParse from 'pdf-parse';
+// Use dynamic import for pdf-parse since it's a CommonJS module
+const getPdfParse = async () => {
+  const pdfParse = await import('pdf-parse');
+  return pdfParse.default || pdfParse;
+};
 
 /**
  * Get accurate page count from a PDF file
@@ -16,6 +20,7 @@ import * as pdfParse from 'pdf-parse';
  */
 export async function getPageCount(fileBuffer: Buffer): Promise<number> {
   try {
+    const pdfParse = await getPdfParse();
     const data = await pdfParse(fileBuffer);
 
     // Validate that we got a valid page count
@@ -60,6 +65,7 @@ export async function getPageCountFromFile(file: File): Promise<number> {
  */
 export async function validatePDF(fileBuffer: Buffer): Promise<boolean> {
   try {
+    const pdfParse = await getPdfParse();
     await pdfParse(fileBuffer);
     return true;
   } catch (error) {
@@ -74,6 +80,7 @@ export async function validatePDF(fileBuffer: Buffer): Promise<boolean> {
  */
 export async function getPDFMetadata(fileBuffer: Buffer) {
   try {
+    const pdfParse = await getPdfParse();
     const data = await pdfParse(fileBuffer);
 
     return {
