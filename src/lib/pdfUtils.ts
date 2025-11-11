@@ -6,7 +6,7 @@
  * Accuracy is essential as it determines credit deductions
  */
 
-import pdf from 'pdf-parse';
+import * as pdfParse from 'pdf-parse';
 
 /**
  * Get accurate page count from a PDF file
@@ -16,7 +16,7 @@ import pdf from 'pdf-parse';
  */
 export async function getPageCount(fileBuffer: Buffer): Promise<number> {
   try {
-    const data = await pdf(fileBuffer);
+    const data = await pdfParse(fileBuffer);
 
     // Validate that we got a valid page count
     if (!data.numpages || data.numpages < 1) {
@@ -60,7 +60,7 @@ export async function getPageCountFromFile(file: File): Promise<number> {
  */
 export async function validatePDF(fileBuffer: Buffer): Promise<boolean> {
   try {
-    await pdf(fileBuffer);
+    await pdfParse(fileBuffer);
     return true;
   } catch (error) {
     throw new Error('Invalid PDF file. The file may be corrupted or password-protected.');
@@ -74,7 +74,7 @@ export async function validatePDF(fileBuffer: Buffer): Promise<boolean> {
  */
 export async function getPDFMetadata(fileBuffer: Buffer) {
   try {
-    const data = await pdf(fileBuffer);
+    const data = await pdfParse(fileBuffer);
 
     return {
       pages: data.numpages,

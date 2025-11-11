@@ -112,13 +112,14 @@ async function getSubscriptionHistory(userId: string) {
 export default async function AdminUserDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
   const session = await auth();
 
   // Require authentication
   if (!session) {
-    redirect('/auth/signin?callbackUrl=/admin/users/' + params.id);
+    redirect('/auth/signin?callbackUrl=/admin/users/' + id);
   }
 
   // Require admin role
@@ -126,7 +127,7 @@ export default async function AdminUserDetailPage({
     redirect('/dashboard');
   }
 
-  const user = await getUserById(params.id);
+  const user = await getUserById(id);
 
   if (!user) {
     return (
@@ -148,10 +149,10 @@ export default async function AdminUserDetailPage({
   }
 
   const [transactions, usageLogs, documents, subscriptionHistory] = await Promise.all([
-    getCreditTransactions(params.id),
-    getUsageLogs(params.id),
-    getUserDocuments(params.id),
-    getSubscriptionHistory(params.id),
+    getCreditTransactions(id),
+    getUsageLogs(id),
+    getUserDocuments(id),
+    getSubscriptionHistory(id),
   ]);
 
   return (
