@@ -14,7 +14,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // GET /api/admin/users/[id] - Get user details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check admin authentication
@@ -26,10 +26,11 @@ export async function GET(
       );
     }
 
+    const { id } = await context.params;
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (error || !user) {
@@ -55,7 +56,7 @@ export async function GET(
 // PATCH /api/admin/users/[id] - Update user (e.g., activate/deactivate)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check admin authentication
@@ -67,6 +68,7 @@ export async function PATCH(
       );
     }
 
+    const { id } = await context.params;
     const body = await request.json();
     const { is_active } = body;
 
@@ -85,7 +87,7 @@ export async function PATCH(
         is_active,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (error) {
       throw error;
@@ -107,7 +109,7 @@ export async function PATCH(
 // DELETE /api/admin/users/[id] - Soft delete user (deactivate)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check admin authentication
@@ -119,6 +121,7 @@ export async function DELETE(
       );
     }
 
+    const { id } = await context.params;
     // Soft delete by setting is_active to false
     const { error } = await supabase
       .from('users')
@@ -126,7 +129,7 @@ export async function DELETE(
         is_active: false,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (error) {
       throw error;

@@ -9,7 +9,7 @@ import { addCreditsToUser } from '@/lib/subscriptionManager';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check admin authentication
@@ -21,6 +21,7 @@ export async function POST(
       );
     }
 
+    const { id } = await context.params;
     const body = await request.json();
     const { amount, adminId, description } = body;
 
@@ -41,7 +42,7 @@ export async function POST(
 
     // Add credits using subscription manager
     const result = await addCreditsToUser(
-      params.id,
+      id,
       amount,
       'admin_add',
       adminId || session.user.id,
@@ -55,7 +56,7 @@ export async function POST(
       );
     }
 
-    console.log(`[ADMIN ACTION] Admin ${session.user.email} added ${amount} credits to user ${params.id}`);
+    console.log(`[ADMIN ACTION] Admin ${session.user.email} added ${amount} credits to user ${id}`);
 
     return NextResponse.json({
       success: true,

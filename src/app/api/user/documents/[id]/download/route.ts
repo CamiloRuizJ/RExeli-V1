@@ -14,7 +14,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -27,12 +27,13 @@ export async function GET(
     }
 
     const userId = session.user.id;
+    const { id } = await context.params;
 
     // Get document and verify ownership
     const { data: document, error } = await supabase
       .from('user_documents')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('user_id', userId)
       .single();
 
@@ -57,7 +58,7 @@ export async function GET(
       .update({
         download_count: (document.download_count || 0) + 1,
       })
-      .eq('id', params.id);
+      .eq('id', id);
 
     // Prepare download data
     const downloadData = {

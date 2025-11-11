@@ -9,7 +9,7 @@ import { assignSubscriptionPlan } from '@/lib/subscriptionManager';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check admin authentication
@@ -21,6 +21,7 @@ export async function POST(
       );
     }
 
+    const { id } = await context.params;
     const body = await request.json();
     const { planType, adminId } = body;
 
@@ -55,7 +56,7 @@ export async function POST(
 
     // Assign plan using subscription manager
     const result = await assignSubscriptionPlan(
-      params.id,
+      id,
       planType,
       adminId || session.user.id
     );
@@ -67,7 +68,7 @@ export async function POST(
       );
     }
 
-    console.log(`[ADMIN ACTION] Admin ${session.user.email} assigned ${planType} plan to user ${params.id}`);
+    console.log(`[ADMIN ACTION] Admin ${session.user.email} assigned ${planType} plan to user ${id}`);
 
     return NextResponse.json({
       success: true,
