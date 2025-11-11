@@ -61,8 +61,9 @@ async function getDocumentStats(userId: string) {
 export default async function DocumentsPage({
   searchParams,
 }: {
-  searchParams: { type?: string };
+  searchParams: Promise<{ type?: string }>;
 }) {
+  const { type } = await searchParams;
   const session = await auth();
 
   // Require authentication
@@ -72,7 +73,7 @@ export default async function DocumentsPage({
 
   const userId = session.user.id;
   const [documents, stats] = await Promise.all([
-    getUserDocuments(userId, searchParams.type),
+    getUserDocuments(userId, type),
     getDocumentStats(userId),
   ]);
 
@@ -134,7 +135,7 @@ export default async function DocumentsPage({
           <select
             id="type"
             name="type"
-            defaultValue={searchParams.type || 'all'}
+            defaultValue={type || 'all'}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {documentTypes.map((type) => (

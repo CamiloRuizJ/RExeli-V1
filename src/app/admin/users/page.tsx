@@ -84,8 +84,9 @@ async function getUserStats() {
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: { search?: string; status?: string };
+  searchParams: Promise<{ search?: string; status?: string }>;
 }) {
+  const { search, status } = await searchParams;
   const session = await auth();
 
   // Require authentication
@@ -98,7 +99,7 @@ export default async function AdminUsersPage({
     redirect('/dashboard');
   }
 
-  const users = await getUsers(searchParams.search, searchParams.status);
+  const users = await getUsers(search, status);
   const stats = await getUserStats();
 
   return (
@@ -153,7 +154,7 @@ export default async function AdminUsersPage({
                 type="text"
                 id="search"
                 name="search"
-                defaultValue={searchParams.search || ''}
+                defaultValue={search || ''}
                 placeholder="Search by email or name..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
@@ -165,7 +166,7 @@ export default async function AdminUsersPage({
               <select
                 id="status"
                 name="status"
-                defaultValue={searchParams.status || 'all'}
+                defaultValue={status || 'all'}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Status</option>
