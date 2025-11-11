@@ -3,6 +3,8 @@ import { extractDocumentData } from '@/lib/anthropic';
 import { transformExtractedData } from '@/lib/data-transformers';
 import { auth } from '@/lib/auth';
 import type { ApiResponse, ExtractionResponse, DocumentType, ExtractedData } from '@/lib/types';
+import { getPageCount } from '@/lib/pdfUtils';
+import { validateCreditTransaction, deductCredits, logUsage, saveUserDocument } from '@/middleware/creditCheck';
 
 // Route segment config - optimize for long-running Claude API calls
 export const runtime = 'nodejs';
@@ -10,8 +12,18 @@ export const maxDuration = 300; // 5 minutes for large PDF processing
 
 export async function POST(request: NextRequest) {
   try {
-    // Get user session for metadata
+    // Get user session - REQUIRED for credit system
     const session = await auth();
+
+    // Require authentication
+    if (!session?.user?.id) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Authentication required. Please sign in to process documents.'
+      }, { status: 401 });
+    }
+
+    const userId = session.user.id;
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -82,6 +94,39 @@ export async function POST(request: NextRequest) {
       fileToProcess = file as File;
     }
 
+    // ============================================
+    // CREDIT SYSTEM: Count pages and validate credits
+    // ============================================
+    let pageCount = 1; // Default for images
+
+    // Count pages for PDFs
+    if (fileToProcess.type === 'application/pdf') {
+      try {
+        const arrayBuffer = await fileToProcess.arrayBuffer();
+        pageCount = await getPageCount(Buffer.from(arrayBuffer));
+        console.log(`[CREDIT CHECK] Document has ${pageCount} pages`);
+      } catch (pageError) {
+        console.error('Error counting pages:', pageError);
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: 'Unable to read document pages. Please ensure the file is not corrupted.'
+        }, { status: 400 });
+      }
+    }
+
+    // Validate user has sufficient credits
+    const creditValidation = await validateCreditTransaction(userId, pageCount);
+
+    if (!creditValidation.isValid) {
+      console.log(`[CREDIT DENIED] User ${session.user.email} - ${creditValidation.message}`);
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: creditValidation.message
+      }, { status: 402 }); // Payment Required
+    }
+
+    console.log(`[CREDIT APPROVED] ${creditValidation.message}`);
+
     // Extract structured data using Claude Sonnet 4.5 (handles PDF conversion automatically)
     const startTime = Date.now();
     console.log(`Processing file for extraction: ${fileToProcess.name}, size: ${fileToProcess.size} bytes, type: ${fileToProcess.type}`);
@@ -150,15 +195,50 @@ export async function POST(request: NextRequest) {
 
     const processingTime = Date.now() - startTime;
 
+    // ============================================
+    // CREDIT SYSTEM: Deduct credits and log usage (only on success)
+    // ============================================
+    const deductionResult = await deductCredits(userId, pageCount);
+
+    if (!deductionResult.success) {
+      console.error('[CREDIT DEDUCTION FAILED]', deductionResult.error);
+      // Still return the extracted data but warn about credit issue
+      warnings.push('Credit deduction failed. Please contact support.');
+    }
+
+    // Log usage
+    await logUsage(userId, {
+      documentType,
+      fileName: fileToProcess.name,
+      filePath: supabaseUrl || fileToProcess.name,
+      pageCount,
+      processingStatus: 'success',
+      processingTimeMs: processingTime,
+    });
+
+    // Save document to user history
+    await saveUserDocument(userId, {
+      filePath: supabaseUrl || fileToProcess.name,
+      fileName: fileToProcess.name,
+      documentType,
+      extractedData: extractedData,
+      pageCount,
+      processingStatus: 'completed',
+    });
+
+    console.log(`[CREDIT DEDUCTED] User ${session.user.email} - ${pageCount} credits used. Remaining: ${deductionResult.remainingCredits}`);
+
     const response: ApiResponse<ExtractionResponse> = {
       success: true,
       data: {
         extractedData,
-        processingTime
-      },
+        processingTime,
+        creditsUsed: pageCount,
+        remainingCredits: deductionResult.remainingCredits,
+      } as any,
       message: partialSuccess
         ? `Data extraction completed with partial results for ${documentType.replace('_', ' ')}`
-        : `Data extraction completed successfully for ${documentType.replace('_', ' ')}`,
+        : `Successfully processed! ${pageCount} ${pageCount === 1 ? 'credit' : 'credits'} used. ${deductionResult.remainingCredits} ${deductionResult.remainingCredits === 1 ? 'credit' : 'credits'} remaining.`,
       ...(warnings.length > 0 && { warnings })
     };
 
@@ -170,6 +250,39 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Extraction API error:', error);
+
+    // ============================================
+    // CREDIT SYSTEM: Log failed processing (NO credit deduction)
+    // ============================================
+    const session = await auth();
+    if (session?.user?.id) {
+      try {
+        const formData = await request.formData();
+        const file = formData.get('file') as File | null;
+        const documentType = formData.get('documentType') as string;
+
+        // Try to get page count for logging (best effort)
+        let pageCount = 1;
+        if (file && file.type === 'application/pdf') {
+          try {
+            const arrayBuffer = await file.arrayBuffer();
+            pageCount = await getPageCount(Buffer.from(arrayBuffer));
+          } catch {}
+        }
+
+        // Log failed processing (no credit deduction)
+        await logUsage(session.user.id, {
+          documentType: documentType || 'unknown',
+          fileName: file?.name || 'unknown',
+          filePath: file?.name || 'unknown',
+          pageCount,
+          processingStatus: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        });
+      } catch (logError) {
+        console.error('Error logging failed processing:', logError);
+      }
+    }
 
     // Provide more detailed error messages based on error type
     let errorMessage = 'Data extraction failed';
