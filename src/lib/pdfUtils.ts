@@ -6,11 +6,7 @@
  * Accuracy is essential as it determines credit deductions
  */
 
-// Use dynamic import for pdf-parse since it's a CommonJS module
-const getPdfParse = async () => {
-  const pdfParse = await import('pdf-parse');
-  return pdfParse.default || pdfParse;
-};
+import { PDFParse } from 'pdf-parse';
 
 /**
  * Get accurate page count from a PDF file
@@ -19,19 +15,28 @@ const getPdfParse = async () => {
  * @throws Error if the file is not a valid PDF
  */
 export async function getPageCount(fileBuffer: Buffer): Promise<number> {
+  let parser: PDFParse | null = null;
   try {
-    const pdfParse = await getPdfParse();
-    const data = await pdfParse(fileBuffer);
+    // Initialize parser with PDF data
+    parser = new PDFParse({ data: fileBuffer });
+
+    // Get document info which includes total page count
+    const info = await parser.getInfo();
 
     // Validate that we got a valid page count
-    if (!data.numpages || data.numpages < 1) {
+    if (!info.total || info.total < 1) {
       throw new Error('Invalid page count returned from PDF');
     }
 
-    return data.numpages;
+    return info.total;
   } catch (error) {
     console.error('Error counting PDF pages:', error);
     throw new Error('Unable to read PDF file. Please ensure the file is not corrupted.');
+  } finally {
+    // Always destroy the parser to free resources
+    if (parser) {
+      await parser.destroy();
+    }
   }
 }
 
@@ -64,12 +69,18 @@ export async function getPageCountFromFile(file: File): Promise<number> {
  * @returns True if valid, throws error if invalid
  */
 export async function validatePDF(fileBuffer: Buffer): Promise<boolean> {
+  let parser: PDFParse | null = null;
   try {
-    const pdfParse = await getPdfParse();
-    await pdfParse(fileBuffer);
+    // Try to parse the PDF to validate it
+    parser = new PDFParse({ data: fileBuffer });
+    await parser.getInfo();
     return true;
   } catch (error) {
     throw new Error('Invalid PDF file. The file may be corrupted or password-protected.');
+  } finally {
+    if (parser) {
+      await parser.destroy();
+    }
   }
 }
 
@@ -79,20 +90,28 @@ export async function validatePDF(fileBuffer: Buffer): Promise<boolean> {
  * @returns PDF metadata
  */
 export async function getPDFMetadata(fileBuffer: Buffer) {
+  let parser: PDFParse | null = null;
   try {
-    const pdfParse = await getPdfParse();
-    const data = await pdfParse(fileBuffer);
+    parser = new PDFParse({ data: fileBuffer });
+
+    // Get document info and text
+    const info = await parser.getInfo();
+    const textResult = await parser.getText();
 
     return {
-      pages: data.numpages,
-      info: data.info,
-      metadata: data.metadata,
-      version: data.version,
-      textLength: data.text ? data.text.length : 0,
+      pages: info.total,
+      info: info.info,
+      metadata: info.metadata,
+      version: undefined, // v2 doesn't expose version directly
+      textLength: textResult.text ? textResult.text.length : 0,
     };
   } catch (error) {
     console.error('Error reading PDF metadata:', error);
     throw new Error('Unable to read PDF metadata');
+  } finally {
+    if (parser) {
+      await parser.destroy();
+    }
   }
 }
 
