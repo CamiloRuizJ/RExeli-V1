@@ -283,22 +283,22 @@ export function FileUpload({
 
             {/* Document Type Selector */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-xl font-bold text-black">
                 Document Type <span className="text-red-500">*</span>
               </label>
               <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
-                <SelectTrigger className="w-full h-12 text-left">
+                <SelectTrigger className="w-full h-16 text-left text-lg font-bold text-black">
                   <SelectValue placeholder="Select the type of document you uploaded..." />
                 </SelectTrigger>
                 <SelectContent>
                   {documentTypes.map((docType) => (
-                    <SelectItem key={docType.value} value={docType.value}>
+                    <SelectItem key={docType.value} value={docType.value} className="text-base font-medium">
                       {docType.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500">
+              <p className="text-sm text-gray-600 font-medium">
                 This helps our AI extract the most relevant data from your document
               </p>
             </div>
