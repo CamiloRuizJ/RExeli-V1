@@ -18,43 +18,47 @@ ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
--- Add constraint for subscription types
-ALTER TABLE users
-ADD CONSTRAINT check_subscription_type CHECK (
-  subscription_type IN (
-    'free',
-    'entrepreneur_monthly',
-    'professional_monthly',
-    'business_monthly',
-    'entrepreneur_annual',
-    'professional_annual',
-    'business_annual',
-    'one_time'
-  )
-);
+-- Add constraint for subscription types (using DO block to handle IF NOT EXISTS)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_subscription_type'
+  ) THEN
+    ALTER TABLE users ADD CONSTRAINT check_subscription_type CHECK (
+      subscription_type IN (
+        'free',
+        'entrepreneur_monthly',
+        'professional_monthly',
+        'business_monthly',
+        'entrepreneur_annual',
+        'professional_annual',
+        'business_annual',
+        'one_time'
+      )
+    );
+  END IF;
+END $$;
 
--- Add constraint for subscription status
-ALTER TABLE users
-ADD CONSTRAINT check_subscription_status CHECK (
-  subscription_status IN ('active', 'inactive', 'cancelled', 'expired')
-);
+-- Add constraint for subscription status (using DO block to handle IF NOT EXISTS)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_subscription_status'
+  ) THEN
+    ALTER TABLE users ADD CONSTRAINT check_subscription_status CHECK (
+      subscription_status IN ('active', 'inactive', 'cancelled', 'expired')
+    );
+  END IF;
+END $$;
 
 -- Add index on credits for performance
 CREATE INDEX IF NOT EXISTS idx_users_credits ON users(credits);
 CREATE INDEX IF NOT EXISTS idx_users_subscription_type ON users(subscription_type);
-CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active);
 
--- Create trigger to auto-update updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column_users()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- NOTE: idx_users_is_active already created in migration 001, skip it
 
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column_users();
+-- Create trigger to auto-update updated_at (skip if already exists from migration 001)
+-- The trigger from migration 001 already handles this
 
 -- ============================================
 -- 2. Create usage_logs table
@@ -75,15 +79,27 @@ CREATE TABLE IF NOT EXISTS usage_logs (
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add constraint to ensure credits_used matches page_count
-ALTER TABLE usage_logs
-ADD CONSTRAINT check_credits_match_pages CHECK (credits_used = page_count);
+-- Add constraint to ensure credits_used matches page_count (using DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_credits_match_pages'
+  ) THEN
+    ALTER TABLE usage_logs ADD CONSTRAINT check_credits_match_pages CHECK (credits_used = page_count);
+  END IF;
+END $$;
 
--- Add constraint for processing status
-ALTER TABLE usage_logs
-ADD CONSTRAINT check_processing_status CHECK (
-  processing_status IN ('success', 'failed', 'pending')
-);
+-- Add constraint for processing status (using DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_processing_status'
+  ) THEN
+    ALTER TABLE usage_logs ADD CONSTRAINT check_processing_status CHECK (
+      processing_status IN ('success', 'failed', 'pending')
+    );
+  END IF;
+END $$;
 
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_usage_logs_user_id ON usage_logs(user_id);
@@ -109,15 +125,27 @@ CREATE TABLE IF NOT EXISTS user_documents (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add constraint to ensure credits_used matches page_count
-ALTER TABLE user_documents
-ADD CONSTRAINT check_doc_credits_match_pages CHECK (credits_used = page_count);
+-- Add constraint to ensure credits_used matches page_count (using DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_doc_credits_match_pages'
+  ) THEN
+    ALTER TABLE user_documents ADD CONSTRAINT check_doc_credits_match_pages CHECK (credits_used = page_count);
+  END IF;
+END $$;
 
--- Add constraint for processing status
-ALTER TABLE user_documents
-ADD CONSTRAINT check_doc_processing_status CHECK (
-  processing_status IN ('completed', 'failed', 'processing')
-);
+-- Add constraint for processing status (using DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_doc_processing_status'
+  ) THEN
+    ALTER TABLE user_documents ADD CONSTRAINT check_doc_processing_status CHECK (
+      processing_status IN ('completed', 'failed', 'processing')
+    );
+  END IF;
+END $$;
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_user_documents_user_id ON user_documents(user_id);
@@ -142,19 +170,25 @@ CREATE TABLE IF NOT EXISTS credit_transactions (
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add constraint for transaction types
-ALTER TABLE credit_transactions
-ADD CONSTRAINT check_transaction_type CHECK (
-  transaction_type IN (
-    'purchase',
-    'deduction',
-    'admin_add',
-    'subscription_reset',
-    'refund',
-    'bonus',
-    'initial_signup'
-  )
-);
+-- Add constraint for transaction types (using DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_transaction_type'
+  ) THEN
+    ALTER TABLE credit_transactions ADD CONSTRAINT check_transaction_type CHECK (
+      transaction_type IN (
+        'purchase',
+        'deduction',
+        'admin_add',
+        'subscription_reset',
+        'refund',
+        'bonus',
+        'initial_signup'
+      )
+    );
+  END IF;
+END $$;
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_id ON credit_transactions(user_id);
@@ -175,26 +209,38 @@ CREATE TABLE IF NOT EXISTS subscription_history (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add constraint for plan types
-ALTER TABLE subscription_history
-ADD CONSTRAINT check_history_plan_type CHECK (
-  plan_type IN (
-    'free',
-    'entrepreneur_monthly',
-    'professional_monthly',
-    'business_monthly',
-    'entrepreneur_annual',
-    'professional_annual',
-    'business_annual',
-    'one_time'
-  )
-);
+-- Add constraint for plan types (using DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_history_plan_type'
+  ) THEN
+    ALTER TABLE subscription_history ADD CONSTRAINT check_history_plan_type CHECK (
+      plan_type IN (
+        'free',
+        'entrepreneur_monthly',
+        'professional_monthly',
+        'business_monthly',
+        'entrepreneur_annual',
+        'professional_annual',
+        'business_annual',
+        'one_time'
+      )
+    );
+  END IF;
+END $$;
 
--- Add constraint for status
-ALTER TABLE subscription_history
-ADD CONSTRAINT check_history_status CHECK (
-  status IN ('active', 'cancelled', 'expired', 'upgraded', 'downgraded')
-);
+-- Add constraint for status (using DO block)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_history_status'
+  ) THEN
+    ALTER TABLE subscription_history ADD CONSTRAINT check_history_status CHECK (
+      status IN ('active', 'cancelled', 'expired', 'upgraded', 'downgraded')
+    );
+  END IF;
+END $$;
 
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_subscription_history_user_id ON subscription_history(user_id);
