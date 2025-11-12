@@ -5,6 +5,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import Navbar from "@/components/navigation/Navbar";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // Use system fonts instead of Google Fonts to avoid build-time network issues
 const fontVariable = "";
@@ -119,6 +120,7 @@ export default function RootLayout({
           <Toaster position="top-right" />
         </SessionProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
