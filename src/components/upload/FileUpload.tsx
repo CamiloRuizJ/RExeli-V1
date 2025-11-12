@@ -283,8 +283,8 @@ export function FileUpload({
 
             {/* Document Type Selector */}
             <div className="space-y-3">
-              <label className="text-xl font-bold text-black">
-                Document Type <span className="text-red-500">*</span>
+              <label className="text-lg font-semibold text-gray-900">
+                Select the type of document <span className="text-red-500">*</span>
               </label>
               <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
                 <SelectTrigger className="w-full h-16 text-left text-lg font-bold text-black">
