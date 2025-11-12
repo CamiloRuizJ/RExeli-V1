@@ -5,6 +5,7 @@ import Credentials from "next-auth/providers/credentials"
 // import AzureAD from "next-auth/providers/azure-ad"
 import bcrypt from "bcryptjs"
 import CryptoJS from "crypto-js"
+import { supabaseAdmin } from "./supabase"
 
 // Admin user configuration - in production, this should be in a secure database
 const ADMIN_USERS = [
@@ -69,26 +70,59 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null
         }
 
-        const user = ADMIN_USERS.find(u => u.email === credentials.email)
-        if (!user) {
-          return null
+        // Normalize email to lowercase (matches signup behavior)
+        const email = (credentials.email as string).toLowerCase()
+        const password = credentials.password as string
+
+        // First, try to find user in database
+        try {
+          const { data: dbUser, error } = await supabaseAdmin
+            .from('users')
+            .select('id, email, password, name, role, credits, subscription_type, subscription_status, is_active')
+            .eq('email', email)
+            .eq('is_active', true)
+            .single()
+
+          if (dbUser && !error) {
+            // Verify password
+            const isValidPassword = await bcrypt.compare(password, dbUser.password)
+
+            if (isValidPassword) {
+              return {
+                id: dbUser.id,
+                email: dbUser.email,
+                name: dbUser.name,
+                role: dbUser.role,
+                credits: dbUser.credits,
+                subscriptionType: dbUser.subscription_type,
+                subscriptionStatus: dbUser.subscription_status
+              }
+            }
+          }
+        } catch (dbError) {
+          console.error('Database authentication error:', dbError)
+          // Fall through to admin user check
         }
 
-        const isValidPassword = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        )
+        // Fall back to admin users
+        const adminUser = ADMIN_USERS.find(u => u.email === email)
+        if (adminUser) {
+          const isValidPassword = await bcrypt.compare(password, adminUser.passwordHash)
 
-        if (!isValidPassword) {
-          return null
+          if (isValidPassword) {
+            return {
+              id: adminUser.id,
+              email: adminUser.email,
+              name: adminUser.name,
+              role: adminUser.role,
+              credits: 999999, // Admin has unlimited credits
+              subscriptionType: 'admin',
+              subscriptionStatus: 'active'
+            }
+          }
         }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role
-        }
+        return null
       }
     })
   ],
@@ -100,6 +134,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role
+        token.credits = user.credits
+        token.subscriptionType = user.subscriptionType
+        token.subscriptionStatus = user.subscriptionStatus
       }
       return token
     },
@@ -107,6 +144,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (token) {
         session.user.id = token.sub!
         session.user.role = token.role
+        session.user.credits = token.credits as number
+        session.user.subscriptionType = token.subscriptionType as string
+        session.user.subscriptionStatus = token.subscriptionStatus as string
       }
       return session
     }
