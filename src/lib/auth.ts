@@ -5,7 +5,7 @@ import Credentials from "next-auth/providers/credentials"
 // import AzureAD from "next-auth/providers/azure-ad"
 import bcrypt from "bcryptjs"
 import CryptoJS from "crypto-js"
-import { supabaseAdmin } from "./supabase"
+// Note: supabaseAdmin is imported dynamically in authorize() to avoid circular dependency
 
 // Admin user configuration - in production, this should be in a secure database
 const ADMIN_USERS = [
@@ -76,6 +76,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         // First, try to find user in database
         try {
+          // Dynamic import to avoid circular dependency with supabase.ts
+          const { supabaseAdmin } = await import("./supabase")
+
           const { data: dbUser, error } = await supabaseAdmin
             .from('users')
             .select('id, email, password, name, role, credits, subscription_type, subscription_status, is_active')
