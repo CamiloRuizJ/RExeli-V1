@@ -9,6 +9,13 @@ import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
   try {
+    // Log environment variable status for debugging
+    console.log('[SIGNUP DEBUG] Environment check:', {
+      hasEncryptedUrl: !!process.env.ENCRYPTED_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 10) || 'MISSING',
+    });
+
     const body = await request.json();
     const { name, email, password } = body;
 
@@ -57,6 +64,8 @@ export async function POST(request: NextRequest) {
     // Create user with free trial credits
     const FREE_TRIAL_CREDITS = 25; // 5 documents × 5 pages average
 
+    console.log('[SIGNUP DEBUG] Attempting to insert user:', { email: email.toLowerCase(), name });
+
     const { data: newUser, error: createError } = await supabase
       .from('users')
       .insert({
@@ -73,9 +82,19 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating user:', createError);
+      console.error('[SIGNUP ERROR] Error creating user:', {
+        error: createError,
+        message: createError.message,
+        details: createError.details,
+        hint: createError.hint,
+        code: createError.code,
+      });
       return NextResponse.json(
-        { error: 'Failed to create account' },
+        {
+          error: 'Failed to create account',
+          details: createError.message,
+          code: createError.code
+        },
         { status: 500 }
       );
     }
