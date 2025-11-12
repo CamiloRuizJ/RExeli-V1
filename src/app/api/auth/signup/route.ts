@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Log the free trial credit transaction
-    await supabase
+    const { error: transactionError } = await supabase
       .from('credit_transactions')
       .insert({
         user_id: newUser.id,
@@ -89,6 +89,12 @@ export async function POST(request: NextRequest) {
         transaction_type: 'initial_signup',
         description: `Free trial credits on signup (${FREE_TRIAL_CREDITS} credits = ~5 documents)`,
       });
+
+    if (transactionError) {
+      console.error('Error logging credit transaction:', transactionError);
+      // Note: User is already created, so we log the error but don't fail the request
+      // The credit transaction can be manually added later if needed
+    }
 
     console.log(`[NEW USER] ${newUser.email} signed up with ${FREE_TRIAL_CREDITS} free trial credits`);
 

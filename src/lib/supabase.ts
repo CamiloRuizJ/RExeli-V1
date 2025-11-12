@@ -29,10 +29,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Get service role configuration (for admin operations)
 function getServiceRoleConfig() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !serviceKey) {
+  if (!encryptedUrl || !serviceKey) {
     // During build time, return dummy values to prevent build errors
     console.warn('Service role keys not found during build - using placeholders');
     return {
@@ -41,7 +41,10 @@ function getServiceRoleConfig() {
     };
   }
 
-  return { url, key: serviceKey };
+  return {
+    url: decryptApiKey(encryptedUrl),
+    key: serviceKey
+  };
 }
 
 const { url: serviceUrl, key: serviceKey } = getServiceRoleConfig();
