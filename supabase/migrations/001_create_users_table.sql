@@ -21,12 +21,24 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
 
--- Add constraints
-ALTER TABLE users
-ADD CONSTRAINT IF NOT EXISTS check_role CHECK (role IN ('user', 'admin'));
+-- Add constraints (using DO block to handle IF NOT EXISTS for constraints)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_role'
+  ) THEN
+    ALTER TABLE users ADD CONSTRAINT check_role CHECK (role IN ('user', 'admin'));
+  END IF;
+END $$;
 
-ALTER TABLE users
-ADD CONSTRAINT IF NOT EXISTS check_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'check_email_format'
+  ) THEN
+    ALTER TABLE users ADD CONSTRAINT check_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+  END IF;
+END $$;
 
 -- Enable Row Level Security
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
