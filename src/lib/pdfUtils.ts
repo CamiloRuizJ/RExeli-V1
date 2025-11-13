@@ -6,7 +6,8 @@
  * Accuracy is essential as it determines credit deductions
  */
 
-import * as pdfParse from 'pdf-parse';
+// Use require for pdf-parse to avoid ESM/TypeScript issues with v1 API
+const pdfParse = require('pdf-parse');
 
 /**
  * Get accurate page count from a PDF file
