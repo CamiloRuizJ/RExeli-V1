@@ -141,7 +141,7 @@ function PDFPreview({
   return (
     <iframe
       src={`${fileUrl}#page=${currentPage}`}
-      className="w-full min-h-[600px] bg-white shadow-lg"
+      className="w-full min-h-[400px] md:min-h-[500px] lg:min-h-[600px] bg-white shadow-lg"
       title="PDF Preview"
     />
   );

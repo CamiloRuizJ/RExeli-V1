@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { FileText, Eye, Download, RotateCw } from 'lucide-react';
 import type { DocumentFile } from '@/lib/types';
 
@@ -157,20 +158,21 @@ export function DocumentPreview({ file, onStartProcessing, isProcessing }: Docum
           </CardHeader>
           <CardContent>
             {file.supabaseUrl ? (
-              <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ minHeight: '400px' }}>
+              <div className="relative bg-gray-100 rounded-lg overflow-hidden min-h-[300px] md:min-h-[400px] lg:min-h-[500px]">
                 {file.type.startsWith('image/') ? (
                   // Image Preview
                   <div className="relative">
                     {imageLoading && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <Spinner size="md" variant="primary" />
                       </div>
                     )}
                     {!imageError ? (
                       <img
                         src={file.supabaseUrl}
                         alt={file.name}
-                        className={`w-full h-auto max-h-[600px] object-contain ${imageLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+                        loading="lazy"
+                        className={`w-full h-auto max-h-[400px] md:max-h-[500px] lg:max-h-[600px] object-contain ${imageLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
                         onLoad={handleImageLoad}
                         onError={handleImageError}
                       />
@@ -186,7 +188,7 @@ export function DocumentPreview({ file, onStartProcessing, isProcessing }: Docum
                   </div>
                 ) : file.type === 'application/pdf' ? (
                   // PDF Preview using iframe
-                  <div className="w-full h-[600px]">
+                  <div className="w-full h-[400px] md:h-[500px] lg:h-[600px]">
                     <iframe
                       src={`${file.supabaseUrl}#view=FitH`}
                       className="w-full h-full border-0 rounded"

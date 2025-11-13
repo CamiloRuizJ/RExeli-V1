@@ -29,10 +29,10 @@ const buttonVariants = cva(
           "bg-primary/10 text-primary hover:bg-primary/20",
       },
       size: {
-        default: "h-10 px-4 text-sm has-[>svg]:px-3",
-        sm: "h-9 px-3 text-xs has-[>svg]:px-2.5",
+        default: "h-11 px-4 text-sm has-[>svg]:px-3",
+        sm: "h-10 px-3 text-xs has-[>svg]:px-2.5",
         lg: "h-12 px-6 text-base has-[>svg]:px-5",
-        icon: "size-10",
+        icon: "size-11",
       },
     },
     defaultVariants: {

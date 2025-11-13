@@ -72,7 +72,7 @@ export default function MobileMenu({
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
                     <span className="text-white font-bold text-lg">R</span>
                   </div>
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
@@ -87,9 +87,9 @@ export default function MobileMenu({
 
           {/* User Info */}
           {session && (
-            <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+            <div className="px-6 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-100">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center flex-shrink-0">
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
@@ -111,7 +111,7 @@ export default function MobileMenu({
                   href={item.href}
                   className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
                     isActive(item.href)
-                      ? 'bg-blue-50 text-blue-700 shadow-sm'
+                      ? 'bg-emerald-50 text-emerald-700 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
@@ -129,7 +129,7 @@ export default function MobileMenu({
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                 <span className="text-sm text-gray-600">System Operational</span>
               </div>
-              <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
+              <div className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold">
                 Beta v1.0
               </div>
             </div>
