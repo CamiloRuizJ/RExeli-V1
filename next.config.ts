@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Configure server-side packages for Vercel serverless environment
+  // This ensures pdf-parse and canvas dependencies are properly bundled
+  serverExternalPackages: ["pdf-parse", "@napi-rs/canvas"],
+
   // Disable ESLint during build to avoid deprecated options
   eslint: {
     ignoreDuringBuilds: true,

@@ -4,10 +4,17 @@
  * CRITICAL: This module handles page counting for the credit system
  * Credit Model: 1 credit = 1 page
  * Accuracy is essential as it determines credit deductions
+ *
+ * IMPORTANT: pdf-parse requires special configuration for Vercel serverless:
+ * - serverExternalPackages: ["pdf-parse", "@napi-rs/canvas"] in next.config.ts
+ * - Worker must be imported BEFORE PDFParse (handled automatically by v2.4.5)
+ * - This ensures canvas dependencies are properly bundled in serverless environment
  */
 
-// Use require for pdf-parse to avoid ESM/TypeScript issues with v1 API
-const pdfParse = require('pdf-parse');
+// Import worker first (required for serverless environments)
+import 'pdf-parse/worker';
+// Import the main parser (ESM style - works with Next.js 15 and serverExternalPackages)
+import { PDFParse } from 'pdf-parse';
 
 /**
  * Get accurate page count from a PDF file
@@ -17,15 +24,22 @@ const pdfParse = require('pdf-parse');
  */
 export async function getPageCount(fileBuffer: Buffer): Promise<number> {
   try {
-    // Use pdf-parse v1 compatible API (works with v2.4.5)
-    const data = await pdfParse(fileBuffer);
+    // Use pdf-parse v2 class-based API with proper serverless configuration
+    // Constructor takes LoadParameters which includes the data source
+    const parser = new PDFParse({ data: fileBuffer });
+
+    // getInfo() returns InfoResult with total page count
+    const info = await parser.getInfo();
 
     // Validate that we got a valid page count
-    if (!data.numpages || data.numpages < 1) {
+    if (!info.total || info.total < 1) {
       throw new Error('Invalid page count returned from PDF');
     }
 
-    return data.numpages;
+    // Clean up
+    await parser.destroy();
+
+    return info.total;
   } catch (error) {
     console.error('Error counting PDF pages:', error);
     throw new Error('Unable to read PDF file. Please ensure the file is not corrupted.');
@@ -63,7 +77,9 @@ export async function getPageCountFromFile(file: File): Promise<number> {
 export async function validatePDF(fileBuffer: Buffer): Promise<boolean> {
   try {
     // Try to parse the PDF to validate it
-    await pdfParse(fileBuffer);
+    const parser = new PDFParse({ data: fileBuffer });
+    await parser.getInfo();
+    await parser.destroy();
     return true;
   } catch (error) {
     throw new Error('Invalid PDF file. The file may be corrupted or password-protected.');
@@ -77,14 +93,18 @@ export async function validatePDF(fileBuffer: Buffer): Promise<boolean> {
  */
 export async function getPDFMetadata(fileBuffer: Buffer) {
   try {
-    const data = await pdfParse(fileBuffer);
+    const parser = new PDFParse({ data: fileBuffer });
+    const info = await parser.getInfo();
+    const text = await parser.getText();
+
+    await parser.destroy();
 
     return {
-      pages: data.numpages,
-      info: data.info,
-      metadata: data.metadata,
-      version: data.version,
-      textLength: data.text ? data.text.length : 0,
+      pages: info.total,
+      info: info.info,
+      metadata: info.metadata,
+      version: undefined, // v2 API doesn't expose version directly
+      textLength: text.text ? text.text.length : 0,
     };
   } catch (error) {
     console.error('Error reading PDF metadata:', error);
