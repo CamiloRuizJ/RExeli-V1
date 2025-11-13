@@ -21,37 +21,61 @@ const publicRoutes = [
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow public routes
+  // Allow public routes without any processing
   if (publicRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.next()
   }
 
   // Check authentication for protected routes
   if (protectedRoutes.some(route => pathname.startsWith(route))) {
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+    try {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
 
-    if (!token) {
-      // For API routes, return unauthorized
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json(
-          { success: false, error: 'Authentication required' },
-          { status: 401 }
-        )
+      if (!token) {
+        // For API routes, return unauthorized
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json(
+            { success: false, error: 'Authentication required' },
+            { status: 401 }
+          )
+        }
+
+        // For pages, redirect to signin
+        const signInUrl = new URL('/auth/signin', request.url)
+        signInUrl.searchParams.set('callbackUrl', pathname)
+        return NextResponse.redirect(signInUrl)
       }
 
-      // For pages, redirect to signin
-      const signInUrl = new URL('/auth/signin', request.url)
-      signInUrl.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(signInUrl)
-    }
+      // For authenticated API routes, add user info to headers and forward request
+      if (pathname.startsWith('/api/')) {
+        const response = NextResponse.next()
+        // Safely extract token fields with fallbacks
+        const userId = token.sub || token.id || ''
+        const userEmail = token.email || ''
+        const userRole = token.role || 'user'
 
-    // Add user info to headers for API routes
-    if (pathname.startsWith('/api/')) {
-      const response = NextResponse.next()
-      response.headers.set('x-user-id', (token.sub as string) || '')
-      response.headers.set('x-user-email', (token.email as string) || '')
-      response.headers.set('x-user-role', (token.role as string) || 'user')
-      return response
+        response.headers.set('x-user-id', String(userId))
+        response.headers.set('x-user-email', String(userEmail))
+        response.headers.set('x-user-role', String(userRole))
+
+        console.log('[Middleware] Forwarding authenticated API request:', {
+          path: pathname,
+          method: request.method,
+          userId,
+          userEmail,
+          userRole
+        })
+
+        return response
+      }
+
+      // For authenticated page routes, just continue
+      return NextResponse.next()
+    } catch (error) {
+      console.error('Middleware error:', error)
+      // On error, allow the request to proceed to avoid blocking legitimate requests
+      // The route handler will re-validate authentication
+      return NextResponse.next()
     }
   }
 

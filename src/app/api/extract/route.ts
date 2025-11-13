@@ -11,12 +11,21 @@ export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutes for large PDF processing
 
 export async function POST(request: NextRequest) {
+  console.log('[Extract API] POST request received');
+  console.log('[Extract API] Request method:', request.method);
+  console.log('[Extract API] Request headers:', Object.fromEntries(request.headers.entries()));
+
   try {
     // Get user session - REQUIRED for credit system
     const session = await auth();
 
+    console.log('[Extract API] Session check:', session ? 'Authenticated' : 'Not authenticated');
+    console.log('[Extract API] User ID:', session?.user?.id || 'None');
+    console.log('[Extract API] User role:', session?.user?.role || 'None');
+
     // Require authentication
     if (!session?.user?.id) {
+      console.log('[Extract API] Authentication failed - no user ID');
       return NextResponse.json<ApiResponse>({
         success: false,
         error: 'Authentication required. Please sign in to process documents.'
@@ -24,6 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id;
+    console.log('[Extract API] Processing for user:', userId, session.user.email);
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
@@ -327,7 +337,21 @@ export async function OPTIONS(request: NextRequest) {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400', // 24 hours
     },
   });
+}
+
+// Add GET handler to prevent 405 errors and provide helpful message
+export async function GET(request: NextRequest) {
+  console.log('[Extract API] WARNING: GET request received (should be POST)');
+  console.log('[Extract API] Request URL:', request.url);
+  console.log('[Extract API] Request headers:', Object.fromEntries(request.headers.entries()));
+
+  return NextResponse.json({
+    success: false,
+    error: 'GET method not supported. Please use POST to submit documents for extraction.',
+    hint: 'This endpoint requires POST method with multipart/form-data containing documentType and either file or supabaseUrl.'
+  }, { status: 405 });
 }
