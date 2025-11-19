@@ -6,7 +6,7 @@
  * Client component with auto-refresh capability
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -41,7 +41,7 @@ const documentTypes = [
   { value: 'financial_statements', label: 'Financial Statements' },
 ];
 
-export default function DocumentsPage() {
+function DocumentsContent() {
   const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -360,5 +360,28 @@ export default function DocumentsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function DocumentsLoading() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading documents...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Default export wraps content in Suspense for useSearchParams
+export default function DocumentsPage() {
+  return (
+    <Suspense fallback={<DocumentsLoading />}>
+      <DocumentsContent />
+    </Suspense>
   );
 }
