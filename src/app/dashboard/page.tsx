@@ -1,103 +1,138 @@
+'use client';
+
 /**
  * User Dashboard
  * Shows user's credits, usage statistics, and document history
+ * Client component with auto-refresh capability
  */
 
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FileText, Upload, Clock, CheckCircle, CreditCard, TrendingUp, AlertCircle } from 'lucide-react';
+import { FileText, Upload, Clock, CheckCircle, CreditCard, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
 
-async function getUserData(userId: string) {
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('credits, subscription_type, subscription_status, monthly_usage, lifetime_usage, billing_cycle_end')
-    .eq('id', userId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching user data:', error);
-    return null;
-  }
-
-  return user;
+interface UserData {
+  credits: number;
+  subscription_type: string;
+  subscription_status: string;
+  monthly_usage: number;
+  lifetime_usage: number;
+  billing_cycle_end: string | null;
 }
 
-async function getUserStats(userId: string) {
-  // Get usage logs to calculate statistics
-  const { data: usageLogs, error } = await supabase
-    .from('usage_logs')
-    .select('processing_status, page_count, timestamp')
-    .eq('user_id', userId);
+interface UserStats {
+  totalDocuments: number;
+  monthlyDocuments: number;
+  successfulProcessing: number;
+  totalPagesProcessed: number;
+  successRate: number;
+}
 
-  if (error) {
-    console.error('Error fetching usage logs:', error);
-    return {
-      totalDocuments: 0,
-      monthlyDocuments: 0,
-      successfulProcessing: 0,
-      totalPagesProcessed: 0,
-      successRate: 0,
-    };
-  }
+interface Document {
+  id: string;
+  created_at: string;
+  file_name: string;
+  document_type: string;
+  page_count: number;
+  credits_used: number;
+  processing_status: string;
+}
 
-  const now = new Date();
-  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+export default function DashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  const totalDocuments = usageLogs.length;
-  const monthlyDocuments = usageLogs.filter(log => new Date(log.timestamp) >= firstOfMonth).length;
-  const successfulProcessing = usageLogs.filter(log => log.processing_status === 'success').length;
-  const totalPagesProcessed = usageLogs
-    .filter(log => log.processing_status === 'success')
-    .reduce((sum, log) => sum + (log.page_count || 0), 0);
-  const successRate = totalDocuments > 0 ? Math.round((successfulProcessing / totalDocuments) * 100) : 0;
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
+  const [userName, setUserName] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  return {
-    totalDocuments,
-    monthlyDocuments,
-    successfulProcessing,
-    totalPagesProcessed,
-    successRate,
+  // Fetch dashboard data
+  const fetchDashboardData = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const response = await fetch('/api/user/dashboard');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+
+      const data = await response.json();
+      setUserData(data.userData);
+      setUserStats(data.stats);
+      setRecentDocuments(data.recentDocuments);
+      setUserName(data.userName);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Unable to load dashboard data. Please try refreshing.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Initial load and auth check
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/dashboard');
+      return;
+    }
+
+    if (status === 'authenticated') {
+      fetchDashboardData();
+    }
+  }, [status, router, fetchDashboardData]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    const interval = setInterval(() => {
+      fetchDashboardData(false);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [status, fetchDashboardData]);
+
+  // Manual refresh handler
+  const handleRefresh = () => {
+    fetchDashboardData(true);
   };
-}
 
-async function getRecentDocuments(userId: string) {
-  const { data, error } = await supabase
-    .from('user_documents')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(5);
-
-  if (error) {
-    console.error('Error fetching documents:', error);
-    return [];
+  // Loading state
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  return data || [];
-}
-
-export default async function DashboardPage() {
-  const session = await auth();
-
-  // Require authentication
-  if (!session) {
-    redirect('/auth/signin?callbackUrl=/dashboard');
-  }
-
-  const userId = session.user.id;
-  const [userData, userStats, recentDocuments] = await Promise.all([
-    getUserData(userId),
-    getUserStats(userId),
-    getRecentDocuments(userId),
-  ]);
-
-  if (!userData) {
+  // Error state
+  if (error || !userData) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <p className="text-red-800">Unable to load user data. Please try refreshing the page.</p>
+          <p className="text-red-800">{error || 'Unable to load user data. Please try refreshing the page.'}</p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -108,9 +143,19 @@ export default async function DashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back, {session.user.name || session.user.email}</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome back, {userName}</p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       {/* Credit Alert Banners */}
@@ -121,7 +166,7 @@ export default async function DashboardPage() {
             <div className="flex-1">
               <h3 className="text-red-900 font-semibold mb-1">No Credits Remaining</h3>
               <p className="text-red-800 text-sm mb-3">
-                You've used all your credits. Purchase more credits or upgrade your plan to continue processing documents.
+                You&apos;ve used all your credits. Purchase more credits or upgrade your plan to continue processing documents.
               </p>
               <Link
                 href="/pricing"
@@ -141,7 +186,7 @@ export default async function DashboardPage() {
             <div className="flex-1">
               <h3 className="text-yellow-900 font-semibold mb-1">Low Credits</h3>
               <p className="text-yellow-800 text-sm mb-3">
-                You're running low on credits. Consider upgrading your plan to avoid interruptions.
+                You&apos;re running low on credits. Consider upgrading your plan to avoid interruptions.
               </p>
               <Link
                 href="/pricing"
@@ -256,48 +301,50 @@ export default async function DashboardPage() {
       </div>
 
       {/* Statistics */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">Total Documents</span>
-              <FileText className="w-5 h-5 text-blue-600" />
+      {userStats && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Statistics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">Total Documents</span>
+                <FileText className="w-5 h-5 text-blue-600" />
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{userStats.totalDocuments}</p>
+              <p className="text-xs text-gray-500 mt-1">All time</p>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{userStats.totalDocuments}</p>
-            <p className="text-xs text-gray-500 mt-1">All time</p>
-          </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">This Month</span>
-              <Upload className="w-5 h-5 text-green-600" />
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">This Month</span>
+                <Upload className="w-5 h-5 text-green-600" />
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{userStats.monthlyDocuments}</p>
+              <p className="text-xs text-gray-500 mt-1">documents</p>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{userStats.monthlyDocuments}</p>
-            <p className="text-xs text-gray-500 mt-1">documents</p>
-          </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">Successful</span>
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">Successful</span>
+                <CheckCircle className="w-5 h-5 text-emerald-600" />
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{userStats.successfulProcessing}</p>
+              <p className="text-xs text-gray-500 mt-1">processed</p>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{userStats.successfulProcessing}</p>
-            <p className="text-xs text-gray-500 mt-1">processed</p>
-          </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">Success Rate</span>
-              <CheckCircle className="w-5 h-5 text-indigo-600" />
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">Success Rate</span>
+                <CheckCircle className="w-5 h-5 text-indigo-600" />
+              </div>
+              <p className="text-3xl font-bold text-gray-900">
+                {userStats.totalDocuments > 0 ? `${userStats.successRate}%` : '-'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">accuracy</p>
             </div>
-            <p className="text-3xl font-bold text-gray-900">
-              {userStats.totalDocuments > 0 ? `${userStats.successRate}%` : '-'}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">accuracy</p>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Recent Documents */}
       <div>
@@ -352,7 +399,7 @@ export default async function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {recentDocuments.map((doc: any) => (
+                {recentDocuments.map((doc) => (
                   <tr key={doc.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {new Date(doc.created_at).toLocaleDateString()}

@@ -9,7 +9,7 @@ import { DocumentPreview } from '@/components/preview/DocumentPreview';
 import { ProcessingWorkflow } from '@/components/processing/ProcessingWorkflow';
 import { ResultsDisplay } from '@/components/results/ResultsDisplay';
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowLeft } from "lucide-react";
+import { FileText, ArrowLeft, CreditCard } from "lucide-react";
 import Link from "next/link";
 import type {
   DocumentFile,
@@ -54,6 +54,8 @@ export default function ToolPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [creditsUsed, setCreditsUsed] = useState<number | null>(null);
+  const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
 
   // Refs for auto-scrolling
   const documentPreviewRef = useRef<HTMLDivElement>(null);
@@ -117,6 +119,8 @@ export default function ToolPage() {
     setIsProcessing(false);
     setIsComplete(false);
     setExtractedData(null);
+    setCreditsUsed(null);
+    setRemainingCredits(null);
   }, []);
 
   // Handle upload completion with document type
@@ -236,6 +240,18 @@ export default function ToolPage() {
       }
 
       const extracted: ExtractedData = extractResult.data.extractedData;
+
+      // Capture credit information from API response
+      const usedCredits = extractResult.data.creditsUsed || extractResult.creditsUsed;
+      const remaining = extractResult.data.remainingCredits || extractResult.remainingCredits;
+
+      if (usedCredits !== undefined) {
+        setCreditsUsed(usedCredits);
+      }
+      if (remaining !== undefined) {
+        setRemainingCredits(remaining);
+      }
+
       updateStep(2, 'completed', `Extracted ${Object.keys(extracted.data || {}).length} data fields`);
       setCurrentStep(3);
 
@@ -263,7 +279,13 @@ export default function ToolPage() {
 
       setIsComplete(true);
       setIsProcessing(false);
-      toast.success('AI processing completed successfully! Your data is ready.');
+
+      // Show success toast with credit information
+      if (usedCredits && remaining !== undefined) {
+        toast.success(`Processing complete! Used ${usedCredits} credit${usedCredits !== 1 ? 's' : ''}. Remaining: ${remaining.toLocaleString()}`);
+      } else {
+        toast.success('AI processing completed successfully! Your data is ready.');
+      }
 
       // Auto-scroll to results section when processing completes
       setTimeout(() => {
@@ -427,6 +449,33 @@ export default function ToolPage() {
                   <p className="text-gray-500 mt-1">Review and export your processed data</p>
                 </div>
               </div>
+
+              {/* Credit Usage Info Card */}
+              {(creditsUsed !== null || remainingCredits !== null) && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <CreditCard className="w-5 h-5 text-blue-600" />
+                      <span className="font-medium text-gray-900">Credit Usage</span>
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm">
+                      {creditsUsed !== null && (
+                        <div>
+                          <span className="text-gray-600">Used: </span>
+                          <span className="font-semibold text-red-600">-{creditsUsed}</span>
+                        </div>
+                      )}
+                      {remainingCredits !== null && (
+                        <div>
+                          <span className="text-gray-600">Remaining: </span>
+                          <span className="font-semibold text-blue-600">{remainingCredits.toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <ResultsDisplay
                 extractedData={extractedData}
                 onExportExcel={handleExportExcel}

@@ -1,101 +1,194 @@
+'use client';
+
 /**
  * User Documents History Page
  * Shows all processed documents with ability to re-download
+ * Client component with auto-refresh capability
  */
 
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { FileText, Download, ArrowLeft } from 'lucide-react';
+import { FileText, Download, ArrowLeft, RefreshCw } from 'lucide-react';
 
-async function getUserDocuments(userId: string, documentType?: string) {
-  let query = supabase
-    .from('user_documents')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (documentType && documentType !== 'all') {
-    query = query.eq('document_type', documentType);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error fetching documents:', error);
-    return [];
-  }
-
-  return data || [];
+interface Document {
+  id: string;
+  created_at: string;
+  file_name: string;
+  document_type: string;
+  page_count: number;
+  credits_used: number;
+  processing_status: string;
 }
 
-async function getDocumentStats(userId: string) {
-  const { data, error } = await supabase
-    .from('user_documents')
-    .select('page_count, credits_used, processing_status')
-    .eq('user_id', userId);
+interface DocumentStats {
+  totalDocuments: number;
+  totalPages: number;
+  totalCreditsUsed: number;
+  completedDocuments: number;
+}
 
-  if (error) {
-    console.error('Error fetching document stats:', error);
-    return {
-      totalDocuments: 0,
-      totalPages: 0,
-      totalCreditsUsed: 0,
-      completedDocuments: 0,
-    };
-  }
+const documentTypes = [
+  { value: 'all', label: 'All Documents' },
+  { value: 'rent_roll', label: 'Rent Roll' },
+  { value: 'operating_budget', label: 'Operating Budget' },
+  { value: 'broker_sales_comparables', label: 'Sales Comparables' },
+  { value: 'broker_lease_comparables', label: 'Lease Comparables' },
+  { value: 'broker_listing', label: 'Broker Listing' },
+  { value: 'offering_memo', label: 'Offering Memo' },
+  { value: 'lease_agreement', label: 'Lease Agreement' },
+  { value: 'financial_statements', label: 'Financial Statements' },
+];
 
-  return {
-    totalDocuments: data.length,
-    totalPages: data.reduce((sum, doc) => sum + (doc.page_count || 0), 0),
-    totalCreditsUsed: data.reduce((sum, doc) => sum + (doc.credits_used || 0), 0),
-    completedDocuments: data.filter(doc => doc.processing_status === 'completed').length,
+export default function DocumentsPage() {
+  const { status } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [stats, setStats] = useState<DocumentStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedType, setSelectedType] = useState(searchParams.get('type') || 'all');
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch documents data
+  const fetchDocuments = useCallback(async (showRefreshing = false, type?: string) => {
+    if (showRefreshing) {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const typeParam = type || selectedType;
+      const url = typeParam && typeParam !== 'all'
+        ? `/api/user/documents?type=${typeParam}`
+        : '/api/user/documents';
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch documents');
+      }
+
+      const data = await response.json();
+      setDocuments(data.documents);
+      setStats(data.stats);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+      setError('Unable to load documents. Please try refreshing.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [selectedType]);
+
+  // Initial load and auth check
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/dashboard/documents');
+      return;
+    }
+
+    if (status === 'authenticated') {
+      fetchDocuments();
+    }
+  }, [status, router, fetchDocuments]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    const interval = setInterval(() => {
+      fetchDocuments(false);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [status, fetchDocuments]);
+
+  // Handle filter change
+  const handleFilterChange = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const type = formData.get('type') as string;
+    setSelectedType(type);
+    fetchDocuments(true, type);
+
+    // Update URL without reload
+    const params = new URLSearchParams();
+    if (type && type !== 'all') {
+      params.set('type', type);
+    }
+    router.push(`/dashboard/documents${params.toString() ? `?${params.toString()}` : ''}`);
   };
-}
 
-export default async function DocumentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ type?: string }>;
-}) {
-  const { type } = await searchParams;
-  const session = await auth();
+  // Manual refresh handler
+  const handleRefresh = () => {
+    fetchDocuments(true);
+  };
 
-  // Require authentication
-  if (!session) {
-    redirect('/auth/signin?callbackUrl=/dashboard/documents');
+  // Loading state
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading documents...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const userId = session.user.id;
-  const [documents, stats] = await Promise.all([
-    getUserDocuments(userId, type),
-    getDocumentStats(userId),
-  ]);
-
-  const documentTypes = [
-    { value: 'all', label: 'All Documents' },
-    { value: 'rent_roll', label: 'Rent Roll' },
-    { value: 'operating_budget', label: 'Operating Budget' },
-    { value: 'broker_sales_comparables', label: 'Sales Comparables' },
-    { value: 'broker_lease_comparables', label: 'Lease Comparables' },
-    { value: 'broker_listing', label: 'Broker Listing' },
-    { value: 'offering_memo', label: 'Offering Memo' },
-    { value: 'lease_agreement', label: 'Lease Agreement' },
-    { value: 'financial_statements', label: 'Financial Statements' },
-  ];
+  // Error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <p className="text-red-800">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Link>
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900">My Documents</h1>
         <p className="text-gray-600 mt-2">
           View and download all your processed documents
@@ -103,35 +196,38 @@ export default async function DocumentsPage({
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-gray-600 text-sm mb-1">Total Documents</div>
-          <div className="text-2xl font-bold text-gray-900">{stats.totalDocuments}</div>
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="text-gray-600 text-sm mb-1">Total Documents</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.totalDocuments}</div>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="text-gray-600 text-sm mb-1">Completed</div>
+            <div className="text-2xl font-bold text-green-600">{stats.completedDocuments}</div>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="text-gray-600 text-sm mb-1">Total Pages</div>
+            <div className="text-2xl font-bold text-gray-900">{stats.totalPages.toLocaleString()}</div>
+          </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="text-gray-600 text-sm mb-1">Credits Used</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.totalCreditsUsed.toLocaleString()}</div>
+          </div>
         </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-gray-600 text-sm mb-1">Completed</div>
-          <div className="text-2xl font-bold text-green-600">{stats.completedDocuments}</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-gray-600 text-sm mb-1">Total Pages</div>
-          <div className="text-2xl font-bold text-gray-900">{stats.totalPages.toLocaleString()}</div>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="text-gray-600 text-sm mb-1">Credits Used</div>
-          <div className="text-2xl font-bold text-blue-600">{stats.totalCreditsUsed.toLocaleString()}</div>
-        </div>
-      </div>
+      )}
 
       {/* Filter */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-        <form className="flex items-center gap-4">
+        <form onSubmit={handleFilterChange} className="flex items-center gap-4">
           <label htmlFor="type" className="text-sm font-medium text-gray-700">
             Filter by type:
           </label>
           <select
             id="type"
             name="type"
-            defaultValue={type || 'all'}
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {documentTypes.map((type) => (
@@ -155,7 +251,7 @@ export default async function DocumentsPage({
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-600 mb-2">No documents found</p>
           <p className="text-gray-500 text-sm mb-4">
-            {type && type !== 'all'
+            {selectedType && selectedType !== 'all'
               ? 'Try selecting a different document type'
               : 'Upload your first document to get started'}
           </p>
@@ -197,7 +293,7 @@ export default async function DocumentsPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {documents.map((doc: any) => (
+                {documents.map((doc) => (
                   <tr key={doc.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">
                       {new Date(doc.created_at).toLocaleDateString()}

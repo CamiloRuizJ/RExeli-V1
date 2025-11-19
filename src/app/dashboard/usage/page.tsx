@@ -1,109 +1,173 @@
+'use client';
+
 /**
  * User Usage Analytics Page
  * Shows detailed usage history and analytics
+ * Client component with auto-refresh capability
  */
 
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, FileText, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, FileText, TrendingUp, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 
-async function getUsageLogs(userId: string) {
-  const { data, error } = await supabase
-    .from('usage_logs')
-    .select('*')
-    .eq('user_id', userId)
-    .order('timestamp', { ascending: false })
-    .limit(50);
-
-  if (error) {
-    console.error('Error fetching usage logs:', error);
-    return [];
-  }
-
-  return data || [];
+interface UsageLog {
+  id: string;
+  timestamp: string;
+  document_type: string;
+  file_name: string;
+  page_count: number;
+  credits_used: number;
+  processing_status: string;
+  processing_time_ms: number | null;
 }
 
-async function getCreditTransactions(userId: string) {
-  const { data, error } = await supabase
-    .from('credit_transactions')
-    .select('*')
-    .eq('user_id', userId)
-    .order('timestamp', { ascending: false })
-    .limit(30);
-
-  if (error) {
-    console.error('Error fetching credit transactions:', error);
-    return [];
-  }
-
-  return data || [];
+interface CreditTransaction {
+  id: string;
+  timestamp: string;
+  transaction_type: string;
+  amount: number;
+  description: string;
 }
 
-async function getUsageStats(userId: string) {
-  const { data: logs } = await supabase
-    .from('usage_logs')
-    .select('processing_status, page_count, credits_used, timestamp')
-    .eq('user_id', userId);
+interface UsageStats {
+  totalProcessed: number;
+  successfulProcessing: number;
+  failedProcessing: number;
+  totalPages: number;
+  totalCreditsUsed: number;
+  successRate: number;
+  avgPagesPerDoc: number;
+}
 
-  if (!logs) {
-    return {
-      totalProcessed: 0,
-      successfulProcessing: 0,
-      failedProcessing: 0,
-      totalPages: 0,
-      totalCreditsUsed: 0,
-      successRate: 0,
-      avgPagesPerDoc: 0,
-    };
-  }
+export default function UsageAnalyticsPage() {
+  const { status } = useSession();
+  const router = useRouter();
 
-  const totalProcessed = logs.length;
-  const successfulProcessing = logs.filter(log => log.processing_status === 'success').length;
-  const failedProcessing = logs.filter(log => log.processing_status === 'failed').length;
-  const totalPages = logs.reduce((sum, log) => sum + (log.page_count || 0), 0);
-  const totalCreditsUsed = logs.reduce((sum, log) => sum + (log.credits_used || 0), 0);
-  const successRate = totalProcessed > 0 ? Math.round((successfulProcessing / totalProcessed) * 100) : 0;
-  const avgPagesPerDoc = totalProcessed > 0 ? Math.round(totalPages / totalProcessed) : 0;
+  const [usageLogs, setUsageLogs] = useState<UsageLog[]>([]);
+  const [creditTransactions, setCreditTransactions] = useState<CreditTransaction[]>([]);
+  const [stats, setStats] = useState<UsageStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  return {
-    totalProcessed,
-    successfulProcessing,
-    failedProcessing,
-    totalPages,
-    totalCreditsUsed,
-    successRate,
-    avgPagesPerDoc,
+  // Fetch usage data
+  const fetchUsageData = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) {
+      setIsRefreshing(true);
+    }
+
+    try {
+      const response = await fetch('/api/user/usage');
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch usage data');
+      }
+
+      const data = await response.json();
+      setUsageLogs(data.usageLogs);
+      setCreditTransactions(data.creditTransactions);
+      setStats(data.stats);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching usage data:', err);
+      setError('Unable to load usage data. Please try refreshing.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Initial load and auth check
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/dashboard/usage');
+      return;
+    }
+
+    if (status === 'authenticated') {
+      fetchUsageData();
+    }
+  }, [status, router, fetchUsageData]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    const interval = setInterval(() => {
+      fetchUsageData(false);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [status, fetchUsageData]);
+
+  // Manual refresh handler
+  const handleRefresh = () => {
+    fetchUsageData(true);
   };
-}
 
-export default async function UsageAnalyticsPage() {
-  const session = await auth();
-
-  // Require authentication
-  if (!session) {
-    redirect('/auth/signin?callbackUrl=/dashboard/usage');
+  // Loading state
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading usage analytics...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const userId = session.user.id;
-  const [usageLogs, creditTransactions, stats] = await Promise.all([
-    getUsageLogs(userId),
-    getCreditTransactions(userId),
-    getUsageStats(userId),
-  ]);
+  // Error state
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <p className="text-red-800">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Link>
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900">Usage Analytics</h1>
         <p className="text-gray-600 mt-2">
           Detailed history of your document processing and credit usage
@@ -111,98 +175,102 @@ export default async function UsageAnalyticsPage() {
       </div>
 
       {/* Statistics Overview */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Overview Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">Total Processed</span>
-              <FileText className="w-5 h-5 text-blue-600" />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalProcessed}</p>
-            <p className="text-xs text-gray-500 mt-1">documents</p>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">Success Rate</span>
-              <TrendingUp className="w-5 h-5 text-green-600" />
-            </div>
-            <p className="text-3xl font-bold text-green-600">{stats.successRate}%</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {stats.successfulProcessing} of {stats.totalProcessed}
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">Total Pages</span>
-              <FileText className="w-5 h-5 text-indigo-600" />
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.totalPages.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Avg: {stats.avgPagesPerDoc} per doc
-            </p>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">Credits Used</span>
-              <Clock className="w-5 h-5 text-orange-600" />
-            </div>
-            <p className="text-3xl font-bold text-orange-600">{stats.totalCreditsUsed.toLocaleString()}</p>
-            <p className="text-xs text-gray-500 mt-1">all time</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Processing Activity */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Processing Activity</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-sm font-medium text-gray-900">Successful</span>
+      {stats && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Overview Statistics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">Total Processed</span>
+                <FileText className="w-5 h-5 text-blue-600" />
               </div>
-              <span className="text-lg font-bold text-green-600">{stats.successfulProcessing}</span>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalProcessed}</p>
+              <p className="text-xs text-gray-500 mt-1">documents</p>
             </div>
-            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <XCircle className="w-5 h-5 text-red-600" />
-                <span className="text-sm font-medium text-gray-900">Failed</span>
-              </div>
-              <span className="text-lg font-bold text-red-600">{stats.failedProcessing}</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Credit Usage */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Credit Usage</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Total Credits Used</span>
-              <span className="text-lg font-bold text-gray-900">
-                {stats.totalCreditsUsed.toLocaleString()}
-              </span>
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">Success Rate</span>
+                <TrendingUp className="w-5 h-5 text-green-600" />
+              </div>
+              <p className="text-3xl font-bold text-green-600">{stats.successRate}%</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {stats.successfulProcessing} of {stats.totalProcessed}
+              </p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Total Pages Processed</span>
-              <span className="text-lg font-bold text-gray-900">
-                {stats.totalPages.toLocaleString()}
-              </span>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">Total Pages</span>
+                <FileText className="w-5 h-5 text-indigo-600" />
+              </div>
+              <p className="text-3xl font-bold text-gray-900">{stats.totalPages.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Avg: {stats.avgPagesPerDoc} per doc
+              </p>
             </div>
-            <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-              <span className="text-sm text-gray-600">Average per Document</span>
-              <span className="text-lg font-bold text-blue-600">
-                {stats.avgPagesPerDoc} pages
-              </span>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 text-sm">Credits Used</span>
+                <Clock className="w-5 h-5 text-orange-600" />
+              </div>
+              <p className="text-3xl font-bold text-orange-600">{stats.totalCreditsUsed.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">all time</p>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {stats && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Processing Activity */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Processing Activity</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium text-gray-900">Successful</span>
+                </div>
+                <span className="text-lg font-bold text-green-600">{stats.successfulProcessing}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <XCircle className="w-5 h-5 text-red-600" />
+                  <span className="text-sm font-medium text-gray-900">Failed</span>
+                </div>
+                <span className="text-lg font-bold text-red-600">{stats.failedProcessing}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Credit Usage */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Credit Usage</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Total Credits Used</span>
+                <span className="text-lg font-bold text-gray-900">
+                  {stats.totalCreditsUsed.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Total Pages Processed</span>
+                <span className="text-lg font-bold text-gray-900">
+                  {stats.totalPages.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                <span className="text-sm text-gray-600">Average per Document</span>
+                <span className="text-lg font-bold text-blue-600">
+                  {stats.avgPagesPerDoc} pages
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Processing History */}
       <div className="mb-8">
@@ -240,7 +308,7 @@ export default async function UsageAnalyticsPage() {
                     </td>
                   </tr>
                 ) : (
-                  usageLogs.map((log: any) => (
+                  usageLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {new Date(log.timestamp).toLocaleDateString()}
@@ -313,7 +381,7 @@ export default async function UsageAnalyticsPage() {
                     </td>
                   </tr>
                 ) : (
-                  creditTransactions.map((txn: any) => (
+                  creditTransactions.map((txn) => (
                     <tr key={txn.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {new Date(txn.timestamp).toLocaleDateString()}
