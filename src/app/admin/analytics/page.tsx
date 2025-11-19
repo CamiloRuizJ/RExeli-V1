@@ -1,127 +1,147 @@
+'use client';
+
 /**
  * Admin Analytics Page
  * Platform-wide usage statistics and revenue analytics
+ * Client component with auto-refresh capability
  */
 
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Users, FileText, CreditCard, TrendingUp, DollarSign } from 'lucide-react';
+import { ArrowLeft, Users, FileText, CreditCard, TrendingUp, DollarSign, RefreshCw } from 'lucide-react';
 
-async function getPlatformStats() {
-  // Get user statistics
-  const { data: users } = await supabase
-    .from('users')
-    .select('id, credits, subscription_type, subscription_status, created_at, is_active');
-
-  // Get usage logs
-  const { data: usageLogs } = await supabase
-    .from('usage_logs')
-    .select('id, page_count, credits_used, processing_status, timestamp');
-
-  // Get credit transactions
-  const { data: transactions } = await supabase
-    .from('credit_transactions')
-    .select('id, amount, transaction_type, timestamp');
-
-  if (!users || !usageLogs || !transactions) {
-    return null;
-  }
-
-  // Calculate current month start
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // User metrics
-  const totalUsers = users.length;
-  const activeUsers = users.filter(u => u.is_active).length;
-  const newUsersThisMonth = users.filter(u => new Date(u.created_at) >= monthStart).length;
-
-  // Subscription metrics
-  const activeSubscriptions = users.filter(u => u.subscription_status === 'active' && u.subscription_type !== 'free').length;
-  const freeUsers = users.filter(u => u.subscription_type === 'free').length;
-
-  // Revenue estimation (placeholder - actual revenue tracking would need payment integration)
-  const subscriptionBreakdown = users.reduce((acc, user) => {
-    if (user.subscription_status === 'active') {
-      acc[user.subscription_type] = (acc[user.subscription_type] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Usage metrics
-  const totalDocumentsProcessed = usageLogs.length;
-  const successfulProcessing = usageLogs.filter(log => log.processing_status === 'success').length;
-  const totalPagesProcessed = usageLogs.reduce((sum, log) => sum + (log.page_count || 0), 0);
-  const totalCreditsUsed = usageLogs.reduce((sum, log) => sum + (log.credits_used || 0), 0);
-
-  // Monthly usage
-  const monthlyDocs = usageLogs.filter(log => new Date(log.timestamp) >= monthStart).length;
-  const monthlyPages = usageLogs
-    .filter(log => new Date(log.timestamp) >= monthStart)
-    .reduce((sum, log) => sum + (log.page_count || 0), 0);
-
-  // Success rate
-  const successRate = totalDocumentsProcessed > 0
-    ? Math.round((successfulProcessing / totalDocumentsProcessed) * 100)
-    : 0;
-
-  // Credit metrics
-  const totalCreditsIssued = transactions
-    .filter(t => t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0);
-  const totalCreditsDeducted = transactions
-    .filter(t => t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  const currentCreditsInSystem = users.reduce((sum, u) => sum + (u.credits || 0), 0);
-
-  return {
-    users: {
-      total: totalUsers,
-      active: activeUsers,
-      newThisMonth: newUsersThisMonth,
-      activeSubscriptions,
-      freeUsers,
-    },
-    subscriptions: subscriptionBreakdown,
-    usage: {
-      totalDocuments: totalDocumentsProcessed,
-      successful: successfulProcessing,
-      totalPages: totalPagesProcessed,
-      totalCreditsUsed,
-      monthlyDocs,
-      monthlyPages,
-      successRate,
-    },
-    credits: {
-      totalIssued: totalCreditsIssued,
-      totalUsed: totalCreditsDeducted,
-      currentInSystem: currentCreditsInSystem,
-    },
+interface PlatformStats {
+  users: {
+    total: number;
+    active: number;
+    newThisMonth: number;
+    activeSubscriptions: number;
+    freeUsers: number;
+  };
+  subscriptions: Record<string, number>;
+  usage: {
+    totalDocuments: number;
+    successful: number;
+    totalPages: number;
+    totalCreditsUsed: number;
+    monthlyDocs: number;
+    monthlyPages: number;
+    successRate: number;
+  };
+  credits: {
+    totalIssued: number;
+    totalUsed: number;
+    currentInSystem: number;
   };
 }
 
-export default async function AdminAnalyticsPage() {
-  const session = await auth();
+export default function AdminAnalyticsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  // Require authentication
-  if (!session) {
-    redirect('/auth/signin?callbackUrl=/admin/analytics');
-  }
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Require admin role
-  if (session.user.role !== 'admin') {
-    redirect('/dashboard');
-  }
+  // Fetch analytics data
+  const fetchAnalytics = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) {
+      setIsRefreshing(true);
+    }
 
-  const stats = await getPlatformStats();
+    try {
+      const response = await fetch('/api/admin/analytics');
 
-  if (!stats) {
+      if (!response.ok) {
+        if (response.status === 403) {
+          router.push('/dashboard');
+          return;
+        }
+        throw new Error('Failed to fetch analytics');
+      }
+
+      const data = await response.json();
+      setStats(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching analytics:', err);
+      setError('Unable to load analytics data. Please try refreshing.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [router]);
+
+  // Initial load and auth check
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/admin/analytics');
+      return;
+    }
+
+    if (status === 'authenticated') {
+      if (session?.user?.role !== 'admin') {
+        router.push('/dashboard');
+        return;
+      }
+      fetchAnalytics();
+    }
+  }, [status, session, router, fetchAnalytics]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    const interval = setInterval(() => {
+      fetchAnalytics(false);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [status, fetchAnalytics]);
+
+  // Manual refresh handler
+  const handleRefresh = () => {
+    fetchAnalytics(true);
+  };
+
+  // Loading state
+  if (status === 'loading' || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading analytics...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !stats) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-4">
+          <Link
+            href="/admin"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Admin Dashboard
+          </Link>
+        </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <p className="text-red-800">Unable to load analytics data. Please try refreshing the page.</p>
+          <p className="text-red-800">{error || 'Unable to load analytics data. Please try refreshing the page.'}</p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -131,13 +151,23 @@ export default async function AdminAnalyticsPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/admin"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Admin Dashboard
-        </Link>
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            href="/admin"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Admin Dashboard
+          </Link>
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+        </div>
         <h1 className="text-3xl font-bold text-gray-900">Platform Analytics</h1>
         <p className="text-gray-600 mt-2">
           Overview of platform usage, user growth, and system metrics
@@ -270,14 +300,18 @@ export default async function AdminAnalyticsPage() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Active Subscription Breakdown</h2>
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="space-y-4">
-            {Object.entries(stats.subscriptions).map(([type, count]) => (
-              <div key={type} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                <span className="text-gray-900 font-medium">
-                  {type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                </span>
-                <span className="text-gray-600 font-semibold">{count} users</span>
-              </div>
-            ))}
+            {Object.entries(stats.subscriptions).length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No active subscriptions</p>
+            ) : (
+              Object.entries(stats.subscriptions).map(([type, count]) => (
+                <div key={type} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                  <span className="text-gray-900 font-medium">
+                    {type.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                  </span>
+                  <span className="text-gray-600 font-semibold">{count} users</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

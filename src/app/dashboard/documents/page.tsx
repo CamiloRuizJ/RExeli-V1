@@ -96,13 +96,13 @@ function DocumentsContent() {
     }
   }, [status, router, fetchDocuments]);
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 10 seconds for faster updates
   useEffect(() => {
     if (status !== 'authenticated') return;
 
     const interval = setInterval(() => {
       fetchDocuments(false);
-    }, 30000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [status, fetchDocuments]);

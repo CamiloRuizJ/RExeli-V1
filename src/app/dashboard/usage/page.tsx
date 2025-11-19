@@ -91,13 +91,13 @@ export default function UsageAnalyticsPage() {
     }
   }, [status, router, fetchUsageData]);
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 10 seconds for faster updates
   useEffect(() => {
     if (status !== 'authenticated') return;
 
     const interval = setInterval(() => {
       fetchUsageData(false);
-    }, 30000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [status, fetchUsageData]);

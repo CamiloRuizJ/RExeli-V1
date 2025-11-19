@@ -91,13 +91,13 @@ export default function DashboardPage() {
     }
   }, [status, router, fetchDashboardData]);
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 10 seconds for faster updates
   useEffect(() => {
     if (status !== 'authenticated') return;
 
     const interval = setInterval(() => {
       fetchDashboardData(false);
-    }, 30000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [status, fetchDashboardData]);

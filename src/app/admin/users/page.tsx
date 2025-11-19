@@ -1,12 +1,16 @@
+'use client';
+
 /**
  * Admin Users Management Page
  * Shows all users with credits, subscription, and usage information
+ * Client component with auto-refresh capability
  */
 
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { useEffect, useState, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { RefreshCw } from 'lucide-react';
 
 interface User {
   id: string;
@@ -22,81 +26,114 @@ interface User {
   created_at: string;
 }
 
-async function getUsers(searchQuery?: string, statusFilter?: string) {
-  let query = supabase
-    .from('users')
-    .select('*')
-    .order('created_at', { ascending: false });
+interface UserStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalCreditsIssued: number;
+  activeSubscriptions: number;
+}
 
-  // Apply search filter
-  if (searchQuery) {
-    query = query.or(`email.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`);
-  }
+function AdminUsersContent() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Apply status filter
-  if (statusFilter && statusFilter !== 'all') {
-    if (statusFilter === 'active') {
-      query = query.eq('is_active', true);
-    } else if (statusFilter === 'inactive') {
-      query = query.eq('is_active', false);
-    } else {
-      query = query.eq('subscription_status', statusFilter);
+  const [users, setUsers] = useState<User[]>([]);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all');
+
+  // Fetch users data
+  const fetchUsers = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) {
+      setIsRefreshing(true);
     }
-  }
 
-  const { data, error } = await query;
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
 
-  if (error) {
-    console.error('Error fetching users:', error);
-    return [];
-  }
+      const response = await fetch(`/api/admin/users?${params.toString()}`);
 
-  return data as User[];
-}
+      if (!response.ok) {
+        if (response.status === 403) {
+          router.push('/dashboard');
+          return;
+        }
+        throw new Error('Failed to fetch users');
+      }
 
-async function getUserStats() {
-  const { data, error } = await supabase
-    .from('users')
-    .select('id, subscription_status, credits, is_active');
+      const data = await response.json();
+      setUsers(data.users);
+      setStats(data.stats);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [searchQuery, statusFilter, router]);
 
-  if (error) {
-    console.error('Error fetching user stats:', error);
-    return {
-      totalUsers: 0,
-      activeUsers: 0,
-      totalCreditsIssued: 0,
-      activeSubscriptions: 0,
-    };
-  }
+  // Initial load and auth check
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/admin/users');
+      return;
+    }
 
-  return {
-    totalUsers: data.length,
-    activeUsers: data.filter(u => u.is_active).length,
-    totalCreditsIssued: data.reduce((sum, u) => sum + (u.credits || 0), 0),
-    activeSubscriptions: data.filter(u => u.subscription_status === 'active').length,
+    if (status === 'authenticated') {
+      if (session?.user?.role !== 'admin') {
+        router.push('/dashboard');
+        return;
+      }
+      fetchUsers();
+    }
+  }, [status, session, router, fetchUsers]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+
+    const interval = setInterval(() => {
+      fetchUsers(false);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [status, fetchUsers]);
+
+  // Handle search form submit
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    fetchUsers(true);
+
+    // Update URL
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+    router.push(`/admin/users${params.toString() ? `?${params.toString()}` : ''}`);
   };
-}
 
-export default async function AdminUsersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ search?: string; status?: string }>;
-}) {
-  const { search, status } = await searchParams;
-  const session = await auth();
+  // Manual refresh handler
+  const handleRefresh = () => {
+    fetchUsers(true);
+  };
 
-  // Require authentication
-  if (!session) {
-    redirect('/auth/signin?callbackUrl=/admin/users');
+  // Loading state
+  if (status === 'loading' || isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading users...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
-
-  // Require admin role
-  if (session.user.role !== 'admin') {
-    redirect('/dashboard');
-  }
-
-  const users = await getUsers(search, status);
-  const stats = await getUserStats();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -109,39 +146,51 @@ export default async function AdminUsersPage({
               Manage user accounts, credits, and subscriptions
             </p>
           </div>
-          <Link
-            href="/admin"
-            className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            ← Back to Dashboard
-          </Link>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <Link
+              href="/admin"
+              className="px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              ← Back to Dashboard
+            </Link>
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="text-blue-600 text-sm font-medium mb-1">Total Users</div>
-            <div className="text-2xl font-bold text-blue-900">{stats.totalUsers}</div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <div className="text-green-600 text-sm font-medium mb-1">Active Users</div>
-            <div className="text-2xl font-bold text-green-900">{stats.activeUsers}</div>
-          </div>
-          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-            <div className="text-purple-600 text-sm font-medium mb-1">Active Subscriptions</div>
-            <div className="text-2xl font-bold text-purple-900">{stats.activeSubscriptions}</div>
-          </div>
-          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-            <div className="text-orange-600 text-sm font-medium mb-1">Total Credits Issued</div>
-            <div className="text-2xl font-bold text-orange-900">
-              {stats.totalCreditsIssued.toLocaleString()}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <div className="text-blue-600 text-sm font-medium mb-1">Total Users</div>
+              <div className="text-2xl font-bold text-blue-900">{stats.totalUsers}</div>
+            </div>
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <div className="text-green-600 text-sm font-medium mb-1">Active Users</div>
+              <div className="text-2xl font-bold text-green-900">{stats.activeUsers}</div>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+              <div className="text-purple-600 text-sm font-medium mb-1">Active Subscriptions</div>
+              <div className="text-2xl font-bold text-purple-900">{stats.activeSubscriptions}</div>
+            </div>
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+              <div className="text-orange-600 text-sm font-medium mb-1">Total Credits Issued</div>
+              <div className="text-2xl font-bold text-orange-900">
+                {stats.totalCreditsIssued.toLocaleString()}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Search and Filters */}
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <form className="flex flex-col md:flex-row gap-4">
+          <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <label htmlFor="search" className="sr-only">
                 Search users
@@ -150,7 +199,8 @@ export default async function AdminUsersPage({
                 type="text"
                 id="search"
                 name="search"
-                defaultValue={search || ''}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by email or name..."
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
@@ -162,7 +212,8 @@ export default async function AdminUsersPage({
               <select
                 id="status"
                 name="status"
-                defaultValue={status || 'all'}
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Status</option>
@@ -307,5 +358,30 @@ export default async function AdminUsersPage({
         </div>
       )}
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function AdminUsersLoading() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading users...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Default export wraps content in Suspense for useSearchParams
+import { Suspense } from 'react';
+
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={<AdminUsersLoading />}>
+      <AdminUsersContent />
+    </Suspense>
   );
 }
