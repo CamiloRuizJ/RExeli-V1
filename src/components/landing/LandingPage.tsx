@@ -16,27 +16,27 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="space-y-6 lg:space-y-8 px-2 sm:px-0">
             <div className="space-y-4 lg:space-y-6">
-              {/* Large Logo */}
-              <div className="mb-6">
-                <Image
-                  src="/logo.png"
-                  alt="RExeli"
-                  width={320}
-                  height={100}
-                  priority
-                  className="h-20 sm:h-24 lg:h-28 w-auto"
-                />
-              </div>
               <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-sm">
                 AI-Powered Document Processing
               </Badge>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
-                Real Estate
-                <br />
-                <span className="text-emerald-600">Document Analysis</span>
-                <br />
-                Made Simple
-              </h1>
+              {/* Logo integrated with heading */}
+              <div className="space-y-4">
+                <Image
+                  src="/logo.png"
+                  alt="RExeli"
+                  width={400}
+                  height={125}
+                  priority
+                  className="h-24 sm:h-28 lg:h-32 w-auto"
+                />
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
+                  Real Estate
+                  <br />
+                  <span className="text-emerald-600">Document Analysis</span>
+                  <br />
+                  Made Simple
+                </h1>
+              </div>
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl">
                 Transform complex real estate documents into structured data with our AI-powered platform.
                 Extract insights from rent rolls, offering memos, and financial statements in minutes.
