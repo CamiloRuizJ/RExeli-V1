@@ -8,6 +8,8 @@ import Image from 'next/image';
 import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 
+import { Logo } from '@/components/ui/Logo';
+
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -47,16 +49,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Brand */}
-            <Link href="/" className="flex items-center flex-shrink-0 hover:opacity-90 transition-opacity">
-              <Image
-                src="/logo.png"
-                alt="RExeli Logo"
-                width={200}
-                height={62}
-                priority
-                className="h-14 w-auto sm:h-16"
-              />
-            </Link>
+            <Logo className="flex-shrink-0" size="md" />
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-1">
@@ -64,11 +57,10 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive(item.href)
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${isActive(item.href)
                       ? 'bg-emerald-50 text-emerald-700 shadow-sm'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   {item.name}
                 </Link>
@@ -96,9 +88,8 @@ export default function Navbar() {
                         <User className="w-4 h-4 text-white" />
                       </div>
                       <ChevronDown
-                        className={`w-4 h-4 transition-transform ${
-                          userMenuOpen ? 'rotate-180' : ''
-                        }`}
+                        className={`w-4 h-4 transition-transform ${userMenuOpen ? 'rotate-180' : ''
+                          }`}
                       />
                     </button>
 

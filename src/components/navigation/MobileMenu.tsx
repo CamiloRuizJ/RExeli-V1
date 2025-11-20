@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { LogOut, User } from 'lucide-react';
 import { Session } from 'next-auth';
 
+import { Logo } from '@/components/ui/Logo';
+
 interface NavigationItem {
   name: string;
   href: string;
@@ -71,13 +73,7 @@ export default function MobileMenu({
           {/* Menu Header */}
           <div className="px-6 py-5 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <Image
-                src="/logo.png"
-                alt="RExeli Logo"
-                width={180}
-                height={56}
-                className="h-14 w-auto"
-              />
+              <Logo size="sm" />
             </div>
           </div>
 
@@ -105,11 +101,10 @@ export default function MobileMenu({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
-                    isActive(item.href)
+                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 ${isActive(item.href)
                       ? 'bg-emerald-50 text-emerald-700 shadow-sm'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   {item.name}
                 </Link>

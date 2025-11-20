@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, FileText, Brain, BarChart3, Download, Zap, Shield, Clock, Check } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { Logo } from "@/components/ui/Logo"
 
 export default function LandingPage() {
   return (
@@ -21,14 +22,7 @@ export default function LandingPage() {
               </Badge>
               {/* Logo integrated with heading */}
               <div className="space-y-4">
-                <Image
-                  src="/logo.png"
-                  alt="RExeli"
-                  width={400}
-                  height={125}
-                  priority
-                  className="h-24 sm:h-28 lg:h-32 w-auto"
-                />
+                <Logo size="xl" className="h-24 sm:h-28 lg:h-32 w-auto" />
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
                   Real Estate
                   <br />
