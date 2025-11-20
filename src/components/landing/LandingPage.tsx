@@ -20,17 +20,13 @@ export default function LandingPage() {
               <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-sm">
                 AI-Powered Document Processing
               </Badge>
-              {/* Logo integrated with heading */}
-              <div className="space-y-4">
-                <Logo size="xl" className="h-24 sm:h-28 lg:h-32 w-auto" />
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
-                  Real Estate
-                  <br />
-                  <span className="text-emerald-600">Document Analysis</span>
-                  <br />
-                  Made Simple
-                </h1>
-              </div>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
+                Real Estate
+                <br />
+                <span className="text-emerald-600">Document Analysis</span>
+                <br />
+                Made Simple
+              </h1>
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl">
                 Transform complex real estate documents into structured data with our AI-powered platform.
                 Extract insights from rent rolls, offering memos, and financial statements in minutes.

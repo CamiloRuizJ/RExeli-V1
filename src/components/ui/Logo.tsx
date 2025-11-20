@@ -12,20 +12,21 @@ export function Logo({ className, variant = "default", size = "md" }: LogoProps)
     const isWhite = variant === "white";
 
     const width = {
-        sm: 100,
-        md: 120,
-        lg: 140,
-        xl: 160,
+        sm: 140,
+        md: 160,
+        lg: 180,
+        xl: 200,
     }[size];
 
     const height = {
-        sm: 30,
-        md: 36,
-        lg: 42,
-        xl: 48,
+        sm: 44,
+        md: 50,
+        lg: 56,
+        xl: 62,
     }[size];
 
-    const logoSrc = isWhite ? "/logo-white.png" : "/logo.png";
+    // Always use transparent logo and apply invert filter for white variant
+    const logoSrc = "/logo.png";
 
     if (variant === "icon") {
         return (
@@ -44,7 +45,10 @@ export function Logo({ className, variant = "default", size = "md" }: LogoProps)
                 alt="RExeli Logo"
                 width={width}
                 height={height}
-                className="h-auto w-auto object-contain"
+                className={cn(
+                    "h-auto w-auto object-contain",
+                    isWhite && "brightness-0 invert"
+                )}
                 priority
             />
         </Link>
