@@ -18,11 +18,14 @@ export const metadata: Metadata = {
   authors: [{ name: "RExeli Team" }],
   icons: {
     icon: [
-      { url: '/favicon.ico?v=2', sizes: '48x48' },
-      { url: '/favicon.png?v=2', type: 'image/png', sizes: '512x512' },
+      { url: '/favicon.ico?v=3', sizes: '48x48' },
+      { url: '/favicon.png?v=3', type: 'image/png', sizes: '512x512' },
     ],
-    apple: '/favicon.png?v=2',
-    shortcut: '/favicon.ico?v=2',
+    apple: [
+      { url: '/apple-touch-icon.png?v=3', sizes: '180x180' },
+      { url: '/favicon.png?v=3', sizes: '512x512' },
+    ],
+    shortcut: '/favicon.ico?v=3',
   },
 };
 
@@ -73,11 +76,11 @@ export default function RootLayout({
                   <div className="flex flex-col space-y-3 max-w-sm">
                     <div className="flex items-center">
                       <Image
-                        src="/logo-dark.png"
+                        src="/logo-white.png"
                         alt="RExeli Logo"
                         width={180}
                         height={56}
-                        className="h-14 w-auto brightness-0 invert"
+                        className="h-14 w-auto"
                       />
                     </div>
                     <p className="text-slate-400 text-sm leading-relaxed">

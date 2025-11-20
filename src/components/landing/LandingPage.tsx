@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, FileText, Brain, BarChart3, Download, Zap, Shield, Clock, Check } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function LandingPage() {
   return (
@@ -15,6 +16,17 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="space-y-6 lg:space-y-8 px-2 sm:px-0">
             <div className="space-y-4 lg:space-y-6">
+              {/* Large Logo */}
+              <div className="mb-6">
+                <Image
+                  src="/logo.png"
+                  alt="RExeli"
+                  width={320}
+                  height={100}
+                  priority
+                  className="h-20 sm:h-24 lg:h-28 w-auto"
+                />
+              </div>
               <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-sm">
                 AI-Powered Document Processing
               </Badge>
