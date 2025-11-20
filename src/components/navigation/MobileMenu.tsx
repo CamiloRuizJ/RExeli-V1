@@ -74,9 +74,9 @@ export default function MobileMenu({
               <Image
                 src="/logo.png"
                 alt="RExeli Logo"
-                width={140}
-                height={44}
-                className="h-11 w-auto"
+                width={180}
+                height={56}
+                className="h-14 w-auto"
               />
             </div>
           </div>

@@ -61,10 +61,10 @@ export default function SignInPage() {
             <Image
               src="/logo.png"
               alt="RExeli Logo"
-              width={160}
-              height={50}
+              width={220}
+              height={68}
               priority
-              className="h-12 w-auto"
+              className="h-16 w-auto"
             />
           </Link>
           <CardDescription className="text-gray-500">

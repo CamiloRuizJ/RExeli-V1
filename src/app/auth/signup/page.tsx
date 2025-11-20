@@ -105,10 +105,10 @@ export default function SignUpPage() {
             <Image
               src="/logo.png"
               alt="RExeli Logo"
-              width={180}
-              height={56}
+              width={240}
+              height={75}
               priority
-              className="h-14 w-auto"
+              className="h-18 w-auto"
             />
           </Link>
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">Create your account</h2>

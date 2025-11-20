@@ -51,10 +51,10 @@ export default function Navbar() {
               <Image
                 src="/logo.png"
                 alt="RExeli Logo"
-                width={160}
-                height={50}
+                width={200}
+                height={62}
                 priority
-                className="h-12 w-auto"
+                className="h-14 w-auto sm:h-16"
               />
             </Link>
 
