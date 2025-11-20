@@ -12,17 +12,17 @@ export function Logo({ className, variant = "default", size = "md" }: LogoProps)
     const isWhite = variant === "white";
 
     const width = {
-        sm: 140,
-        md: 160,
-        lg: 180,
-        xl: 200,
+        sm: 120,
+        md: 140,
+        lg: 160,
+        xl: 180,
     }[size];
 
     const height = {
-        sm: 44,
-        md: 50,
-        lg: 56,
-        xl: 62,
+        sm: 38,
+        md: 44,
+        lg: 50,
+        xl: 56,
     }[size];
 
     // Always use transparent logo and apply invert filter for white variant
