@@ -6,6 +6,7 @@ import Navbar from "@/components/navigation/Navbar";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import Image from "next/image";
 
 // Use system fonts instead of Google Fonts to avoid build-time network issues
 const fontVariable = "";
@@ -16,7 +17,12 @@ export const metadata: Metadata = {
   keywords: "real estate, document processing, AI, rent roll, offering memo, lease agreement",
   authors: [{ name: "RExeli Team" }],
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    apple: '/favicon.png',
+    shortcut: '/favicon.ico',
   },
 };
 
@@ -65,11 +71,14 @@ export default function RootLayout({
                 <div className="flex flex-col md:flex-row justify-between items-start space-y-6 md:space-y-0">
                   {/* Brand and Description */}
                   <div className="flex flex-col space-y-3 max-w-sm">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-lg">R</span>
-                      </div>
-                      <span className="text-white font-bold text-xl">RExeli</span>
+                    <div className="flex items-center">
+                      <Image
+                        src="/logo-white.png"
+                        alt="RExeli Logo"
+                        width={140}
+                        height={44}
+                        className="h-11 w-auto"
+                      />
                     </div>
                     <p className="text-slate-400 text-sm leading-relaxed">
                       AI-powered real estate document processing platform. Transform complex documents into structured data in minutes.

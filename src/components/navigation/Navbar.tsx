@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 
@@ -46,21 +47,15 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Brand */}
-            <Link href="/" className="flex items-center space-x-3 flex-shrink-0">
-              <div className="relative">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105">
-                  <span className="text-white font-bold text-lg">R</span>
-                </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></div>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  RExeli
-                </h1>
-                <p className="text-[10px] text-slate-600 font-medium -mt-1">
-                  AI-Powered Real Estate
-                </p>
-              </div>
+            <Link href="/" className="flex items-center flex-shrink-0 hover:opacity-90 transition-opacity">
+              <Image
+                src="/logo.png"
+                alt="RExeli Logo"
+                width={160}
+                height={50}
+                priority
+                className="h-12 w-auto"
+              />
             </Link>
 
             {/* Desktop Navigation */}

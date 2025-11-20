@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LogOut, User } from 'lucide-react';
 import { Session } from 'next-auth';
 
@@ -70,18 +71,13 @@ export default function MobileMenu({
           {/* Menu Header */}
           <div className="px-6 py-5 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">R</span>
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">RExeli</h2>
-                  <p className="text-xs text-gray-500">Navigation Menu</p>
-                </div>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="RExeli Logo"
+                width={140}
+                height={44}
+                className="h-11 w-auto"
+              />
             </div>
           </div>
 

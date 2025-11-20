@@ -101,13 +101,15 @@ export default function SignUpPage() {
       <div className="w-full max-w-md">
         {/* Logo Section */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">R</span>
-            </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-              RExeli
-            </h1>
+          <Link href="/" className="inline-flex items-center justify-center mb-4 hover:opacity-90 transition-opacity">
+            <Image
+              src="/logo.png"
+              alt="RExeli Logo"
+              width={180}
+              height={56}
+              priority
+              className="h-14 w-auto"
+            />
           </Link>
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">Create your account</h2>
           <p className="text-gray-600">Start processing documents with AI in minutes</p>

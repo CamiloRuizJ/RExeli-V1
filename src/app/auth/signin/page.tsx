@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -56,14 +57,16 @@ export default function SignInPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-xl">
-              R
-            </div>
-          </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            RExeli
-          </CardTitle>
+          <Link href="/" className="flex items-center justify-center mb-4 hover:opacity-90 transition-opacity">
+            <Image
+              src="/logo.png"
+              alt="RExeli Logo"
+              width={160}
+              height={50}
+              priority
+              className="h-12 w-auto"
+            />
+          </Link>
           <CardDescription className="text-gray-500">
             Sign in to access the document processing system
           </CardDescription>
