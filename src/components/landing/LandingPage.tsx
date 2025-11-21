@@ -17,9 +17,6 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="space-y-6 lg:space-y-8 px-2 sm:px-0">
             <div className="space-y-4 lg:space-y-6">
-              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-sm">
-                AI-Powered Document Processing
-              </Badge>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
                 Real Estate
                 <br />
@@ -27,6 +24,9 @@ export default function LandingPage() {
                 <br />
                 Made Simple
               </h1>
+              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-sm">
+                AI-Powered Document Processing
+              </Badge>
             </div>
 
             <div className="space-y-4">
