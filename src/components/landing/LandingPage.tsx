@@ -249,6 +249,148 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Document Types Section */}
+      <section className="bg-white py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center space-y-4 lg:space-y-6 mb-12 lg:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Documents We Process</h2>
+            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+              Our AI extracts structured data from all major real estate document types
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {/* Rent Roll */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-emerald-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Rent Roll</h3>
+                <p className="text-sm text-gray-600">
+                  Extract tenant names, unit numbers, lease dates, rent amounts, deposits, and occupancy status
+                </p>
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-medium text-emerald-600">Output: Excel with tenant data, lease terms, rent schedules</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Offering Memo */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Offering Memo</h3>
+                <p className="text-sm text-gray-600">
+                  Extract property details, financial highlights, location info, cap rate, NOI, and investment metrics
+                </p>
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-medium text-blue-600">Output: Structured financial summary, property highlights</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Lease Agreement */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Lease Agreement</h3>
+                <p className="text-sm text-gray-600">
+                  Extract lease terms, rent escalations, tenant obligations, renewal options, and key dates
+                </p>
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-medium text-purple-600">Output: Lease terms summary, obligation checklist</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Financial Statements */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6 text-orange-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Financial Statements</h3>
+                <p className="text-sm text-gray-600">
+                  Extract income, expenses, NOI, cash flow, operating ratios, and year-over-year comparisons
+                </p>
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-medium text-orange-600">Output: P&L summary, key financial metrics</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Operating Budget */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6 text-teal-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Operating Budget</h3>
+                <p className="text-sm text-gray-600">
+                  Extract budget categories, projected income, operating expenses, capital expenditures, and variances
+                </p>
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-medium text-teal-600">Output: Budget breakdown, expense categories</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Broker Comparables */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-indigo-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Broker Comparables</h3>
+                <p className="text-sm text-gray-600">
+                  Extract comp properties, sale prices, price per SF, cap rates, NOI, and market trends for sales & leases
+                </p>
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-medium text-indigo-600">Output: Comparable analysis, market data table</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Broker Listing */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+              <CardContent className="p-6 space-y-4">
+                <div className="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-pink-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Broker Listing</h3>
+                <p className="text-sm text-gray-600">
+                  Extract listing price, property features, square footage, zoning, amenities, and broker contact info
+                </p>
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-medium text-pink-600">Output: Property details, listing specifications</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* More Document Types */}
+            <Card className="border-emerald-100 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-gradient-to-br from-gray-50 to-white">
+              <CardContent className="p-6 space-y-4 flex flex-col justify-center items-center text-center h-full">
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-gray-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">More Coming Soon</h3>
+                <p className="text-sm text-gray-600">
+                  We're constantly adding support for new document types based on customer feedback
+                </p>
+                <a href="mailto:support@rexeli.com" className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
+                  Request a document type →
+                </a>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className="bg-gray-50 py-12 sm:py-16 lg:py-24 px-6 sm:px-8 lg:px-12">
         <div className="max-w-7xl mx-auto">
@@ -280,10 +422,10 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Entrepreneur</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$29</span>
+                        <span className="text-4xl font-bold text-gray-900">$19</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-emerald-600 font-medium">$0.58 per document</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.38 per document</p>
                     </div>
 
                     <div className="space-y-3">
@@ -316,10 +458,10 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Professional</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$129</span>
+                        <span className="text-4xl font-bold text-gray-900">$119</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-emerald-600 font-medium">$0.43 per document</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.40 per document</p>
                     </div>
 
                     <div className="space-y-3">
@@ -349,10 +491,10 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Business</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$399</span>
+                        <span className="text-4xl font-bold text-gray-900">$389</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-emerald-600 font-medium">$0.27 per document</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.26 per document</p>
                     </div>
 
                     <div className="space-y-3">
@@ -425,11 +567,11 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold text-gray-900">Entrepreneur</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$278</span>
+                          <span className="text-4xl font-bold text-gray-900">$182</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$23/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $70/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$15/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $46/year</p>
                       </div>
                     </div>
 
@@ -464,11 +606,11 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold text-gray-900">Professional</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$1,238</span>
+                          <span className="text-4xl font-bold text-gray-900">$1,142</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$103/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $310/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$95/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $286/year</p>
                       </div>
                     </div>
 
@@ -500,11 +642,11 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold text-gray-900">Business</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$3,830</span>
+                          <span className="text-4xl font-bold text-gray-900">$3,734</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$319/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $958/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$311/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $934/year</p>
                       </div>
                     </div>
 
@@ -577,7 +719,7 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Entrepreneur Pack</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$49</span>
+                        <span className="text-4xl font-bold text-gray-900">$39</span>
                       </div>
                       <p className="text-sm text-gray-600">One-time payment</p>
                     </div>
@@ -593,7 +735,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.98 per doc</span>
+                        <span className="text-sm">$0.78 per doc</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -616,7 +758,7 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Professional Pack</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$159</span>
+                        <span className="text-4xl font-bold text-gray-900">$149</span>
                       </div>
                       <p className="text-sm text-gray-600">One-time payment</p>
                     </div>
@@ -632,7 +774,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-semibold">$0.64 per doc</span>
+                        <span className="text-sm font-semibold">$0.60 per doc</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -652,7 +794,7 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Business Pack</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$549</span>
+                        <span className="text-4xl font-bold text-gray-900">$539</span>
                       </div>
                       <p className="text-sm text-gray-600">One-time payment</p>
                     </div>
@@ -668,7 +810,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.44 per doc</span>
+                        <span className="text-sm">$0.43 per doc</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
