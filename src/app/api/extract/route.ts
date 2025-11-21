@@ -216,8 +216,8 @@ export async function POST(request: NextRequest) {
       warnings.push('Credit deduction failed. Please contact support.');
     }
 
-    // Log usage
-    await logUsage(userId, {
+    // Log usage - CHECK RETURN VALUE
+    const usageLogged = await logUsage(userId, {
       documentType,
       fileName: fileToProcess.name,
       filePath: supabaseUrl || fileToProcess.name,
@@ -226,8 +226,15 @@ export async function POST(request: NextRequest) {
       processingTimeMs: processingTime,
     });
 
-    // Save document to user history
-    await saveUserDocument(userId, {
+    if (!usageLogged) {
+      console.error('[USAGE LOG FAILED] Failed to log usage for user:', session.user.email, 'document:', fileToProcess.name);
+      warnings.push('Usage logging failed. Please contact support if this persists.');
+    } else {
+      console.log('[USAGE LOG SUCCESS] Logged usage for user:', session.user.email);
+    }
+
+    // Save document to user history - CHECK RETURN VALUE
+    const documentId = await saveUserDocument(userId, {
       filePath: supabaseUrl || fileToProcess.name,
       fileName: fileToProcess.name,
       documentType,
@@ -235,6 +242,13 @@ export async function POST(request: NextRequest) {
       pageCount,
       processingStatus: 'completed',
     });
+
+    if (!documentId) {
+      console.error('[DOCUMENT SAVE FAILED] Failed to save document for user:', session.user.email, 'document:', fileToProcess.name);
+      warnings.push('Document history save failed. Please contact support if this persists.');
+    } else {
+      console.log('[DOCUMENT SAVE SUCCESS] Saved document:', documentId, 'for user:', session.user.email);
+    }
 
     console.log(`[CREDIT DEDUCTED] User ${session.user.email} - ${pageCount} credits used. Remaining: ${deductionResult.remainingCredits}`);
 

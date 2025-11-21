@@ -132,7 +132,9 @@ export async function logUsage(
   }
 ): Promise<boolean> {
   try {
-    const { error } = await supabase.from('usage_logs').insert({
+    console.log('[logUsage] Attempting to insert usage log for user:', userId, 'document:', documentData.fileName);
+
+    const insertData = {
       user_id: userId,
       document_type: documentData.documentType,
       file_name: documentData.fileName,
@@ -143,16 +145,26 @@ export async function logUsage(
       tokens_used: documentData.tokensUsed,
       processing_time_ms: documentData.processingTimeMs,
       error_message: documentData.errorMessage,
-    });
+    };
+
+    console.log('[logUsage] Insert data:', JSON.stringify(insertData, null, 2));
+
+    const { data, error } = await supabase.from('usage_logs').insert(insertData).select();
 
     if (error) {
-      console.error('Error logging usage:', error);
+      console.error('[logUsage] Supabase error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
       return false;
     }
 
+    console.log('[logUsage] Successfully inserted usage log:', data);
     return true;
   } catch (error) {
-    console.error('Error logging usage:', error);
+    console.error('[logUsage] Exception:', error);
     return false;
   }
 }
@@ -175,29 +187,44 @@ export async function saveUserDocument(
   }
 ): Promise<string | null> {
   try {
+    console.log('[saveUserDocument] Attempting to save document for user:', userId, 'file:', documentData.fileName);
+
+    const insertData = {
+      user_id: userId,
+      file_path: documentData.filePath,
+      file_name: documentData.fileName,
+      document_type: documentData.documentType,
+      extracted_data: documentData.extractedData,
+      page_count: documentData.pageCount,
+      credits_used: documentData.pageCount,
+      processing_status: documentData.processingStatus,
+    };
+
+    console.log('[saveUserDocument] Insert data (without extracted_data):', JSON.stringify({
+      ...insertData,
+      extracted_data: '[REDACTED - too large to log]'
+    }, null, 2));
+
     const { data, error } = await supabase
       .from('user_documents')
-      .insert({
-        user_id: userId,
-        file_path: documentData.filePath,
-        file_name: documentData.fileName,
-        document_type: documentData.documentType,
-        extracted_data: documentData.extractedData,
-        page_count: documentData.pageCount,
-        credits_used: documentData.pageCount,
-        processing_status: documentData.processingStatus,
-      })
+      .insert(insertData)
       .select('id')
       .single();
 
     if (error) {
-      console.error('Error saving user document:', error);
+      console.error('[saveUserDocument] Supabase error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
       return null;
     }
 
+    console.log('[saveUserDocument] Successfully saved document with ID:', data.id);
     return data.id;
   } catch (error) {
-    console.error('Error saving user document:', error);
+    console.error('[saveUserDocument] Exception:', error);
     return null;
   }
 }

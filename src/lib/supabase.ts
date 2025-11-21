@@ -50,7 +50,15 @@ function getServiceRoleConfig() {
 const { url: serviceUrl, key: serviceKey } = getServiceRoleConfig();
 
 // Service role client for admin operations (bypasses RLS)
-export const supabaseAdmin = createClient(serviceUrl, serviceKey);
+// Important: auth.persistSession must be false for server-side usage
+// auth.autoRefreshToken must be false to prevent token refresh issues
+export const supabaseAdmin = createClient(serviceUrl, serviceKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+});
 
 // Log configuration for debugging (without exposing encrypted keys)
 if (typeof window === 'undefined') {
