@@ -471,6 +471,11 @@ export default function ToolPage() {
                           <span className="font-semibold text-blue-600">{remainingCredits.toLocaleString()}</span>
                         </div>
                       )}
+                      <Link href="/dashboard">
+                        <Button variant="outline" size="sm" className="ml-2 border-blue-300 text-blue-700 hover:bg-blue-100">
+                          View Dashboard
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>

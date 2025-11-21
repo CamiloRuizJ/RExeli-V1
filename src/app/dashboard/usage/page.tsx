@@ -11,6 +11,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FileText, TrendingUp, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { useMultipleRealtimeSubscriptions } from '@/hooks/useRealtimeSubscription';
 
 interface UsageLog {
   id: string;
@@ -42,7 +43,7 @@ interface UsageStats {
 }
 
 export default function UsageAnalyticsPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   const [usageLogs, setUsageLogs] = useState<UsageLog[]>([]);
@@ -91,13 +92,43 @@ export default function UsageAnalyticsPage() {
     }
   }, [status, router, fetchUsageData]);
 
-  // Auto-refresh every 10 seconds for faster updates
+  // Real-time subscriptions for instant updates
+  useMultipleRealtimeSubscriptions(
+    session?.user?.id
+      ? [
+          // Listen to new usage logs
+          {
+            table: 'usage_logs',
+            event: 'INSERT',
+            filter: `user_id=eq.${session.user.id}`,
+            onInsert: (payload) => {
+              console.log('[Usage Analytics] New usage log:', payload.new);
+              setUsageLogs((prev) => [payload.new, ...prev].slice(0, 50));
+              // Refresh stats when new log added
+              fetchUsageData(false);
+            },
+          },
+          // Listen to new credit transactions
+          {
+            table: 'credit_transactions',
+            event: 'INSERT',
+            filter: `user_id=eq.${session.user.id}`,
+            onInsert: (payload) => {
+              console.log('[Usage Analytics] New transaction:', payload.new);
+              setCreditTransactions((prev) => [payload.new, ...prev].slice(0, 30));
+            },
+          },
+        ]
+      : []
+  );
+
+  // Fallback polling every 30 seconds (reduced from 10s since we have realtime now)
   useEffect(() => {
     if (status !== 'authenticated') return;
 
     const interval = setInterval(() => {
       fetchUsageData(false);
-    }, 10000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [status, fetchUsageData]);

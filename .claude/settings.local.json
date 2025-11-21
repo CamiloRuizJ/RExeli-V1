@@ -52,7 +52,8 @@
       "Bash(if [ -f .env.local ])",
       "Bash(then grep -i \"google\\|azure\\|microsoft\" .env.local)",
       "Bash(else echo \"No .env.local file found\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(npm --version:*)"
     ],
     "deny": [],
     "ask": []

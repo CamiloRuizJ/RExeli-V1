@@ -11,6 +11,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Users, FileText, CreditCard, TrendingUp, DollarSign, RefreshCw } from 'lucide-react';
+import { useMultipleRealtimeSubscriptions } from '@/hooks/useRealtimeSubscription';
 
 interface PlatformStats {
   users: {
@@ -91,13 +92,62 @@ export default function AdminAnalyticsPage() {
     }
   }, [status, session, router, fetchAnalytics]);
 
-  // Auto-refresh every 30 seconds
+  // Real-time subscriptions for platform-wide updates
+  // Admin monitors ALL users, documents, and transactions
+  useMultipleRealtimeSubscriptions(
+    session?.user?.role === 'admin'
+      ? [
+          // Listen to all new users
+          {
+            table: 'users',
+            event: 'INSERT',
+            onInsert: (payload) => {
+              console.log('[Admin Analytics] New user registered:', payload.new);
+              // Refresh analytics to update user count
+              fetchAnalytics(false);
+            },
+          },
+          // Listen to all document processing
+          {
+            table: 'user_documents',
+            event: 'INSERT',
+            onInsert: (payload) => {
+              console.log('[Admin Analytics] New document processed:', payload.new);
+              // Refresh analytics to update document stats
+              fetchAnalytics(false);
+            },
+          },
+          // Listen to all credit transactions
+          {
+            table: 'credit_transactions',
+            event: 'INSERT',
+            onInsert: (payload) => {
+              console.log('[Admin Analytics] New transaction:', payload.new);
+              // Refresh analytics to update credit metrics
+              fetchAnalytics(false);
+            },
+          },
+          // Listen to user updates (subscription changes, etc)
+          {
+            table: 'users',
+            event: 'UPDATE',
+            onUpdate: (payload) => {
+              console.log('[Admin Analytics] User updated:', payload.new);
+              // Refresh analytics to update subscription breakdown
+              fetchAnalytics(false);
+            },
+          },
+        ]
+      : []
+  );
+
+  // Fallback polling every 60 seconds (reduced from 30s since we have realtime now)
   useEffect(() => {
     if (status !== 'authenticated') return;
 
     const interval = setInterval(() => {
       fetchAnalytics(false);
-    }, 30000);
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [status, fetchAnalytics]);

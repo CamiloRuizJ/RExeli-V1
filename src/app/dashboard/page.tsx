@@ -11,6 +11,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, Upload, Clock, CheckCircle, CreditCard, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
+import { useMultipleRealtimeSubscriptions } from '@/hooks/useRealtimeSubscription';
 
 interface UserData {
   credits: number;
@@ -91,13 +92,61 @@ export default function DashboardPage() {
     }
   }, [status, router, fetchDashboardData]);
 
-  // Auto-refresh every 10 seconds for faster updates
+  // Real-time subscriptions for instant updates
+  useMultipleRealtimeSubscriptions(
+    session?.user?.id
+      ? [
+          // Listen to user table changes for credit updates
+          {
+            table: 'users',
+            event: 'UPDATE',
+            filter: `id=eq.${session.user.id}`,
+            onUpdate: (payload) => {
+              console.log('[Dashboard] User data updated:', payload.new);
+              setUserData((prev) => ({
+                ...prev!,
+                credits: payload.new.credits,
+                monthly_usage: payload.new.monthly_usage,
+                lifetime_usage: payload.new.lifetime_usage,
+                subscription_status: payload.new.subscription_status,
+              }));
+            },
+          },
+          // Listen to new documents
+          {
+            table: 'user_documents',
+            event: 'INSERT',
+            filter: `user_id=eq.${session.user.id}`,
+            onInsert: (payload) => {
+              console.log('[Dashboard] New document:', payload.new);
+              setRecentDocuments((prev) => [payload.new, ...prev].slice(0, 5));
+              // Refresh stats when new document added
+              fetchDashboardData(false);
+            },
+          },
+          // Listen to document updates
+          {
+            table: 'user_documents',
+            event: 'UPDATE',
+            filter: `user_id=eq.${session.user.id}`,
+            onUpdate: (payload) => {
+              console.log('[Dashboard] Document updated:', payload.new);
+              setRecentDocuments((prev) =>
+                prev.map((doc) => (doc.id === payload.new.id ? payload.new : doc))
+              );
+            },
+          },
+        ]
+      : []
+  );
+
+  // Fallback polling every 30 seconds (reduced from 10s since we have realtime now)
   useEffect(() => {
     if (status !== 'authenticated') return;
 
     const interval = setInterval(() => {
       fetchDashboardData(false);
-    }, 10000);
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [status, fetchDashboardData]);
