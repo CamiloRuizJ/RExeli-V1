@@ -49,10 +49,16 @@ export async function POST(
       );
     }
 
+    // Determine admin ID - only use if it's a valid UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const effectiveAdminId = adminId || session.user.id;
+    const validAdminId = uuidRegex.test(effectiveAdminId) ? effectiveAdminId : undefined;
+
     console.log('[Admin Credits API] Calling addCreditsToUser with:', {
       userId: id,
       amount,
-      adminId: adminId || session.user.id,
+      adminId: validAdminId,
+      originalAdminId: effectiveAdminId,
     });
 
     // Add credits using subscription manager
@@ -60,8 +66,8 @@ export async function POST(
       id,
       amount,
       'admin_add',
-      adminId || session.user.id,
-      description || `${amount} credits manually added by admin`
+      validAdminId,
+      description || `${amount} credits manually added by admin (by ${session.user.email})`
     );
 
     console.log('[Admin Credits API] Result:', result);
