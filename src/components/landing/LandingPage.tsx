@@ -177,7 +177,7 @@ export default function LandingPage() {
           <div className="text-center space-y-4 lg:space-y-6 mb-12 lg:mb-16">
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Documents We Process</h2>
             <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
-              Our platform extracts structured data from PDF's from all major Real Estate document types into Excel
+              Our platform extracts structured data from all major real estate PDFs directly into Excel.
             </p>
           </div>
 
