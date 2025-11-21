@@ -27,10 +27,6 @@ export default function LandingPage() {
                 <br />
                 Made Simple
               </h1>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl">
-                Transform complex real estate documents into structured data with our AI-powered platform.
-                Extract insights from rent rolls, offering memos, and financial statements in minutes.
-              </p>
             </div>
 
             <div className="space-y-4">
@@ -38,15 +34,27 @@ export default function LandingPage() {
               <div className="space-y-2">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Instant document classification</span>
+                  <span className="text-gray-700">Multi-Document Support - Process rent rolls, offering memos, lease agreements, and more</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Structured data extraction</span>
+                  <span className="text-gray-700">Intelligent Data Extraction - Extract tenant info, rental rates, and financial metrics with precision</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Professional Excel reports</span>
+                  <span className="text-gray-700">Professional Excel Export - Generate formatted reports ready for stakeholders</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <span className="text-gray-700">Efficient Processing - Process documents up to 25MB in 2-3 minutes</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <span className="text-gray-700">Secure & Compliant - Enterprise-grade security with encrypted storage</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <span className="text-gray-700">Save Hours of Work - Reduce processing time from hours to minutes</span>
                 </div>
               </div>
             </div>
