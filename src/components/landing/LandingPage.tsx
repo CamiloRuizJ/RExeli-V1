@@ -34,27 +34,27 @@ export default function LandingPage() {
               <div className="space-y-2">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Multi-Document Support - Process rent rolls, offering memos, lease agreements, and more</span>
+                  <span className="text-gray-700">Multi-Document Support</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Intelligent Data Extraction - Extract tenant info, rental rates, and financial metrics with precision</span>
+                  <span className="text-gray-700">Intelligent Data Extraction</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Professional Excel Export - Generate formatted reports ready for stakeholders</span>
+                  <span className="text-gray-700">Professional Excel Export</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Efficient Processing - Process documents up to 25MB in 2-3 minutes</span>
+                  <span className="text-gray-700">Efficient Processing</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Secure & Compliant - Enterprise-grade security with encrypted storage</span>
+                  <span className="text-gray-700">Secure & Compliant</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Save Hours of Work - Reduce processing time from hours to minutes</span>
+                  <span className="text-gray-700">Save Hours of Work</span>
                 </div>
               </div>
             </div>
