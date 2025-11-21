@@ -12,8 +12,12 @@ export async function POST(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    console.log('[Admin Credits API] Request received');
+
     // Check admin authentication
     const session = await auth();
+    console.log('[Admin Credits API] Session:', session?.user?.email, 'Role:', session?.user?.role);
+
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Admin access required.' },
@@ -22,11 +26,16 @@ export async function POST(
     }
 
     const { id } = await context.params;
+    console.log('[Admin Credits API] Target user ID:', id);
+
     const body = await request.json();
+    console.log('[Admin Credits API] Request body:', body);
+
     const { amount, adminId, description } = body;
 
     // Validate input
     if (!amount || typeof amount !== 'number' || amount <= 0) {
+      console.log('[Admin Credits API] Invalid amount:', amount, typeof amount);
       return NextResponse.json(
         { success: false, error: 'Invalid credit amount. Must be a positive number.' },
         { status: 400 }
@@ -40,6 +49,12 @@ export async function POST(
       );
     }
 
+    console.log('[Admin Credits API] Calling addCreditsToUser with:', {
+      userId: id,
+      amount,
+      adminId: adminId || session.user.id,
+    });
+
     // Add credits using subscription manager
     const result = await addCreditsToUser(
       id,
@@ -48,6 +63,8 @@ export async function POST(
       adminId || session.user.id,
       description || `${amount} credits manually added by admin`
     );
+
+    console.log('[Admin Credits API] Result:', result);
 
     if (!result.success) {
       return NextResponse.json(
@@ -64,9 +81,9 @@ export async function POST(
       newBalance: result.newBalance,
     });
   } catch (error) {
-    console.error('Error adding credits:', error);
+    console.error('[Admin Credits API] Exception:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to add credits. Please try again.' },
+      { success: false, error: `Failed to add credits: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }
