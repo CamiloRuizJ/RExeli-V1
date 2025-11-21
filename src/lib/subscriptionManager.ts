@@ -45,7 +45,15 @@ export async function assignSubscriptionPlan(
     const credits = SUBSCRIPTION_CREDITS[planType as SubscriptionType] || 0;
     const isMonthlyOrAnnual =
       planType.includes('monthly') || planType.includes('annual');
-    const isOneTime = planType === 'one_time';
+    const isOneTime = planType.includes('one_time');
+
+    console.log('[assignSubscriptionPlan] Assigning plan:', {
+      userId,
+      planType,
+      credits,
+      isMonthlyOrAnnual,
+      isOneTime,
+    });
 
     // Calculate billing cycle dates for recurring subscriptions
     const billingCycleStart = new Date();
@@ -55,6 +63,9 @@ export async function assignSubscriptionPlan(
       billingCycleEnd.setMonth(billingCycleEnd.getMonth() + 1);
     } else if (planType.includes('annual')) {
       billingCycleEnd.setFullYear(billingCycleEnd.getFullYear() + 1);
+    } else if (isOneTime) {
+      // One-time purchases don't expire - set billing cycle end to far future
+      billingCycleEnd.setFullYear(billingCycleEnd.getFullYear() + 100);
     }
 
     // Update user's subscription
@@ -65,15 +76,18 @@ export async function assignSubscriptionPlan(
         subscription_status: 'active',
         credits: credits,
         monthly_usage: 0, // Reset usage when new plan assigned
-        billing_cycle_start: isMonthlyOrAnnual ? billingCycleStart.toISOString() : null,
-        billing_cycle_end: isMonthlyOrAnnual ? billingCycleEnd.toISOString() : null,
+        billing_cycle_start: (isMonthlyOrAnnual || isOneTime) ? billingCycleStart.toISOString() : null,
+        billing_cycle_end: (isMonthlyOrAnnual || isOneTime) ? billingCycleEnd.toISOString() : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);
 
     if (updateError) {
+      console.error('[assignSubscriptionPlan] Error updating user:', updateError);
       throw updateError;
     }
+
+    console.log('[assignSubscriptionPlan] User updated successfully');
 
     // Log credit transaction
     const { error: transactionError } = await supabase
@@ -318,25 +332,47 @@ export async function addCreditsToUser(
   newBalance?: number;
 }> {
   try {
+    console.log('[addCreditsToUser] Adding credits:', {
+      userId,
+      amount,
+      transactionType,
+      adminId,
+      description,
+    });
+
     // Use the database function
     const { data, error } = await supabase.rpc('add_user_credits', {
       p_user_id: userId,
       p_amount: amount,
       p_transaction_type: transactionType,
-      p_admin_id: adminId,
+      p_admin_id: adminId || null,
       p_description: description || `Credits added: ${amount}`,
     });
 
     if (error) {
+      console.error('[addCreditsToUser] RPC error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
       throw error;
     }
 
+    console.log('[addCreditsToUser] RPC result:', data);
+
     // Get new balance
-    const { data: user } = await supabase
+    const { data: user, error: userError } = await supabase
       .from('users')
       .select('credits')
       .eq('id', userId)
       .single();
+
+    if (userError) {
+      console.error('[addCreditsToUser] Error fetching new balance:', userError);
+    }
+
+    console.log('[addCreditsToUser] New balance:', user?.credits);
 
     return {
       success: true,
@@ -344,7 +380,7 @@ export async function addCreditsToUser(
       newBalance: user?.credits || 0,
     };
   } catch (error) {
-    console.error('Error adding credits:', error);
+    console.error('[addCreditsToUser] Exception:', error);
     return {
       success: false,
       message: 'Failed to add credits. Please try again.',
