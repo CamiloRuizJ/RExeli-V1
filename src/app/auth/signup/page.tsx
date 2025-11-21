@@ -75,7 +75,7 @@ export default function SignUpPage() {
         });
 
         if (result?.ok) {
-          router.push('/');
+          router.push('/tool');
           router.refresh();
         }
       }, 1500);

@@ -878,7 +878,7 @@ export default function LandingPage() {
               Ready to Transform Your Document Processing?
             </h2>
             <p className="text-lg sm:text-xl text-primary-foreground/80 max-w-3xl mx-auto">
-              Join real estate professionals who are already saving hours with RExeli&apos;s AI-powered document analysis.
+              Join Real Estate professionals who are already saving hours with RExeli&apos;s document analysis.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <Link href="/auth/signup">
