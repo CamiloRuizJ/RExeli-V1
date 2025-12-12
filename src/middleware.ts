@@ -7,7 +7,13 @@ const protectedRoutes = [
   '/api/classify',
   '/api/extract',
   '/api/export',
-  '/tool'
+  '/api/config',        // Supabase configuration endpoint
+  '/api/user',          // User dashboard endpoints
+  '/api/admin',         // Admin management endpoints
+  '/api/training',      // Training and fine-tuning endpoints
+  '/tool',
+  '/dashboard',
+  '/admin'
 ]
 
 // Define public routes that don't require authentication

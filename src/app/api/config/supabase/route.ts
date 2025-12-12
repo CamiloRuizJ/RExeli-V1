@@ -5,11 +5,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { decryptApiKey } from '@/lib/auth';
+import { decryptApiKey, auth } from '@/lib/auth';
 import type { ApiResponse } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
+    // SECURITY: Require authentication to prevent credential exposure
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json<ApiResponse>({
+        success: false,
+        error: 'Authentication required'
+      }, { status: 401 });
+    }
+
     const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
     const encryptedKey = process.env.ENCRYPTED_SUPABASE_ANON_KEY;
 
