@@ -12,6 +12,7 @@ import type {
 } from '@/lib/types';
 import { supabase, updateTrainingDocumentExtraction, calculateConfidenceScore } from '@/lib/training-utils';
 import { extractDocumentData } from '@/lib/anthropic';
+import { ProcessBatchRequestSchema, safeValidateInput, formatValidationError, hasPrototypePollution } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,20 +24,43 @@ export async function POST(request: NextRequest) {
       contentLength: request.headers.get('content-length')
     });
 
-    // Step 1: Get raw body text to log what was actually received
-    let rawBody: string;
-    let body: ProcessBatchRequest;
+    // Step 1: Parse and validate with Zod schema (SECURITY: prevents injection attacks)
+    let validatedRequest;
 
     try {
-      // Clone the request so we can read it twice
       const clonedRequest = request.clone();
-      rawBody = await clonedRequest.text();
-      console.log('[BATCH] Raw request body:', rawBody);
-      console.log('[BATCH] Raw body length:', rawBody.length);
+      const rawBody = await clonedRequest.text();
+      console.log('[BATCH] Raw request body:', rawBody.substring(0, 200) + '...');
 
-      // Step 2: Parse the JSON
-      body = JSON.parse(rawBody);
-      console.log('[BATCH] Parsed body:', JSON.stringify(body, null, 2));
+      // Parse JSON
+      const rawData = JSON.parse(rawBody);
+
+      // Security check: detect prototype pollution attempts
+      if (hasPrototypePollution(rawData)) {
+        console.error('[BATCH] SECURITY: Prototype pollution attempt detected');
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: 'Invalid request: malicious input detected'
+        }, { status: 400 });
+      }
+
+      // Validate with Zod schema
+      const validation = safeValidateInput(ProcessBatchRequestSchema, rawData);
+
+      if (!validation.success) {
+        console.error('[BATCH] Validation error:', validation.error);
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: formatValidationError(validation.error)
+        }, { status: 400 });
+      }
+
+      validatedRequest = validation.data;
+      console.log('[BATCH] Validated request:', {
+        documentCount: validatedRequest.documentIds.length,
+        batchSize: validatedRequest.batchSize,
+        priority: validatedRequest.priority
+      });
 
     } catch (parseError) {
       console.error('[BATCH] JSON parsing failed:', parseError);
@@ -46,38 +70,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Step 3: Extract documentIds
-    const { documentIds } = body;
-    console.log('[BATCH] Extracted documentIds:', documentIds);
-    console.log('[BATCH] documentIds type:', typeof documentIds);
-    console.log('[BATCH] documentIds is array?', Array.isArray(documentIds));
-
-    // Step 4: Validation checks with detailed logging
-    if (!documentIds) {
-      console.error('[BATCH] VALIDATION FAILED: documentIds is undefined or null');
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: `Document IDs array is required. Received: ${JSON.stringify(body)}`
-      }, { status: 400 });
-    }
-
-    if (!Array.isArray(documentIds)) {
-      console.error('[BATCH] VALIDATION FAILED: documentIds is not an array. Type:', typeof documentIds, 'Value:', documentIds);
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: `Document IDs must be an array. Received type: ${typeof documentIds}, value: ${JSON.stringify(documentIds)}`
-      }, { status: 400 });
-    }
-
-    if (documentIds.length === 0) {
-      console.error('[BATCH] VALIDATION FAILED: documentIds array is empty');
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: 'Document IDs array cannot be empty'
-      }, { status: 400 });
-    }
-
-    console.log(`[BATCH] Validation passed. Processing ${documentIds.length} documents:`, documentIds);
+    const { documentIds } = validatedRequest;
+    console.log(`[BATCH] Processing ${documentIds.length} documents:`, documentIds);
 
     const results: Array<{ documentId: string; success: boolean; error?: string }> = [];
     let processed = 0;

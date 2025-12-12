@@ -15,17 +15,42 @@ import type {
   ComparableData,
   FinancialData
 } from '@/lib/types';
+import { ExportRequestSchema, safeValidateInput, formatValidationError, hasPrototypePollution } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
     console.log('Export API: Processing request...');
-    
-    // Parse JSON with better error handling
-    let requestBody;
+
+    // Parse and validate JSON with Zod schema (SECURITY: prevents prototype pollution)
+    let validatedRequest;
     try {
       const requestText = await request.text();
       console.log('Raw request body:', requestText.substring(0, 200) + '...');
-      requestBody = JSON.parse(requestText);
+
+      // Parse JSON
+      const rawData = JSON.parse(requestText);
+
+      // Security check: detect prototype pollution attempts
+      if (hasPrototypePollution(rawData)) {
+        console.error('SECURITY: Prototype pollution attempt detected in export request');
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: 'Invalid request: malicious input detected'
+        }, { status: 400 });
+      }
+
+      // Validate with Zod schema
+      const validation = safeValidateInput(ExportRequestSchema, rawData);
+
+      if (!validation.success) {
+        console.error('Validation error:', validation.error);
+        return NextResponse.json<ApiResponse>({
+          success: false,
+          error: formatValidationError(validation.error)
+        }, { status: 400 });
+      }
+
+      validatedRequest = validation.data;
     } catch (jsonError) {
       console.error('JSON parsing error:', jsonError);
       return NextResponse.json<ApiResponse>({
@@ -33,24 +58,9 @@ export async function POST(request: NextRequest) {
         error: `Invalid JSON in request body: ${jsonError instanceof Error ? jsonError.message : 'Parse error'}`
       }, { status: 400 });
     }
-    
-    const { extractedData, options } = requestBody;
-    console.log('Parsed request data:', { hasExtractedData: !!extractedData, options });
 
-    if (!extractedData) {
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: 'No extracted data provided'
-      }, { status: 400 });
-    }
-    
-    // Validate extracted data structure
-    if (!extractedData.documentType || !extractedData.data) {
-      return NextResponse.json<ApiResponse>({
-        success: false,
-        error: 'Invalid extracted data structure. Missing documentType or data.'
-      }, { status: 400 });
-    }
+    const { extractedData, options } = validatedRequest;
+    console.log('Validated request data:', { documentType: extractedData.documentType, options });
 
     // Create Excel workbook
     const workbook = new ExcelJS.Workbook();
