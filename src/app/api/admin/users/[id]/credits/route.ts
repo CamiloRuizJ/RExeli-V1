@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import { addCreditsToUser } from '@/lib/subscriptionManager';
 
 export async function POST(
@@ -15,7 +15,7 @@ export async function POST(
     console.log('[Admin Credits API] Request received');
 
     // Check admin authentication
-    const session = await auth();
+    const session = await getSession();
     console.log('[Admin Credits API] Session:', session?.user?.email, 'Role:', session?.user?.role);
 
     if (!session?.user || session.user.role !== 'admin') {

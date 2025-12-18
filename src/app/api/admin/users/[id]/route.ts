@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 // GET /api/admin/users/[id] - Get user details
@@ -14,7 +14,7 @@ export async function GET(
 ) {
   try {
     // Check admin authentication
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Admin access required.' },
@@ -56,7 +56,7 @@ export async function PATCH(
 ) {
   try {
     // Check admin authentication
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Admin access required.' },
@@ -109,7 +109,7 @@ export async function DELETE(
 ) {
   try {
     // Check admin authentication
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Admin access required.' },

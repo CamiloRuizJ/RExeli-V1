@@ -53,7 +53,10 @@
       "Bash(then grep -i \"google\\|azure\\|microsoft\" .env.local)",
       "Bash(else echo \"No .env.local file found\")",
       "Bash(fi)",
-      "Bash(npm --version:*)"
+      "Bash(npm --version:*)",
+      "Bash(/c/Program Files/nodejs/npm.cmd run build)",
+      "Bash(where npm)",
+      "Bash(xargs -I {} git show {}:src/lib/auth.ts)"
     ],
     "deny": [],
     "ask": []

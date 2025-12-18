@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractDocumentData } from '@/lib/anthropic';
 import { transformExtractedData } from '@/lib/data-transformers';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import type { ApiResponse, ExtractionResponse, DocumentType, ExtractedData } from '@/lib/types';
 import { getPageCount } from '@/lib/pdfUtils';
 import { validateCreditTransaction, deductCredits, logUsage, saveUserDocument } from '@/middleware/creditCheck';
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Get user session - REQUIRED for credit system
-    const session = await auth();
+    const session = await getSession();
 
     console.log('[Extract API] Session check:', session ? 'Authenticated' : 'Not authenticated');
     console.log('[Extract API] User ID:', session?.user?.id || 'None');
@@ -278,7 +278,7 @@ export async function POST(request: NextRequest) {
     // ============================================
     // CREDIT SYSTEM: Log failed processing (NO credit deduction)
     // ============================================
-    const session = await auth();
+    const session = await getSession();
     if (session?.user?.id) {
       try {
         const formData = await request.formData();

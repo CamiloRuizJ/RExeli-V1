@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn, getSession } from 'next-auth/react';
+import { signInWithPassword, signInWithOAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,14 +24,14 @@ export default function SignInPage() {
     setIsLoading(true);
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      });
+      const { data, error } = await signInWithPassword(email, password);
 
-      if (result?.error) {
-        toast.error('Invalid credentials. Please check your email and password.');
+      if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          toast.error('Please verify your email before signing in.');
+        } else {
+          toast.error(error.message || 'Invalid credentials. Please check your email and password.');
+        }
       } else {
         toast.success('Welcome to RExeli!');
         router.push('/tool');
@@ -44,9 +44,12 @@ export default function SignInPage() {
     }
   };
 
-  const handleOAuthSignIn = async (provider: 'google' | 'azure-ad') => {
+  const handleOAuthSignIn = async (provider: 'google' | 'azure') => {
     try {
-      await signIn(provider, { callbackUrl: '/tool' });
+      const { error } = await signInWithOAuth(provider);
+      if (error) {
+        toast.error('Failed to sign in with OAuth provider');
+      }
     } catch (error) {
       console.error('OAuth sign in error:', error);
       toast.error('Failed to sign in with OAuth provider');
@@ -72,9 +75,7 @@ export default function SignInPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* TODO: Re-enable OAuth once credentials are configured */}
-          {/* OAuth Buttons - Temporarily disabled for deployment */}
-          {false && (
+          {/* OAuth Buttons - NOW ENABLED with Supabase Auth */}
           <div className="space-y-3 mb-6">
             <button
               onClick={() => handleOAuthSignIn('google')}
@@ -91,7 +92,7 @@ export default function SignInPage() {
             </button>
 
             <button
-              onClick={() => handleOAuthSignIn('azure-ad')}
+              onClick={() => handleOAuthSignIn('azure')}
               type="button"
               className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors group"
             >
@@ -105,10 +106,8 @@ export default function SignInPage() {
               <span className="text-sm font-medium text-gray-700">Continue with Microsoft</span>
             </button>
           </div>
-          )}
 
-          {/* Divider - Only show if OAuth is enabled */}
-          {false && (
+          {/* Divider */}
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
@@ -117,7 +116,6 @@ export default function SignInPage() {
               <span className="px-4 bg-white text-gray-500">Or continue with email</span>
             </div>
           </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -185,6 +183,13 @@ export default function SignInPage() {
               )}
             </Button>
           </form>
+
+          {/* Password Reset Link */}
+          <div className="mt-4 text-center">
+            <Link href="/auth/reset-password" className="text-sm text-emerald-600 hover:text-emerald-700">
+              Forgot your password?
+            </Link>
+          </div>
 
           {/* Sign Up Link */}
           <div className="mt-6 pt-6 border-t border-gray-200">

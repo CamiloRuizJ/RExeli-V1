@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 // Valid document types for filtering
@@ -22,7 +22,7 @@ const VALID_DOCUMENT_TYPES = [
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getSession();
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

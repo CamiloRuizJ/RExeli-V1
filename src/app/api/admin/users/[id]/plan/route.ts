@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import { assignSubscriptionPlan } from '@/lib/subscriptionManager';
 
 export async function POST(
@@ -13,7 +13,7 @@ export async function POST(
 ) {
   try {
     // Check admin authentication
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Admin access required.' },

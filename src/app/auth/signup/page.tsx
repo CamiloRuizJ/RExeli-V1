@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signUpWithPassword, signInWithOAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -46,39 +47,25 @@ export default function SignUpPage() {
     }
 
     try {
-      // Call signup API
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password
-        })
-      });
+      // Sign up with Supabase Auth
+      const { data, error: signUpError } = await signUpWithPassword(
+        formData.email.toLowerCase(),
+        formData.password,
+        { name: formData.name }
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Signup failed');
+      if (signUpError) {
+        throw new Error(signUpError.message);
       }
 
-      // Show success
+      // Show success message
       setSuccess(true);
+      toast.success('Account created! Please check your email to verify your account.');
 
-      // Auto sign in after 1.5 seconds
-      setTimeout(async () => {
-        const result = await signIn('credentials', {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        });
-
-        if (result?.ok) {
-          router.push('/tool');
-          router.refresh();
-        }
-      }, 1500);
+      // Redirect to email verification page
+      setTimeout(() => {
+        router.push('/auth/verify-email');
+      }, 2000);
 
     } catch (err: any) {
       setError(err.message || 'An error occurred. Please try again.');
@@ -87,12 +74,15 @@ export default function SignUpPage() {
     }
   };
 
-  const handleOAuthSignIn = async (provider: 'google' | 'azure-ad') => {
+  const handleOAuthSignUp = async (provider: 'google' | 'azure') => {
     try {
-      await signIn(provider, { callbackUrl: '/tool' });
+      const { error } = await signInWithOAuth(provider);
+      if (error) {
+        toast.error('Failed to sign up with OAuth provider');
+      }
     } catch (error) {
-      console.error('OAuth sign in error:', error);
-      setError('Failed to sign in with OAuth provider');
+      console.error('OAuth sign up error:', error);
+      setError('Failed to sign up with OAuth provider');
     }
   };
 
@@ -127,12 +117,10 @@ export default function SignUpPage() {
             </div>
           ) : (
             <>
-              {/* TODO: Re-enable OAuth once credentials are configured */}
-              {/* OAuth Buttons - Temporarily disabled for deployment */}
-              {false && (
+              {/* OAuth Buttons - NOW ENABLED with Supabase Auth */}
               <div className="space-y-3 mb-6">
                 <button
-                  onClick={() => handleOAuthSignIn('google')}
+                  onClick={() => handleOAuthSignUp('google')}
                   type="button"
                   className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors group"
                 >
@@ -146,7 +134,7 @@ export default function SignUpPage() {
                 </button>
 
                 <button
-                  onClick={() => handleOAuthSignIn('azure-ad')}
+                  onClick={() => handleOAuthSignUp('azure')}
                   type="button"
                   className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors group"
                 >
@@ -160,10 +148,8 @@ export default function SignUpPage() {
                   <span className="text-sm font-medium text-gray-700">Continue with Microsoft</span>
                 </button>
               </div>
-              )}
 
-              {/* Divider - Only show if OAuth is enabled */}
-              {false && (
+              {/* Divider */}
               <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200"></div>
@@ -172,7 +158,6 @@ export default function SignUpPage() {
                   <span className="px-4 bg-white text-gray-500">Or continue with email</span>
                 </div>
               </div>
-              )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
               {error && (

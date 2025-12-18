@@ -4,13 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import { getUserCreditInfo } from '@/middleware/creditCheck';
 
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const session = await auth();
+    const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
