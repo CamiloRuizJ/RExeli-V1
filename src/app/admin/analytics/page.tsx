@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Users, FileText, CreditCard, TrendingUp, DollarSign, RefreshCw } from 'lucide-react';
@@ -39,7 +39,7 @@ interface PlatformStats {
 }
 
 export default function AdminAnalyticsPage() {
-  const { data: session, status } = useSession();
+  const { user, loading, userProfile } = useAuth();
   const router = useRouter();
 
   const [stats, setStats] = useState<PlatformStats | null>(null);
@@ -78,24 +78,24 @@ export default function AdminAnalyticsPage() {
 
   // Initial load and auth check
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.push('/auth/signin?callbackUrl=/admin/analytics');
       return;
     }
 
-    if (status === 'authenticated') {
-      if (session?.user?.role !== 'admin') {
+    if (!loading && user) {
+      if (userProfile?.role !== 'admin') {
         router.push('/dashboard');
         return;
       }
       fetchAnalytics();
     }
-  }, [status, session, router, fetchAnalytics]);
+  }, [loading, user, userProfile, router, fetchAnalytics]);
 
   // Real-time subscriptions for platform-wide updates
   // Admin monitors ALL users, documents, and transactions
   useMultipleRealtimeSubscriptions(
-    session?.user?.role === 'admin'
+    userProfile?.role === 'admin'
       ? [
           // Listen to all new users
           {
@@ -158,7 +158,7 @@ export default function AdminAnalyticsPage() {
   };
 
   // Loading state
-  if (status === 'loading' || isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">

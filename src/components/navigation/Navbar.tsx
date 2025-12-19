@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { useAuth, signOut } from '@/hooks/useAuth';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
@@ -12,7 +12,7 @@ import { Logo } from '@/components/ui/Logo';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const { user, loading, userProfile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -20,9 +20,9 @@ export default function Navbar() {
   const navigationItems = [
     { name: 'Document Tool', href: '/tool', requiresAuth: true },
     // Show appropriate dashboard based on role
-    ...(session?.user.role === 'admin'
+    ...(userProfile?.role === 'admin'
       ? [{ name: 'Admin Dashboard', href: '/admin', requiresAuth: true }]
-      : session
+      : user
         ? [{ name: 'My Dashboard', href: '/dashboard', requiresAuth: true }]
         : []
     ),
@@ -36,11 +36,11 @@ export default function Navbar() {
   };
 
   const filteredNavItems = navigationItems.filter(
-    (item) => !item.requiresAuth || (item.requiresAuth && session)
+    (item) => !item.requiresAuth || (item.requiresAuth && user)
   );
 
   const handleSignOut = async () => {
-    await signOut({ callbackUrl: '/' });
+    await signOut();
   };
 
   return (
@@ -77,7 +77,7 @@ export default function Navbar() {
 
               {/* Auth Actions - Desktop */}
               <div className="hidden md:flex items-center space-x-3">
-                {session ? (
+                {user ? (
                   <div className="relative">
                     <button
                       onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -103,7 +103,7 @@ export default function Navbar() {
                           <div className="px-4 py-2 border-b border-slate-100">
                             <p className="text-xs text-slate-500">Signed in as</p>
                             <p className="text-sm font-medium text-slate-900 truncate">
-                              {session.user?.email}
+                              {user.email}
                             </p>
                           </div>
                           <button
@@ -157,7 +157,7 @@ export default function Navbar() {
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
         navigationItems={filteredNavItems}
-        session={session}
+        user={user}
         onSignOut={handleSignOut}
       />
     </>

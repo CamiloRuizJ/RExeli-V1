@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LogOut, User } from 'lucide-react';
-import { Session } from 'next-auth';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 import { Logo } from '@/components/ui/Logo';
 
@@ -19,7 +19,7 @@ interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
   navigationItems: NavigationItem[];
-  session: Session | null;
+  user: SupabaseUser | null;
   onSignOut: () => void;
 }
 
@@ -27,7 +27,7 @@ export default function MobileMenu({
   isOpen,
   onClose,
   navigationItems,
-  session,
+  user,
   onSignOut,
 }: MobileMenuProps) {
   const pathname = usePathname();
@@ -78,7 +78,7 @@ export default function MobileMenu({
           </div>
 
           {/* User Info */}
-          {session && (
+          {user && (
             <div className="px-6 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-100">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -87,7 +87,7 @@ export default function MobileMenu({
                 <div className="min-w-0">
                   <p className="text-xs text-gray-600 font-medium">Signed in as</p>
                   <p className="text-sm font-semibold text-gray-900 truncate">
-                    {session.user?.email}
+                    {user.email}
                   </p>
                 </div>
               </div>
@@ -126,7 +126,7 @@ export default function MobileMenu({
             </div>
 
             {/* Sign Out Button */}
-            {session && (
+            {user && (
               <button
                 onClick={onSignOut}
                 className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors"

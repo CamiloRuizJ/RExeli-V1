@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { RefreshCw } from 'lucide-react';
@@ -34,7 +34,7 @@ interface UserStats {
 }
 
 function AdminUsersContent() {
-  const { data: session, status } = useSession();
+  const { user, loading, userProfile } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -79,23 +79,23 @@ function AdminUsersContent() {
 
   // Initial load and auth check
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.push('/auth/signin?callbackUrl=/admin/users');
       return;
     }
 
-    if (status === 'authenticated') {
-      if (session?.user?.role !== 'admin') {
+    if (!loading && user) {
+      if (userProfile?.role !== 'admin') {
         router.push('/dashboard');
         return;
       }
       fetchUsers();
     }
-  }, [status, session, router, fetchUsers]);
+  }, [loading, user, userProfile, router, fetchUsers]);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (!user) return;
 
     const interval = setInterval(() => {
       fetchUsers(false);
@@ -122,7 +122,7 @@ function AdminUsersContent() {
   };
 
   // Loading state
-  if (status === 'loading' || isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">

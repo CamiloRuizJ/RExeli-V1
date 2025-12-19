@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, Download, ArrowLeft, RefreshCw } from 'lucide-react';
@@ -42,7 +42,7 @@ const documentTypes = [
 ];
 
 function DocumentsContent() {
-  const { status } = useSession();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -86,19 +86,19 @@ function DocumentsContent() {
 
   // Initial load and auth check
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.push('/auth/signin?callbackUrl=/dashboard/documents');
       return;
     }
 
-    if (status === 'authenticated') {
+    if (!loading && user) {
       fetchDocuments();
     }
-  }, [status, router, fetchDocuments]);
+  }, [loading, user, router, fetchDocuments]);
 
   // Auto-refresh every 10 seconds for faster updates
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (!user) return;
 
     const interval = setInterval(() => {
       fetchDocuments(false);
@@ -129,7 +129,7 @@ function DocumentsContent() {
   };
 
   // Loading state
-  if (status === 'loading' || isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">

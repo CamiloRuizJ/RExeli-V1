@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FileText, TrendingUp, Clock, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
@@ -43,7 +43,7 @@ interface UsageStats {
 }
 
 export default function UsageAnalyticsPage() {
-  const { data: session, status } = useSession();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   const [usageLogs, setUsageLogs] = useState<UsageLog[]>([]);
@@ -82,19 +82,19 @@ export default function UsageAnalyticsPage() {
 
   // Initial load and auth check
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.push('/auth/signin?callbackUrl=/dashboard/usage');
       return;
     }
 
-    if (status === 'authenticated') {
+    if (!loading && user) {
       fetchUsageData();
     }
-  }, [status, router, fetchUsageData]);
+  }, [loading, user, router, fetchUsageData]);
 
   // Real-time subscriptions for instant updates
   useMultipleRealtimeSubscriptions(
-    session?.user?.id
+    user?.id
       ? [
           // Listen to new usage logs
           {
@@ -139,7 +139,7 @@ export default function UsageAnalyticsPage() {
   };
 
   // Loading state
-  if (status === 'loading' || isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
