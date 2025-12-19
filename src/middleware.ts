@@ -42,10 +42,31 @@ export default async function middleware(request: NextRequest) {
     },
   })
 
+  // Validate Supabase environment variables
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('[Middleware] Missing Supabase environment variables')
+    console.error('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'MISSING')
+    console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'MISSING')
+
+    // For protected routes, return error
+    if (protectedRoutes.some(route => pathname.startsWith(route))) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { success: false, error: 'Authentication service unavailable' },
+          { status: 503 }
+        )
+      }
+      return NextResponse.redirect(new URL('/auth/error?error=Configuration', request.url))
+    }
+
+    // For public routes, allow through
+    return response
+  }
+
   // Create Supabase client with cookie handling
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         get(name: string) {
