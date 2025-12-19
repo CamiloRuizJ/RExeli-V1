@@ -6,33 +6,75 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-auth-client'
 import type { Session, User } from '@supabase/supabase-js'
 
 /**
+ * User profile from public.users table
+ */
+export interface UserProfile {
+  id: string
+  auth_user_id: string
+  email: string
+  name: string
+  role: string
+  credits: number
+  subscription_type: string
+  subscription_status: string
+  is_active: boolean
+}
+
+/**
  * Auth state hook - replaces useSession() from next-auth/react
  *
- * @returns Auth state with user, session, and loading status
+ * @returns Auth state with user, session, userProfile, and loading status
  *
  * @example
- * const { user, session, loading } = useAuth()
+ * const { user, session, userProfile, loading } = useAuth()
  *
  * if (loading) return <div>Loading...</div>
  * if (!user) router.push('/auth/signin')
+ * if (userProfile?.role === 'admin') // show admin content
  * return <div>Welcome, {user.email}</div>
  */
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<User | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+
+  // Fetch user profile from public.users table
+  const fetchUserProfile = useCallback(async (authUserId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, auth_user_id, email, name, role, credits, subscription_type, subscription_status, is_active')
+        .eq('auth_user_id', authUserId)
+        .eq('is_active', true)
+        .single()
+
+      if (!error && data) {
+        setUserProfile(data)
+      } else if (error) {
+        console.error('Error fetching user profile:', error)
+        setUserProfile(null)
+      }
+    } catch (err) {
+      console.error('Error in fetchUserProfile:', err)
+      setUserProfile(null)
+    }
+  }, [supabase])
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
+      if (session?.user) {
+        fetchUserProfile(session.user.id)
+      }
       setLoading(false)
     })
 
@@ -42,14 +84,19 @@ export function useAuth() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+      if (session?.user) {
+        fetchUserProfile(session.user.id)
+      } else {
+        setUserProfile(null)
+      }
       setLoading(false)
     })
 
     // Cleanup subscription on unmount
     return () => subscription.unsubscribe()
-  }, [])
+  }, [fetchUserProfile, supabase.auth])
 
-  return { session, user, loading }
+  return { session, user, userProfile, loading }
 }
 
 /**
