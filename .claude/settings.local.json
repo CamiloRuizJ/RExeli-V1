@@ -56,7 +56,14 @@
       "Bash(npm --version:*)",
       "Bash(/c/Program Files/nodejs/npm.cmd run build)",
       "Bash(where npm)",
-      "Bash(xargs -I {} git show {}:src/lib/auth.ts)"
+      "Bash(xargs -I {} git show {}:src/lib/auth.ts)",
+      "Bash(mcp list:*)",
+      "Bash(echo:*)",
+      "Bash(supabase --version:*)",
+      "Bash($env:SUPABASE_ACCESS_TOKEN=\"sbp_90bc13d5cb349c3d00807ca5bef4dd851f0cac05\")",
+      "Bash(mcp list-tools:*)",
+      "Bash(rm:*)",
+      "Bash(xargs cat:*)"
     ],
     "deny": [],
     "ask": []
