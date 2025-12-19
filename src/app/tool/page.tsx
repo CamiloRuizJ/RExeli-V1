@@ -22,30 +22,7 @@ export default function ToolPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // Redirect to signin if not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth/signin?callbackUrl=/tool');
-    }
-  }, [loading, user, router]);
-
-  // Show loading while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render tool if not authenticated
-  if (!user) {
-    return null;
-  }
-
+  // All useState hooks must be called at the top level, before any conditional returns
   const [currentFile, setCurrentFile] = useState<DocumentFile | null>(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType | null>(null);
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([]);
@@ -350,6 +327,30 @@ export default function ToolPage() {
       setIsExporting(false);
     }
   }, [extractedData]);
+
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/signin?callbackUrl=/tool');
+    }
+  }, [loading, user, router]);
+
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render tool if not authenticated
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="-mx-4 sm:-mx-6 lg:-mx-8 -my-8 min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50">
