@@ -38,7 +38,9 @@ export default function SignInPage() {
         router.refresh();
       }
     } catch (error) {
-      toast.error('An error occurred during sign in. Please try again.');
+      console.error('Sign in error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during sign in';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
