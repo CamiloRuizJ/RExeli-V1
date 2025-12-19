@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, Upload, Clock, CheckCircle, CreditCard, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
@@ -41,7 +41,7 @@ interface Document {
 }
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -82,25 +82,25 @@ export default function DashboardPage() {
 
   // Initial load and auth check
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.push('/auth/signin?callbackUrl=/dashboard');
       return;
     }
 
-    if (status === 'authenticated') {
+    if (!loading && user) {
       fetchDashboardData();
     }
-  }, [status, router, fetchDashboardData]);
+  }, [loading, user, router, fetchDashboardData]);
 
   // Real-time subscriptions for instant updates
   useMultipleRealtimeSubscriptions(
-    session?.user?.id
+    user?.id
       ? [
           // Listen to user table changes for credit updates
           {
             table: 'users',
             event: 'UPDATE',
-            filter: `id=eq.${session.user.id}`,
+            filter: `id=eq.${user.id}`,
             onUpdate: (payload) => {
               console.log('[Dashboard] User data updated:', payload.new);
               setUserData((prev) => ({
@@ -157,7 +157,7 @@ export default function DashboardPage() {
   };
 
   // Loading state
-  if (status === 'loading' || isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-[400px]">

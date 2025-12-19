@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { FileUpload } from '@/components/upload/FileUpload';
@@ -19,18 +19,18 @@ import type {
 } from '@/lib/types';
 
 export default function ToolPage() {
-  const { data: session, status } = useSession();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   // Redirect to signin if not authenticated
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.push('/auth/signin?callbackUrl=/tool');
     }
-  }, [status, router]);
+  }, [loading, user, router]);
 
   // Show loading while checking authentication
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -42,7 +42,7 @@ export default function ToolPage() {
   }
 
   // Don't render tool if not authenticated
-  if (!session) {
+  if (!user) {
     return null;
   }
 
