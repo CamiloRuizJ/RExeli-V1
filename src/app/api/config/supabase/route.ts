@@ -5,13 +5,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { decryptApiKey, auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import type { ApiResponse } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
     // SECURITY: Require authentication to prevent credential exposure
-    const session = await auth();
+    const session = await getSession();
 
     if (!session?.user?.id) {
       return NextResponse.json<ApiResponse>({
@@ -20,19 +20,16 @@ export async function GET(request: NextRequest) {
       }, { status: 401 });
     }
 
-    const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
-    const encryptedKey = process.env.ENCRYPTED_SUPABASE_ANON_KEY;
+    // Get Supabase configuration from environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!encryptedUrl || !encryptedKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json<ApiResponse>({
         success: false,
         error: 'Supabase configuration not available'
       }, { status: 500 });
     }
-
-    // Decrypt the configuration
-    const supabaseUrl = decryptApiKey(encryptedUrl);
-    const supabaseAnonKey = decryptApiKey(encryptedKey);
 
     const response: ApiResponse<{ url: string; anonKey: string }> = {
       success: true,

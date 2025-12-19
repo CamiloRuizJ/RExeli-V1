@@ -4,7 +4,7 @@
  */
 
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { AddCreditsForm } from './AddCreditsForm';
@@ -111,7 +111,7 @@ export default async function AdminUserDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
+  const session = await getSession();
 
   // Require authentication
   if (!session) {

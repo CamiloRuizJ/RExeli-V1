@@ -1,16 +1,15 @@
 import { createClient } from '@supabase/supabase-js';
-import { decryptApiKey } from './auth';
 import type { UploadResponse } from './types';
 
-// Get decrypted Supabase configuration
+// Get Supabase configuration from environment variables
 function getSupabaseConfig() {
-  const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
-  const encryptedKey = process.env.ENCRYPTED_SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!encryptedUrl || !encryptedKey) {
+  if (!url || !key) {
     // During build time, return dummy values to prevent build errors
     // This allows the build to succeed while actual values will be used at runtime
-    console.warn('ENCRYPTED_SUPABASE keys not found during build - using placeholders');
+    console.warn('Supabase environment variables not found during build - using placeholders');
     return {
       url: 'https://placeholder.supabase.co',
       key: 'build-time-placeholder-key'
@@ -18,8 +17,8 @@ function getSupabaseConfig() {
   }
 
   return {
-    url: decryptApiKey(encryptedUrl),
-    key: decryptApiKey(encryptedKey)
+    url,
+    key
   };
 }
 
@@ -29,10 +28,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Get service role configuration (for admin operations)
 function getServiceRoleConfig() {
-  const encryptedUrl = process.env.ENCRYPTED_SUPABASE_URL;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!encryptedUrl || !serviceKey) {
+  if (!url || !serviceKey) {
     // During build time, return dummy values to prevent build errors
     console.warn('Service role keys not found during build - using placeholders');
     return {
@@ -42,7 +41,7 @@ function getServiceRoleConfig() {
   }
 
   return {
-    url: decryptApiKey(encryptedUrl),
+    url,
     key: serviceKey
   };
 }

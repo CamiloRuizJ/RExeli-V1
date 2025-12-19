@@ -22,7 +22,7 @@
 
 // OpenAI import commented out - migrated to Claude Sonnet 4.5
 // import OpenAI from 'openai';
-import { decryptApiKey } from './auth';
+// decryptApiKey import removed - no longer needed with Supabase Auth migration
 import { supabase } from './training-utils';
 // OpenAI export utilities disabled - fine-tuning not active with Claude
 // import { exportTrainingData } from './openai-export';

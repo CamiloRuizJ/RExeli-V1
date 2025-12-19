@@ -1,5 +1,4 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { decryptApiKey } from './auth';
 import type {
   DocumentType,
   DocumentClassification,
@@ -17,25 +16,25 @@ import type {
 } from './types';
 
 /**
- * Get decrypted Anthropic API key from environment
+ * Get Anthropic API key from environment
  * Handles build-time placeholders for Vercel builds
  */
 function getAnthropicApiKey(): string {
-  const encryptedKey = process.env.ENCRYPTED_ANTHROPIC_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
 
   // During build time, env vars may not be available yet
   // Return placeholder to allow build to complete
   // Actual values will be used at runtime when the API is called
-  if (!encryptedKey) {
-    console.warn('ENCRYPTED_ANTHROPIC_API_KEY not found during build - using placeholder');
+  if (!apiKey) {
+    console.warn('ANTHROPIC_API_KEY not found during build - using placeholder');
     return 'build-time-placeholder-key-will-be-replaced-at-runtime';
   }
 
-  return decryptApiKey(encryptedKey);
+  return apiKey;
 }
 
 /**
- * Initialize Anthropic client with encrypted API key and production settings
+ * Initialize Anthropic client with API key and production settings
  * Following Anthropic SDK best practices for commercial real estate document processing
  */
 const anthropic = new Anthropic({
@@ -45,8 +44,8 @@ const anthropic = new Anthropic({
 });
 
 // Validate API key is present (with build-time handling)
-if (!process.env.ENCRYPTED_ANTHROPIC_API_KEY && process.env.NODE_ENV === 'production' && process.env.VERCEL) {
-  console.error('ENCRYPTED_ANTHROPIC_API_KEY environment variable is required');
+if (!process.env.ANTHROPIC_API_KEY && process.env.NODE_ENV === 'production' && process.env.VERCEL) {
+  console.error('ANTHROPIC_API_KEY environment variable is required');
 }
 
 /**

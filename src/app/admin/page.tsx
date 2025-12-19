@@ -4,11 +4,11 @@
  */
 
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/auth-helpers';
 import Link from 'next/link';
 
 export default async function AdminPage() {
-  const session = await auth();
+  const session = await getSession();
 
   // Require authentication
   if (!session) {
