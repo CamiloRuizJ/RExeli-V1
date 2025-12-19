@@ -100,7 +100,7 @@ export default function UsageAnalyticsPage() {
           {
             table: 'usage_logs',
             event: 'INSERT',
-            filter: `user_id=eq.${session.user.id}`,
+            filter: `user_id=eq.${user.id}`,
             onInsert: (payload) => {
               console.log('[Usage Analytics] New usage log:', payload.new);
               setUsageLogs((prev) => [payload.new, ...prev].slice(0, 50));
@@ -112,7 +112,7 @@ export default function UsageAnalyticsPage() {
           {
             table: 'credit_transactions',
             event: 'INSERT',
-            filter: `user_id=eq.${session.user.id}`,
+            filter: `user_id=eq.${user.id}`,
             onInsert: (payload) => {
               console.log('[Usage Analytics] New transaction:', payload.new);
               setCreditTransactions((prev) => [payload.new, ...prev].slice(0, 30));
@@ -124,14 +124,14 @@ export default function UsageAnalyticsPage() {
 
   // Fallback polling every 30 seconds (reduced from 10s since we have realtime now)
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (!user) return;
 
     const interval = setInterval(() => {
       fetchUsageData(false);
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [status, fetchUsageData]);
+  }, [user, fetchUsageData]);
 
   // Manual refresh handler
   const handleRefresh = () => {

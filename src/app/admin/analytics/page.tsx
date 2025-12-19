@@ -143,14 +143,14 @@ export default function AdminAnalyticsPage() {
 
   // Fallback polling every 60 seconds (reduced from 30s since we have realtime now)
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (!user) return;
 
     const interval = setInterval(() => {
       fetchAnalytics(false);
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [status, fetchAnalytics]);
+  }, [user, fetchAnalytics]);
 
   // Manual refresh handler
   const handleRefresh = () => {

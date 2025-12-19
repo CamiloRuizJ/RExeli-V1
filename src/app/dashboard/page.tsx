@@ -116,7 +116,7 @@ export default function DashboardPage() {
           {
             table: 'user_documents',
             event: 'INSERT',
-            filter: `user_id=eq.${session.user.id}`,
+            filter: `user_id=eq.${user.id}`,
             onInsert: (payload) => {
               console.log('[Dashboard] New document:', payload.new);
               setRecentDocuments((prev) => [payload.new, ...prev].slice(0, 5));
@@ -128,7 +128,7 @@ export default function DashboardPage() {
           {
             table: 'user_documents',
             event: 'UPDATE',
-            filter: `user_id=eq.${session.user.id}`,
+            filter: `user_id=eq.${user.id}`,
             onUpdate: (payload) => {
               console.log('[Dashboard] Document updated:', payload.new);
               setRecentDocuments((prev) =>
@@ -142,14 +142,14 @@ export default function DashboardPage() {
 
   // Fallback polling every 30 seconds (reduced from 10s since we have realtime now)
   useEffect(() => {
-    if (status !== 'authenticated') return;
+    if (!user) return;
 
     const interval = setInterval(() => {
       fetchDashboardData(false);
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [status, fetchDashboardData]);
+  }, [user, fetchDashboardData]);
 
   // Manual refresh handler
   const handleRefresh = () => {
