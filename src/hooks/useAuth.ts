@@ -43,10 +43,12 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
   const supabase = createClient()
 
   // Fetch user profile via API endpoint (bypasses RLS issues)
   const fetchUserProfile = useCallback(async () => {
+    setProfileLoading(true)
     try {
       const response = await fetch('/api/user/profile')
       const result = await response.json()
@@ -60,16 +62,19 @@ export function useAuth() {
     } catch (err) {
       console.error('Error in fetchUserProfile:', err)
       setUserProfile(null)
+    } finally {
+      setProfileLoading(false)
     }
   }, [])
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchUserProfile()
+        // Wait for profile to load before marking as not loading
+        await fetchUserProfile()
       }
       setLoading(false)
     })
@@ -77,11 +82,11 @@ export function useAuth() {
     // Listen for auth changes (sign in, sign out, token refresh)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchUserProfile()
+        await fetchUserProfile()
       } else {
         setUserProfile(null)
       }
@@ -92,7 +97,7 @@ export function useAuth() {
     return () => subscription.unsubscribe()
   }, [fetchUserProfile, supabase.auth])
 
-  return { session, user, userProfile, loading }
+  return { session, user, userProfile, loading, profileLoading }
 }
 
 /**

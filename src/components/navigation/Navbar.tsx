@@ -12,19 +12,26 @@ import { Logo } from '@/components/ui/Logo';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user, loading, userProfile } = useAuth();
+  const { user, loading, userProfile, profileLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
+  // Determine if user is admin (profile must be loaded)
+  const isAdmin = userProfile?.role === 'admin';
+
   // Dynamic navigation based on user role
+  // Only show dashboard link once profile is loaded (to show correct one)
   const navigationItems = [
     { name: 'Document Tool', href: '/tool', requiresAuth: true },
     // Show appropriate dashboard based on role
-    ...(userProfile?.role === 'admin'
-      ? [{ name: 'Admin Dashboard', href: '/admin', requiresAuth: true }]
-      : user
-        ? [{ name: 'My Dashboard', href: '/dashboard', requiresAuth: true }]
-        : []
+    // Wait for profile to load before showing dashboard link
+    ...(loading || (user && !userProfile)
+      ? [] // Don't show dashboard link while loading
+      : isAdmin
+        ? [{ name: 'Admin Dashboard', href: '/admin', requiresAuth: true }]
+        : user
+          ? [{ name: 'My Dashboard', href: '/dashboard', requiresAuth: true }]
+          : []
     ),
   ];
 
