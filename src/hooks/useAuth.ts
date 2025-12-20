@@ -45,27 +45,23 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  // Fetch user profile from public.users table
-  const fetchUserProfile = useCallback(async (authUserId: string) => {
+  // Fetch user profile via API endpoint (bypasses RLS issues)
+  const fetchUserProfile = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, auth_user_id, email, name, role, credits, subscription_type, subscription_status, is_active')
-        .eq('auth_user_id', authUserId)
-        .eq('is_active', true)
-        .single()
+      const response = await fetch('/api/user/profile')
+      const result = await response.json()
 
-      if (!error && data) {
-        setUserProfile(data)
-      } else if (error) {
-        console.error('Error fetching user profile:', error)
+      if (result.success && result.data) {
+        setUserProfile(result.data)
+      } else {
+        console.error('Error fetching user profile:', result.error)
         setUserProfile(null)
       }
     } catch (err) {
       console.error('Error in fetchUserProfile:', err)
       setUserProfile(null)
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     // Get initial session
@@ -73,7 +69,7 @@ export function useAuth() {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchUserProfile(session.user.id)
+        fetchUserProfile()
       }
       setLoading(false)
     })
@@ -85,7 +81,7 @@ export function useAuth() {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchUserProfile(session.user.id)
+        fetchUserProfile()
       } else {
         setUserProfile(null)
       }
