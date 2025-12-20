@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-helpers';
+import { createClient } from '@/lib/supabase-server';
 import { supabaseAdmin } from '@/lib/supabase';
 import type { ApiResponse } from '@/lib/types';
 
@@ -23,30 +23,38 @@ export interface UserProfileResponse {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSession();
+    // Get the authenticated user directly from Supabase Auth
+    const supabase = await createClient();
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
 
-    if (!session?.user?.id) {
+    if (authError || !authUser) {
+      console.log('Profile API: No authenticated user found');
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Authentication required' },
         { status: 401 }
       );
     }
 
+    console.log('Profile API: Fetching profile for auth_user_id:', authUser.id);
+
     // Fetch full profile using admin client (bypasses RLS)
+    // Use auth_user_id to find the user in public.users table
     const { data: profile, error } = await supabaseAdmin
       .from('users')
       .select('id, auth_user_id, email, name, role, credits, subscription_type, subscription_status, is_active')
-      .eq('id', session.user.id)
+      .eq('auth_user_id', authUser.id)
       .eq('is_active', true)
       .single();
 
     if (error || !profile) {
-      console.error('Error fetching user profile:', error);
+      console.error('Error fetching user profile for auth_user_id:', authUser.id, error);
       return NextResponse.json<ApiResponse>(
         { success: false, error: 'Profile not found' },
         { status: 404 }
       );
     }
+
+    console.log('Profile API: Found profile with role:', profile.role);
 
     return NextResponse.json<ApiResponse<UserProfileResponse>>({
       success: true,
