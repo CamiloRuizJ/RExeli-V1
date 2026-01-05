@@ -1444,10 +1444,15 @@ export async function extractDocumentData(
       throw new Error(`No extraction prompt available for document type: ${documentType}`);
     }
 
-    // Append user instructions if provided
+    // PREPEND user instructions if provided (at START for better influence)
     if (userInstructions?.trim()) {
-      console.log(`[Claude] Appending user instructions to prompt: "${userInstructions.substring(0, 50)}..."`);
-      prompt = `${prompt}\n\n---\nUSER INSTRUCTIONS (prioritize these requirements):\n${userInstructions.trim()}\n---`;
+      console.log(`[Claude] Prepending user instructions to prompt: "${userInstructions.substring(0, 50)}..."`);
+      prompt = `═══════════════════════════════════════════════════════════════════════════════
+IMPORTANT - USER SPECIAL INSTRUCTIONS (PRIORITIZE THESE REQUIREMENTS):
+${userInstructions.trim()}
+═══════════════════════════════════════════════════════════════════════════════
+
+${prompt}`;
     }
 
     let imageDataUrls: string[] = [];

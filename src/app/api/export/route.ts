@@ -117,6 +117,139 @@ export async function POST(request: NextRequest) {
 }
 
 // ============================================================================
+// PROFESSIONAL EXCEL STYLING - RExeli Brand Colors
+// ============================================================================
+
+// Emerald/teal brand color scheme
+const COLORS = {
+  emerald700: 'FF047857',  // Dark emerald for titles
+  emerald600: 'FF059669',  // Header background
+  emerald100: 'FFD1FAE5',  // Title background
+  emerald50: 'FFF0FDF4',   // Section header background
+  white: 'FFFFFFFF',
+  gray100: 'FFF3F4F6',     // Alternating row
+  gray300: 'FFD1D5DB',     // Border color
+  gray700: 'FF374151',     // Dark text
+};
+
+// Thin border style for cells
+const thinBorder: Partial<ExcelJS.Border> = {
+  style: 'thin',
+  color: { argb: COLORS.gray300 }
+};
+
+const allBorders: Partial<ExcelJS.Borders> = {
+  top: thinBorder,
+  left: thinBorder,
+  bottom: thinBorder,
+  right: thinBorder,
+};
+
+/**
+ * Style a title row (main sheet title)
+ */
+function styleTitleRow(row: ExcelJS.Row, sheet: ExcelJS.Worksheet, colspan: number = 2): void {
+  // Merge cells for title
+  if (colspan > 1) {
+    sheet.mergeCells(row.number, 1, row.number, colspan);
+  }
+  row.font = { bold: true, size: 14, color: { argb: COLORS.emerald700 } };
+  row.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.emerald100 }
+  };
+  row.alignment = { horizontal: 'left', vertical: 'middle' };
+  row.height = 24;
+  row.eachCell((cell) => {
+    cell.border = allBorders;
+  });
+}
+
+/**
+ * Style a section header row (subsection titles)
+ */
+function styleSectionHeader(row: ExcelJS.Row, sheet: ExcelJS.Worksheet, colspan: number = 2): void {
+  if (colspan > 1) {
+    sheet.mergeCells(row.number, 1, row.number, colspan);
+  }
+  row.font = { bold: true, size: 12, color: { argb: COLORS.gray700 } };
+  row.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.emerald50 }
+  };
+  row.alignment = { horizontal: 'left', vertical: 'middle' };
+  row.height = 20;
+  row.eachCell((cell) => {
+    cell.border = allBorders;
+  });
+}
+
+/**
+ * Style a table header row
+ */
+function styleHeaderRow(row: ExcelJS.Row): void {
+  row.font = { bold: true, size: 11, color: { argb: COLORS.white } };
+  row.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.emerald600 }
+  };
+  row.alignment = { horizontal: 'center', vertical: 'middle' };
+  row.height = 20;
+  row.eachCell((cell) => {
+    cell.border = allBorders;
+  });
+}
+
+/**
+ * Style a data row with borders
+ */
+function styleDataRow(row: ExcelJS.Row, isAlternate: boolean = false): void {
+  if (isAlternate) {
+    row.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: COLORS.gray100 }
+    };
+  }
+  row.alignment = { vertical: 'middle' };
+  row.eachCell((cell) => {
+    cell.border = allBorders;
+  });
+}
+
+/**
+ * Style a key-value pair row (label on left, value on right)
+ */
+function styleKeyValueRow(row: ExcelJS.Row): void {
+  row.alignment = { vertical: 'middle' };
+  const keyCell = row.getCell(1);
+  keyCell.font = { bold: true };
+  row.eachCell((cell) => {
+    cell.border = allBorders;
+  });
+}
+
+/**
+ * Freeze header rows so they stay visible when scrolling
+ */
+function freezeRows(sheet: ExcelJS.Worksheet, rowCount: number): void {
+  sheet.views = [{ state: 'frozen', ySplit: rowCount, xSplit: 0 }];
+}
+
+/**
+ * Set consistent column widths
+ */
+function setColumnWidths(sheet: ExcelJS.Worksheet, widths: number[]): void {
+  widths.forEach((width, index) => {
+    const column = sheet.getColumn(index + 1);
+    column.width = width;
+  });
+}
+
+// ============================================================================
 // DYNAMIC EXCEL EXPORT HELPER FUNCTIONS
 // ============================================================================
 
@@ -163,6 +296,7 @@ function flattenObject(obj: any, prefix: string = ''): Record<string, any> {
 /**
  * Generate dynamic Excel sheet from array of objects
  * Automatically detects all fields and creates columns for each
+ * Now with professional styling
  */
 function generateDynamicArraySheet(
   sheet: ExcelJS.Worksheet,
@@ -174,7 +308,8 @@ function generateDynamicArraySheet(
   } = {}
 ): void {
   if (!data || data.length === 0) {
-    sheet.addRow(['No data available']);
+    const noDataRow = sheet.addRow(['No data available']);
+    styleDataRow(noDataRow, false);
     return;
   }
 
@@ -196,36 +331,40 @@ function generateDynamicArraySheet(
 
   // Generate headers with Title Case
   const headers = allFields.map(field => camelCaseToTitleCase(field));
+  const numColumns = headers.length;
 
-  // Add optional title row
+  let headerRowNumber = 1;
+
+  // Add optional title row with professional styling
   if (options.sheetTitle) {
-    sheet.addRow([options.sheetTitle]);
+    const titleRow = sheet.addRow([options.sheetTitle]);
+    styleTitleRow(titleRow, sheet, numColumns);
     sheet.addRow([]); // Empty row for spacing
+    headerRowNumber = 3;
   }
 
-  // Add header row
+  // Add header row with professional styling
   const headerRow = sheet.addRow(headers);
-  headerRow.font = { bold: true };
-  headerRow.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FFE0E0E0' }
-  };
+  styleHeaderRow(headerRow);
 
-  // Add data rows
-  data.forEach(item => {
+  // Freeze the header row
+  freezeRows(sheet, headerRowNumber);
+
+  // Add data rows with alternating colors and borders
+  data.forEach((item, index) => {
     const flatItem = flattenObject(item);
     const rowValues = allFields.map(field => {
       const value = flatItem[field];
       return value !== undefined && value !== null ? value : 'N/A';
     });
-    sheet.addRow(rowValues);
+    const dataRow = sheet.addRow(rowValues);
+    styleDataRow(dataRow, index % 2 === 1);
   });
 
-  // Auto-size columns
+  // Set consistent column widths based on header length
   sheet.columns.forEach((column, index) => {
     const headerLength = headers[index]?.length || 10;
-    column.width = Math.max(headerLength + 2, 15); // Minimum 15, or header length + padding
+    column.width = Math.max(headerLength + 4, 18); // Minimum 18, or header length + padding
   });
 }
 
@@ -275,26 +414,37 @@ async function generateExcelByType(
 async function generateRentRollExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const rentRollData = data.data as RentRollData;
 
-  // Summary Sheet
+  // Summary Sheet with professional styling
   const summarySheet = workbook.addWorksheet('Summary');
-  summarySheet.addRow(['Property Summary']);
+  setColumnWidths(summarySheet, [35, 30]);
+
+  // Property Summary Title
+  const titleRow = summarySheet.addRow(['Property Summary']);
+  styleTitleRow(titleRow, summarySheet, 2);
+
+  // Metadata rows
   if (data.metadata) {
     const metadataFlat = flattenObject(data.metadata);
     Object.entries(metadataFlat).forEach(([key, value]) => {
-      summarySheet.addRow([camelCaseToTitleCase(key), value]);
+      const row = summarySheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
     });
   }
   summarySheet.addRow([]);
 
-  summarySheet.addRow(['Financial Summary']);
+  // Financial Summary Section
+  const financialTitleRow = summarySheet.addRow(['Financial Summary']);
+  styleSectionHeader(financialTitleRow, summarySheet, 2);
+
   if (rentRollData.summary) {
     const summaryFlat = flattenObject(rentRollData.summary);
     Object.entries(summaryFlat).forEach(([key, value]) => {
-      summarySheet.addRow([camelCaseToTitleCase(key), value]);
+      const row = summarySheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
     });
   }
 
-  // Rent Roll Detail Sheet - Use dynamic generation for ALL fields
+  // Rent Roll Detail Sheet - Use dynamic generation with styling
   const detailSheet = workbook.addWorksheet('Rent Roll Details');
   generateDynamicArraySheet(detailSheet, rentRollData.tenants, {
     sheetTitle: 'Rent Roll - All Tenant Fields'
@@ -304,6 +454,11 @@ async function generateRentRollExcel(workbook: ExcelJS.Workbook, data: Extracted
 async function generateOfferingMemoExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const offeringData = data.data as OfferingMemoData;
   const sheet = workbook.addWorksheet('Offering Memo');
+  setColumnWidths(sheet, [35, 30]);
+
+  // Main Title
+  const titleRow = sheet.addRow(['Offering Memorandum']);
+  styleTitleRow(titleRow, sheet, 2);
 
   // Use dynamic flattening for all sections
   const allData = flattenObject(offeringData);
@@ -322,28 +477,34 @@ async function generateOfferingMemoExcel(workbook: ExcelJS.Workbook, data: Extra
   sections.forEach(section => {
     const sectionFields = Object.entries(allData).filter(([key]) => key.startsWith(section.prefix));
     if (sectionFields.length > 0) {
-      sheet.addRow([section.name]);
+      sheet.addRow([]); // Spacing
+      const sectionRow = sheet.addRow([section.name]);
+      styleSectionHeader(sectionRow, sheet, 2);
       sectionFields.forEach(([key, value]) => {
         const displayKey = key.replace(section.prefix + '.', '');
-        sheet.addRow([camelCaseToTitleCase(displayKey), value]);
+        const row = sheet.addRow([camelCaseToTitleCase(displayKey), value]);
+        styleKeyValueRow(row);
       });
-      sheet.addRow([]);
     }
   });
 
-  // Dynamic comparables if present
+  // Dynamic comparables if present - in separate sheet
   if (offeringData.comparables && Array.isArray(offeringData.comparables) && offeringData.comparables.length > 0) {
-    generateDynamicArraySheet(sheet, offeringData.comparables, {
+    const compSheet = workbook.addWorksheet('Comparables');
+    generateDynamicArraySheet(compSheet, offeringData.comparables, {
       sheetTitle: 'Comparable Sales - All Fields'
     });
   }
-
-  sheet.columns.forEach(column => { column.width = 25; });
 }
 
 async function generateLeaseExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const leaseData = data.data as LeaseData;
   const sheet = workbook.addWorksheet('Lease Agreement');
+  setColumnWidths(sheet, [35, 35]);
+
+  // Main Title
+  const titleRow = sheet.addRow(['Lease Agreement']);
+  styleTitleRow(titleRow, sheet, 2);
 
   // Use dynamic flattening for all sections
   const allData = flattenObject(leaseData);
@@ -360,12 +521,14 @@ async function generateLeaseExcel(workbook: ExcelJS.Workbook, data: ExtractedDat
   sections.forEach(section => {
     const sectionFields = Object.entries(allData).filter(([key]) => key.startsWith(section.prefix));
     if (sectionFields.length > 0) {
-      sheet.addRow([section.name]);
+      sheet.addRow([]); // Spacing
+      const sectionRow = sheet.addRow([section.name]);
+      styleSectionHeader(sectionRow, sheet, 2);
       sectionFields.forEach(([key, value]) => {
         const displayKey = key.replace(section.prefix + '.', '');
-        sheet.addRow([camelCaseToTitleCase(displayKey), value]);
+        const row = sheet.addRow([camelCaseToTitleCase(displayKey), value]);
+        styleKeyValueRow(row);
       });
-      sheet.addRow([]);
     }
   });
 
@@ -374,30 +537,35 @@ async function generateLeaseExcel(workbook: ExcelJS.Workbook, data: ExtractedDat
     !sections.some(s => key.startsWith(s.prefix))
   );
   if (topLevelFields.length > 0) {
-    sheet.addRow(['Other Terms']);
+    sheet.addRow([]); // Spacing
+    const otherRow = sheet.addRow(['Other Terms']);
+    styleSectionHeader(otherRow, sheet, 2);
     topLevelFields.forEach(([key, value]) => {
-      sheet.addRow([camelCaseToTitleCase(key), value]);
+      const row = sheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
     });
   }
-
-  sheet.columns.forEach(column => { column.width = 30; });
 }
 
 async function generateComparableExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const compData = data.data as ComparableData;
-  
+
   const sheet = workbook.addWorksheet('Comparable Sales');
-  
+
+  // Title row
+  const titleRow = sheet.addRow(['Comparable Sales Analysis']);
+  styleTitleRow(titleRow, sheet, 7);
+  sheet.addRow([]); // Spacing
+
   const headers = ['Address', 'Sale Price', 'Sale Date', 'Square Feet', 'Price Per Sq Ft', 'Property Type', 'Year Built'];
-  sheet.addRow(headers);
-  
-  // Style headers
-  const headerRow = sheet.getRow(1);
-  headerRow.font = { bold: true };
-  headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6F3FF' } };
-  
-  compData.properties.forEach(property => {
-    sheet.addRow([
+  const headerRow = sheet.addRow(headers);
+  styleHeaderRow(headerRow);
+
+  // Freeze header
+  freezeRows(sheet, 3);
+
+  compData.properties.forEach((property, index) => {
+    const row = sheet.addRow([
       property.address,
       property.salePrice,
       property.saleDate,
@@ -406,148 +574,223 @@ async function generateComparableExcel(workbook: ExcelJS.Workbook, data: Extract
       property.propertyType,
       property.yearBuilt || 'N/A'
     ]);
+    styleDataRow(row, index % 2 === 1);
   });
-  
-  sheet.columns.forEach(column => {
-    column.width = 18;
-  });
+
+  setColumnWidths(sheet, [30, 18, 15, 15, 18, 20, 12]);
 }
 
 async function generateFinancialExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const finData = data.data as FinancialData;
-  
+
   const sheet = workbook.addWorksheet('Financial Statement');
-  
-  sheet.addRow(['Financial Statement']);
-  sheet.addRow(['Period', finData.period]);
+  setColumnWidths(sheet, [30, 25]);
+
+  // Title
+  const titleRow = sheet.addRow(['Financial Statement']);
+  styleTitleRow(titleRow, sheet, 2);
+
+  const periodRow = sheet.addRow(['Period', finData.period]);
+  styleKeyValueRow(periodRow);
   sheet.addRow([]);
-  
-  sheet.addRow(['Revenue']);
-  sheet.addRow(['Gross Rent', finData.revenue.grossRent]);
-  sheet.addRow(['Other Income', finData.revenue.otherIncome]);
-  sheet.addRow(['Total Revenue', finData.revenue.totalRevenue]);
-  sheet.addRow([]);
-  
-  sheet.addRow(['Expenses']);
-  sheet.addRow(['Operating Expenses', finData.expenses.operatingExpenses]);
-  sheet.addRow(['Maintenance', finData.expenses.maintenance]);
-  sheet.addRow(['Insurance', finData.expenses.insurance]);
-  sheet.addRow(['Taxes', finData.expenses.taxes]);
-  sheet.addRow(['Utilities', finData.expenses.utilities]);
-  sheet.addRow(['Management', finData.expenses.management]);
-  sheet.addRow(['Total Expenses', finData.expenses.totalExpenses]);
-  sheet.addRow([]);
-  
-  sheet.addRow(['Net Operating Income', finData.netOperatingIncome]);
-  
-  sheet.columns.forEach(column => {
-    column.width = 20;
+
+  // Revenue Section
+  const revenueTitle = sheet.addRow(['Revenue']);
+  styleSectionHeader(revenueTitle, sheet, 2);
+
+  const revenueRows = [
+    ['Gross Rent', finData.revenue.grossRent],
+    ['Other Income', finData.revenue.otherIncome],
+    ['Total Revenue', finData.revenue.totalRevenue]
+  ];
+  revenueRows.forEach(([key, value]) => {
+    const row = sheet.addRow([key, value]);
+    styleKeyValueRow(row);
   });
+  sheet.addRow([]);
+
+  // Expenses Section
+  const expensesTitle = sheet.addRow(['Expenses']);
+  styleSectionHeader(expensesTitle, sheet, 2);
+
+  const expenseRows = [
+    ['Operating Expenses', finData.expenses.operatingExpenses],
+    ['Maintenance', finData.expenses.maintenance],
+    ['Insurance', finData.expenses.insurance],
+    ['Taxes', finData.expenses.taxes],
+    ['Utilities', finData.expenses.utilities],
+    ['Management', finData.expenses.management],
+    ['Total Expenses', finData.expenses.totalExpenses]
+  ];
+  expenseRows.forEach(([key, value]) => {
+    const row = sheet.addRow([key, value]);
+    styleKeyValueRow(row);
+  });
+  sheet.addRow([]);
+
+  // NOI - highlight as important
+  const noiTitle = sheet.addRow(['Summary']);
+  styleSectionHeader(noiTitle, sheet, 2);
+  const noiRow = sheet.addRow(['Net Operating Income', finData.netOperatingIncome]);
+  styleKeyValueRow(noiRow);
+  noiRow.font = { bold: true, size: 12 };
 }
 
-// New specialized Excel generators - using generic template for now
+// New specialized Excel generators with professional styling
 async function generateOperatingBudgetExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const sheet = workbook.addWorksheet('Operating Budget');
   const budgetData = data.data as OperatingBudgetData;
+  setColumnWidths(sheet, [35, 25]);
 
-  sheet.addRow(['Operating Budget - ' + (data.metadata.propertyName || 'Unknown Property')]);
-  sheet.addRow(['Period', budgetData.period || 'N/A']);
+  // Title
+  const titleRow = sheet.addRow(['Operating Budget - ' + (data.metadata.propertyName || 'Unknown Property')]);
+  styleTitleRow(titleRow, sheet, 2);
+
+  const periodRow = sheet.addRow(['Period', budgetData.period || 'N/A']);
+  styleKeyValueRow(periodRow);
   sheet.addRow([]);
 
-  // Use dynamic flattening for all sections
+  // Income Section
   if (budgetData.income) {
-    sheet.addRow(['Income']);
+    const incomeTitle = sheet.addRow(['Income']);
+    styleSectionHeader(incomeTitle, sheet, 2);
     const incomeFlat = flattenObject(budgetData.income);
     Object.entries(incomeFlat).forEach(([key, value]) => {
-      sheet.addRow([camelCaseToTitleCase(key), value]);
+      const row = sheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
     });
     sheet.addRow([]);
   }
 
+  // Expenses Section
   if (budgetData.expenses) {
-    sheet.addRow(['Expenses']);
+    const expensesTitle = sheet.addRow(['Expenses']);
+    styleSectionHeader(expensesTitle, sheet, 2);
     const expensesFlat = flattenObject(budgetData.expenses);
     Object.entries(expensesFlat).forEach(([key, value]) => {
-      sheet.addRow([camelCaseToTitleCase(key), value]);
+      const row = sheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
     });
     sheet.addRow([]);
   }
 
-  // Other summary fields
-  if (budgetData.noi !== undefined) sheet.addRow(['NOI', budgetData.noi]);
-  if (budgetData.capexForecast !== undefined) sheet.addRow(['CapEx Forecast', budgetData.capexForecast]);
-  if (budgetData.cashFlow !== undefined) sheet.addRow(['Cash Flow', budgetData.cashFlow]);
+  // Summary Section
+  const summaryTitle = sheet.addRow(['Summary']);
+  styleSectionHeader(summaryTitle, sheet, 2);
 
-  sheet.columns.forEach(column => { column.width = 25; });
+  if (budgetData.noi !== undefined) {
+    const row = sheet.addRow(['NOI', budgetData.noi]);
+    styleKeyValueRow(row);
+  }
+  if (budgetData.capexForecast !== undefined) {
+    const row = sheet.addRow(['CapEx Forecast', budgetData.capexForecast]);
+    styleKeyValueRow(row);
+  }
+  if (budgetData.cashFlow !== undefined) {
+    const row = sheet.addRow(['Cash Flow', budgetData.cashFlow]);
+    styleKeyValueRow(row);
+  }
 }
 
 async function generateBrokerSalesComparablesExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
-  const sheet = workbook.addWorksheet('Sales Comparables');
+  // Summary sheet first
+  const summarySheet = workbook.addWorksheet('Summary');
+  setColumnWidths(summarySheet, [35, 30]);
+
   const compData = data.data as any;
 
-  // Add metadata section if available
+  // Title
+  const titleRow = summarySheet.addRow(['Broker Sales Comparables']);
+  styleTitleRow(titleRow, summarySheet, 2);
+
+  // Document Information section
   if (data.metadata) {
-    sheet.addRow(['Document Information']);
+    summarySheet.addRow([]);
+    const docInfoTitle = summarySheet.addRow(['Document Information']);
+    styleSectionHeader(docInfoTitle, summarySheet, 2);
     const metadataFlat = flattenObject(data.metadata);
     Object.entries(metadataFlat).forEach(([key, value]) => {
-      sheet.addRow([camelCaseToTitleCase(key), value]);
+      const row = summarySheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
     });
-    sheet.addRow([]);
   }
 
   // Market Summary section if available
   if (compData.marketSummary) {
-    sheet.addRow(['Market Summary']);
+    summarySheet.addRow([]);
+    const marketTitle = summarySheet.addRow(['Market Summary']);
+    styleSectionHeader(marketTitle, summarySheet, 2);
     const summaryFlat = flattenObject(compData.marketSummary);
     Object.entries(summaryFlat).forEach(([key, value]) => {
-      sheet.addRow([camelCaseToTitleCase(key), value]);
-    });
-    sheet.addRow([]);
-  }
-
-  // Use dynamic sheet generation for comparable sales - exports ALL fields
-  const salesData = compData.comparableSales || compData.comparables || [];
-  if (Array.isArray(salesData) && salesData.length > 0) {
-    generateDynamicArraySheet(sheet, salesData, {
-      sheetTitle: 'Comparable Sales - All Extracted Fields'
+      const row = summarySheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
     });
   }
 
   // Market Analysis section if available
   if (compData.marketAnalysis) {
-    sheet.addRow([]);
-    sheet.addRow(['Market Analysis']);
+    summarySheet.addRow([]);
+    const analysisTitle = summarySheet.addRow(['Market Analysis']);
+    styleSectionHeader(analysisTitle, summarySheet, 2);
     const analysisFlat = flattenObject(compData.marketAnalysis);
     Object.entries(analysisFlat).forEach(([key, value]) => {
-      sheet.addRow([camelCaseToTitleCase(key), value]);
+      const row = summarySheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
+    });
+  }
+
+  // Comparables in separate sheet with dynamic generation
+  const salesData = compData.comparableSales || compData.comparables || [];
+  if (Array.isArray(salesData) && salesData.length > 0) {
+    const compSheet = workbook.addWorksheet('Comparable Sales');
+    generateDynamicArraySheet(compSheet, salesData, {
+      sheetTitle: 'Comparable Sales - All Extracted Fields'
     });
   }
 }
 
 async function generateBrokerLeaseComparablesExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
-  const sheet = workbook.addWorksheet('Lease Comparables');
   const compData = data.data as BrokerLeaseComparablesData;
 
-  // Use dynamic sheet generation to export ALL fields
-  generateDynamicArraySheet(sheet, compData.comparables, {
-    sheetTitle: 'Lease Comparables - All Extracted Fields'
+  // Summary sheet first
+  const summarySheet = workbook.addWorksheet('Summary');
+  setColumnWidths(summarySheet, [35, 25]);
+
+  // Title
+  const titleRow = summarySheet.addRow(['Broker Lease Comparables']);
+  styleTitleRow(titleRow, summarySheet, 2);
+
+  // Summary statistics section
+  summarySheet.addRow([]);
+  const summaryTitle = summarySheet.addRow(['Summary Statistics']);
+  styleSectionHeader(summaryTitle, summarySheet, 2);
+
+  const summaryRows = [
+    ['Average Base Rent', compData.summary.averageBaseRent || 'N/A'],
+    ['Average Effective Rent', compData.summary.averageEffectiveRent || 'N/A'],
+    ['Rent Range Min', compData.summary.rentRange?.min || 'N/A'],
+    ['Rent Range Max', compData.summary.rentRange?.max || 'N/A']
+  ];
+  summaryRows.forEach(([key, value]) => {
+    const row = summarySheet.addRow([key, value]);
+    styleKeyValueRow(row);
   });
 
-  // Add summary section
-  sheet.addRow([]);
-  sheet.addRow(['Summary']);
-  sheet.addRow(['Average Base Rent', compData.summary.averageBaseRent || 'N/A']);
-  sheet.addRow(['Average Effective Rent', compData.summary.averageEffectiveRent || 'N/A']);
-  sheet.addRow(['Rent Range Min', compData.summary.rentRange?.min || 'N/A']);
-  sheet.addRow(['Rent Range Max', compData.summary.rentRange?.max || 'N/A']);
+  // Comparables in separate sheet with dynamic generation
+  const compSheet = workbook.addWorksheet('Lease Comparables');
+  generateDynamicArraySheet(compSheet, compData.comparables, {
+    sheetTitle: 'Lease Comparables - All Extracted Fields'
+  });
 }
 
 async function generateBrokerListingExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const sheet = workbook.addWorksheet('Broker Listing');
   const listingData = data.data as BrokerListingData;
+  setColumnWidths(sheet, [35, 35]);
 
-  sheet.addRow(['Broker Listing Details']);
-  sheet.addRow([]);
+  // Title
+  const titleRow = sheet.addRow(['Broker Listing Details']);
+  styleTitleRow(titleRow, sheet, 2);
 
   // Use dynamic flattening for all sections
   const allData = flattenObject(listingData);
@@ -560,12 +803,14 @@ async function generateBrokerListingExcel(workbook: ExcelJS.Workbook, data: Extr
   sections.forEach(section => {
     const sectionFields = Object.entries(allData).filter(([key]) => key.startsWith(section.prefix));
     if (sectionFields.length > 0) {
-      sheet.addRow([section.name]);
+      sheet.addRow([]); // Spacing
+      const sectionRow = sheet.addRow([section.name]);
+      styleSectionHeader(sectionRow, sheet, 2);
       sectionFields.forEach(([key, value]) => {
         const displayKey = key.replace(section.prefix + '.', '');
-        sheet.addRow([camelCaseToTitleCase(displayKey), value]);
+        const row = sheet.addRow([camelCaseToTitleCase(displayKey), value]);
+        styleKeyValueRow(row);
       });
-      sheet.addRow([]);
     }
   });
 
@@ -574,21 +819,27 @@ async function generateBrokerListingExcel(workbook: ExcelJS.Workbook, data: Extr
     !sections.some(s => key.startsWith(s.prefix))
   );
   if (otherFields.length > 0) {
+    sheet.addRow([]); // Spacing
+    const otherTitle = sheet.addRow(['Additional Information']);
+    styleSectionHeader(otherTitle, sheet, 2);
     otherFields.forEach(([key, value]) => {
-      sheet.addRow([camelCaseToTitleCase(key), value]);
+      const row = sheet.addRow([camelCaseToTitleCase(key), value]);
+      styleKeyValueRow(row);
     });
   }
-
-  sheet.columns.forEach(column => { column.width = 30; });
 }
 
 async function generateFinancialStatementsExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const sheet = workbook.addWorksheet('Financial Statements');
   const finData = data.data as FinancialStatementsData;
+  setColumnWidths(sheet, [35, 25]);
 
-  sheet.addRow(['Financial Statements - ' + (data.metadata.propertyName || 'Unknown Property')]);
-  sheet.addRow(['Period', finData.period || 'N/A']);
-  sheet.addRow([]);
+  // Title
+  const titleRow = sheet.addRow(['Financial Statements - ' + (data.metadata.propertyName || 'Unknown Property')]);
+  styleTitleRow(titleRow, sheet, 2);
+
+  const periodRow = sheet.addRow(['Period', finData.period || 'N/A']);
+  styleKeyValueRow(periodRow);
 
   // Use dynamic flattening for all sections
   const sections = [
@@ -602,36 +853,56 @@ async function generateFinancialStatementsExcel(workbook: ExcelJS.Workbook, data
   sections.forEach(section => {
     const sectionFields = Object.entries(allData).filter(([key]) => key.startsWith(section.prefix));
     if (sectionFields.length > 0) {
-      sheet.addRow([section.name]);
+      sheet.addRow([]); // Spacing
+      const sectionRow = sheet.addRow([section.name]);
+      styleSectionHeader(sectionRow, sheet, 2);
       sectionFields.forEach(([key, value]) => {
         const displayKey = key.replace(section.prefix + '.', '');
-        sheet.addRow([camelCaseToTitleCase(displayKey), value]);
+        const row = sheet.addRow([camelCaseToTitleCase(displayKey), value]);
+        styleKeyValueRow(row);
       });
-      sheet.addRow([]);
     }
   });
 
-  // Top-level summary fields
-  if (finData.noi !== undefined) sheet.addRow(['NOI', finData.noi]);
-  if (finData.debtService !== undefined) sheet.addRow(['Debt Service', finData.debtService]);
-  if (finData.cashFlow !== undefined) sheet.addRow(['Cash Flow', finData.cashFlow]);
+  // Summary section
+  sheet.addRow([]); // Spacing
+  const summaryTitle = sheet.addRow(['Summary']);
+  styleSectionHeader(summaryTitle, sheet, 2);
 
-  sheet.columns.forEach(column => { column.width = 25; });
+  if (finData.noi !== undefined) {
+    const row = sheet.addRow(['NOI', finData.noi]);
+    styleKeyValueRow(row);
+  }
+  if (finData.debtService !== undefined) {
+    const row = sheet.addRow(['Debt Service', finData.debtService]);
+    styleKeyValueRow(row);
+  }
+  if (finData.cashFlow !== undefined) {
+    const row = sheet.addRow(['Cash Flow', finData.cashFlow]);
+    styleKeyValueRow(row);
+  }
 }
 
 async function generateGenericExcel(workbook: ExcelJS.Workbook, data: ExtractedData) {
   const sheet = workbook.addWorksheet('Extracted Data');
+  setColumnWidths(sheet, [35, 50]);
 
-  sheet.addRow(['Document Type', data.documentType]);
-  sheet.addRow(['Extraction Date', data.metadata.extractedDate]);
+  // Title
+  const titleRow = sheet.addRow(['Extracted Data']);
+  styleTitleRow(titleRow, sheet, 2);
+
+  // Metadata
+  const docTypeRow = sheet.addRow(['Document Type', data.documentType]);
+  styleKeyValueRow(docTypeRow);
+  const dateRow = sheet.addRow(['Extraction Date', data.metadata.extractedDate]);
+  styleKeyValueRow(dateRow);
   sheet.addRow([]);
 
-  sheet.addRow(['Raw Data']);
-  sheet.addRow([JSON.stringify(data.data, null, 2)]);
-
-  sheet.columns.forEach(column => {
-    column.width = 30;
-  });
+  // Data section
+  const dataTitle = sheet.addRow(['Raw Data']);
+  styleSectionHeader(dataTitle, sheet, 2);
+  const dataRow = sheet.addRow([JSON.stringify(data.data, null, 2)]);
+  styleDataRow(dataRow, false);
 }
 
 export async function OPTIONS(request: NextRequest) {
