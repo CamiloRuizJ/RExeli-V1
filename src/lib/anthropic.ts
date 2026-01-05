@@ -17,35 +17,36 @@ import type {
 
 /**
  * Get Anthropic API key from environment
- * Handles build-time placeholders for Vercel builds
+ * Called at runtime to ensure we get the actual key, not a build-time placeholder
  */
 function getAnthropicApiKey(): string {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  // During build time, env vars may not be available yet
-  // Return placeholder to allow build to complete
-  // Actual values will be used at runtime when the API is called
   if (!apiKey) {
-    console.warn('ANTHROPIC_API_KEY not found during build - using placeholder');
-    return 'build-time-placeholder-key-will-be-replaced-at-runtime';
+    throw new Error('ANTHROPIC_API_KEY environment variable is not configured');
   }
 
   return apiKey;
 }
 
 /**
- * Initialize Anthropic client with API key and production settings
- * Following Anthropic SDK best practices for commercial real estate document processing
+ * Lazy-initialized Anthropic client
+ * Created on first use to ensure environment variables are available at runtime
  */
-const anthropic = new Anthropic({
-  apiKey: getAnthropicApiKey(),
-  maxRetries: 2,       // Retry failed requests twice for resilience
-  timeout: 600000,     // 600 seconds (10 minutes) for multi-page document processing
-});
+let _anthropicClient: Anthropic | null = null;
 
-// Validate API key is present (with build-time handling)
-if (!process.env.ANTHROPIC_API_KEY && process.env.NODE_ENV === 'production' && process.env.VERCEL) {
-  console.error('ANTHROPIC_API_KEY environment variable is required');
+function getAnthropicClient(): Anthropic {
+  if (!_anthropicClient) {
+    const apiKey = getAnthropicApiKey();
+    console.log('Initializing Anthropic client with API key:', apiKey.substring(0, 10) + '...');
+
+    _anthropicClient = new Anthropic({
+      apiKey: apiKey,
+      maxRetries: 2,       // Retry failed requests twice for resilience
+      timeout: 600000,     // 600 seconds (10 minutes) for multi-page document processing
+    });
+  }
+  return _anthropicClient;
 }
 
 /**
@@ -947,12 +948,6 @@ export async function classifyDocument(imageDataUrls: string[]): Promise<Documen
   try {
     console.log(`Claude: Starting document classification for ${imageDataUrls.length} page(s)...`);
 
-    // Check API key availability
-    const apiKey = getAnthropicApiKey();
-    if (!apiKey || apiKey === 'build-time-placeholder-key') {
-      throw new Error('Anthropic API key not configured');
-    }
-
     // Build content array with images and text prompt
     const content: Array<{
       type: 'image';
@@ -994,7 +989,7 @@ export async function classifyDocument(imageDataUrls: string[]): Promise<Documen
     });
 
     // Call Claude API
-    const response = await anthropic.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 500,
       temperature: 0.7,
@@ -1143,7 +1138,7 @@ export async function extractData(
     let response;
 
     try {
-      response = await anthropic.messages.create({
+      response = await getAnthropicClient().messages.create({
         model: modelToUse,
         max_tokens: 64000, // Increased to match native PDF path (was 16K, causing truncation)
         temperature: 0.7, // Increased for variation and non-deterministic output
@@ -1309,7 +1304,7 @@ async function extractDataFromNativePDF(
     console.log(`║  Prompt length: ${prompt.length} chars`);
     console.log('╚════════════════════════════════════════════════════════════╝');
 
-    const response = await anthropic.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: await getActiveModelForDocumentType(documentType),
       max_tokens: 64000, // Maximum for Claude Sonnet 4.5 (supports large documents with many comparables)
       temperature: 0.7, // Increased for variation and non-deterministic output
