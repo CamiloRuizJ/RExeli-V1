@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
     const supabaseUrl = formData.get('supabaseUrl') as string | null;
     const documentType = formData.get('documentType') as DocumentType;
+    const userInstructions = formData.get('userInstructions') as string | null;
 
     // Accept either a file directly or a Supabase URL to fetch from
     if (!file && !supabaseUrl) {
@@ -155,6 +156,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Starting data extraction for manually selected document type: ${documentType}`);
+    if (userInstructions) {
+      console.log(`[Extract API] User provided custom instructions: ${userInstructions.substring(0, 100)}...`);
+    }
 
     // Create user metadata for extraction
     const userMetadata = {
@@ -172,7 +176,7 @@ export async function POST(request: NextRequest) {
     let warnings: string[] = [];
 
     try {
-      extractedData = await extractDocumentData(fileToProcess, documentType, userMetadata);
+      extractedData = await extractDocumentData(fileToProcess, documentType, userMetadata, userInstructions || undefined);
       console.log('Raw data extraction completed:', extractedData);
 
       // Transform the extracted data to match display component expectations

@@ -1060,7 +1060,8 @@ export async function classifyDocument(imageDataUrls: string[]): Promise<Documen
  */
 export async function extractData(
   documentType: DocumentType,
-  imageDataUrls: string[]
+  imageDataUrls: string[],
+  customPrompt?: string
 ): Promise<ExtractedData> {
   try {
     console.log('╔════════════════════════════════════════════════════════════╗');
@@ -1068,13 +1069,19 @@ export async function extractData(
     console.log('╚════════════════════════════════════════════════════════════╝');
     console.log(`Claude: Starting data extraction for ${documentType} with ${imageDataUrls.length} page(s)...`);
 
-    // Get extraction prompt for document type
-    const prompt = EXTRACTION_PROMPTS[documentType as keyof typeof EXTRACTION_PROMPTS];
-    if (!prompt) {
-      throw new Error(`No extraction prompt available for document type: ${documentType}`);
+    // Use custom prompt if provided (includes user instructions), otherwise get default
+    let prompt: string;
+    if (customPrompt) {
+      prompt = customPrompt;
+      console.log(`Claude: Using custom prompt with user instructions for ${documentType}`);
+    } else {
+      const defaultPrompt = EXTRACTION_PROMPTS[documentType as keyof typeof EXTRACTION_PROMPTS];
+      if (!defaultPrompt) {
+        throw new Error(`No extraction prompt available for document type: ${documentType}`);
+      }
+      prompt = defaultPrompt;
+      console.log(`Claude: Using default extraction prompt for ${documentType}`);
     }
-
-    console.log(`Claude: Using extraction prompt for ${documentType}`);
 
     // Get active model (currently always Claude Sonnet 4.5)
     const modelToUse = await getActiveModelForDocumentType(documentType);
@@ -1424,16 +1431,23 @@ export async function extractDocumentData(
     rexeliUserEmail: string;
     extractionTimestamp: string;
     documentId: string;
-  }
+  },
+  userInstructions?: string
 ): Promise<ExtractedData> {
   try {
     console.log(`Claude: Starting data extraction for ${documentType}...`);
     console.log(`File: ${file.name}, Type: ${file.type}, Size: ${(file.size / 1024).toFixed(2)}KB`);
 
     // Get extraction prompt
-    const prompt = EXTRACTION_PROMPTS[documentType as keyof typeof EXTRACTION_PROMPTS];
+    let prompt = EXTRACTION_PROMPTS[documentType as keyof typeof EXTRACTION_PROMPTS];
     if (!prompt) {
       throw new Error(`No extraction prompt available for document type: ${documentType}`);
+    }
+
+    // Append user instructions if provided
+    if (userInstructions?.trim()) {
+      console.log(`[Claude] Appending user instructions to prompt: "${userInstructions.substring(0, 50)}..."`);
+      prompt = `${prompt}\n\n---\nUSER INSTRUCTIONS (prioritize these requirements):\n${userInstructions.trim()}\n---`;
     }
 
     let imageDataUrls: string[] = [];
@@ -1494,7 +1508,7 @@ export async function extractDocumentData(
     // For PNG/image processing (scenarios 1 & 3), call extractData
     if (imageDataUrls.length > 0) {
       console.log(`Processing ${imageDataUrls.length} image(s) with Claude...`);
-      return await extractData(documentType, imageDataUrls);
+      return await extractData(documentType, imageDataUrls, prompt);
     }
 
     // Should not reach here

@@ -12,7 +12,7 @@ import type { DocumentFile, DocumentType } from '@/lib/types';
 
 interface FileUploadProps {
   onFileUpload: (file: DocumentFile) => void;
-  onUploadComplete: (file: DocumentFile, documentType: DocumentType) => void;
+  onUploadComplete: (file: DocumentFile, documentType: DocumentType, userInstructions?: string) => void;
   onUploadError: (error: string) => void;
   isProcessing?: boolean;
 }
@@ -27,6 +27,7 @@ export function FileUpload({
   const [uploadedFile, setUploadedFile] = useState<DocumentFile | null>(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
   const [showDocumentTypeSelection, setShowDocumentTypeSelection] = useState(false);
+  const [userInstructions, setUserInstructions] = useState<string>('');
 
   // Document type options as required
   const documentTypes = [
@@ -43,18 +44,20 @@ export function FileUpload({
   // Handle document type confirmation
   const handleDocumentTypeConfirmation = useCallback(() => {
     if (uploadedFile && selectedDocumentType) {
-      onUploadComplete(uploadedFile, selectedDocumentType as DocumentType);
+      onUploadComplete(uploadedFile, selectedDocumentType as DocumentType, userInstructions.trim() || undefined);
       setShowDocumentTypeSelection(false);
       setUploadedFile(null);
       setSelectedDocumentType('');
+      setUserInstructions('');
     }
-  }, [uploadedFile, selectedDocumentType, onUploadComplete]);
+  }, [uploadedFile, selectedDocumentType, userInstructions, onUploadComplete]);
 
   // Reset file upload to start over
   const handleStartOver = useCallback(() => {
     setShowDocumentTypeSelection(false);
     setUploadedFile(null);
     setSelectedDocumentType('');
+    setUserInstructions('');
     setUploadingFiles(new Map());
   }, []);
 
@@ -300,6 +303,25 @@ export function FileUpload({
               </Select>
               <p className="text-sm text-gray-600 font-medium">
                 This helps our AI extract the most relevant data from your document
+              </p>
+            </div>
+
+            {/* Extraction Instructions (Optional) */}
+            <div className="space-y-3">
+              <label className="text-base font-semibold text-gray-900">
+                Extraction Instructions <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <textarea
+                value={userInstructions}
+                onChange={(e) => setUserInstructions(e.target.value)}
+                placeholder="Help improve extraction accuracy:
+• Specify fields you need: 'Focus on tenant names and lease dates'
+• Describe your document: 'Uses Unit # instead of Suite'
+• Add context: 'Multi-property rent roll with 3 buildings'"
+                className="w-full h-28 px-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none placeholder:text-gray-400"
+              />
+              <p className="text-xs text-gray-500">
+                Provide any special instructions to help the AI understand your document better or focus on specific data
               </p>
             </div>
 

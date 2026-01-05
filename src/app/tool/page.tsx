@@ -25,6 +25,7 @@ export default function ToolPage() {
   // All useState hooks must be called at the top level, before any conditional returns
   const [currentFile, setCurrentFile] = useState<DocumentFile | null>(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType | null>(null);
+  const [userInstructions, setUserInstructions] = useState<string | undefined>(undefined);
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -91,6 +92,7 @@ export default function ToolPage() {
   const handleFileUpload = useCallback((file: DocumentFile) => {
     setCurrentFile(file);
     setSelectedDocumentType(null);
+    setUserInstructions(undefined);
     setProcessingSteps([]);
     setCurrentStep(0);
     setIsProcessing(false);
@@ -100,11 +102,15 @@ export default function ToolPage() {
     setRemainingCredits(null);
   }, []);
 
-  // Handle upload completion with document type
-  const handleUploadComplete = useCallback((file: DocumentFile, documentType: DocumentType) => {
+  // Handle upload completion with document type and optional instructions
+  const handleUploadComplete = useCallback((file: DocumentFile, documentType: DocumentType, instructions?: string) => {
     setCurrentFile(file);
     setSelectedDocumentType(documentType);
-    toast.success(`Document uploaded and classified as ${documentType.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}! Ready for AI processing.`);
+    setUserInstructions(instructions);
+
+    const docTypeLabel = documentType.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const instructionsNote = instructions ? ' Custom instructions included.' : '';
+    toast.success(`Document uploaded as ${docTypeLabel}!${instructionsNote} Ready for AI processing.`);
 
     // Auto-scroll to document preview section after a brief delay
     setTimeout(() => {
@@ -170,6 +176,9 @@ export default function ToolPage() {
       const extractionFormData = new FormData();
       extractionFormData.append('supabaseUrl', currentFile.supabaseUrl);
       extractionFormData.append('documentType', selectedDocumentType);
+      if (userInstructions) {
+        extractionFormData.append('userInstructions', userInstructions);
+      }
 
       // Create AbortController for timeout protection
       const controller = new AbortController();
@@ -280,7 +289,7 @@ export default function ToolPage() {
       setIsProcessing(false);
       toast.error(`Processing failed: ${errorMessage}`);
     }
-  }, [currentFile, selectedDocumentType, initializeSteps, updateStep, currentStep, scrollToElement]);
+  }, [currentFile, selectedDocumentType, userInstructions, initializeSteps, updateStep, currentStep, scrollToElement]);
 
   // Export to Excel
   const handleExportExcel = useCallback(async () => {
