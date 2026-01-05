@@ -171,765 +171,423 @@ Respond with this exact JSON structure:
  */
 const EXTRACTION_PROMPTS = {
   rent_roll: `
-You are a commercial real estate analyst extracting rent roll data. Extract EVERY tenant row (occupied AND vacant) - completeness is critical for NOI calculations.
+**CRITICAL ACCURACY RULES (MUST FOLLOW):**
+- Extract ONLY data that is EXPLICITLY written in this document
+- NEVER invent, estimate, or assume any data
+- If a value is not visible in the document, use null
+- Missing data is acceptable - WRONG data is NOT acceptable
+- Do NOT fill in fields based on typical values or assumptions
 
-**EXTRACTION REQUIREMENTS:**
-1. Count all tenant rows (occupied + vacant) across all pages
-2. Extract complete data for every tenant/unit
-3. Verify your JSON array length matches your count
-4. Calculate accurate summary metrics
+**FORMATTING RULES:**
+- Prices: Include "$" prefix (e.g., "$4,000" not 4000)
+- Percentages: Include "%" suffix (e.g., "92%" not 0.92)
+- Dates: YYYY-MM-DD format
+- Square feet: number only
 
-**DATA TO EXTRACT PER TENANT:**
-- Tenant name & suite/unit (use "VACANT" for vacant units)
-- Lease dates (start, end, commencement)
-- Financial terms (base rent, escalations, CAM, deposits, concessions)
-- Lease type (NNN, Gross, Modified Gross)
-- Square footage & occupancy status
-- Renewal options and special terms
+You are extracting rent roll data. Extract all visible tenant rows.
 
-**SUMMARY CALCULATIONS:**
-- Total rent (sum all base rents)
-- Occupancy rate (occupied ÷ total units)
-- Average rent PSF (total rent ÷ occupied SF)
-- Total/vacant units counts
+**CORE FIELDS TO EXTRACT (only if visible in document):**
+- tenantName (use "VACANT" for vacant units)
+- suiteUnit
+- squareFootage
+- baseRent (monthly, with $ prefix)
+- leaseStart, leaseEnd (YYYY-MM-DD)
+- leaseType (NNN/Gross/Modified Gross if shown)
 
-Return JSON with this structure:
+**OPTIONAL FIELDS (only if explicitly shown):**
+- rentEscalations, camReimbursements, securityDeposit
+- renewalOptions, freeRentConcessions, occupancyStatus
+
+Return JSON:
 {
   "documentType": "rent_roll",
   "metadata": {
-    "propertyName": "Property Name",
-    "propertyAddress": "Full Address",
-    "totalSquareFeet": 50000,
-    "totalUnits": 25,
-    "extractedDate": "2025-01-15"
+    "propertyName": null,
+    "propertyAddress": null,
+    "extractedDate": "YYYY-MM-DD"
   },
   "data": {
     "tenants": [
       {
-        "tenantName": "ABC Company",
-        "suiteUnit": "Suite 101",
-        "leaseStart": "2024-01-01",
-        "leaseEnd": "2026-12-31",
-        "rentCommencementDate": "2024-02-01",
-        "baseRent": 4000,
-        "rentEscalations": "3% annually",
-        "leaseType": "NNN",
-        "camReimbursements": 500,
-        "securityDeposit": 8000,
-        "renewalOptions": "Two 5-year options",
-        "freeRentConcessions": "2 months free",
+        "tenantName": "Tenant Name from document",
+        "suiteUnit": "Unit from document",
         "squareFootage": 2000,
-        "occupancyStatus": "occupied"
+        "baseRent": "$4,000",
+        "leaseStart": "2024-01-01",
+        "leaseEnd": "2026-12-31"
       }
     ],
     "summary": {
-      "totalRent": 100000,
-      "occupancyRate": 0.92,
-      "totalSquareFeet": 50000,
-      "averageRentPsf": 24.00,
-      "totalUnits": 25,
-      "vacantUnits": 2
+      "totalUnits": null,
+      "occupancyRate": null
     }
   }
 }
 
 **IMPORTANT:**
-- Process all pages - multi-page rent rolls must be complete
-- Use "N/A" for unavailable text fields, 0 for unavailable numeric fields
-- Dates in YYYY-MM-DD format
-- Ensure totals and metrics are accurate
+- Only include fields that have actual values in the document
+- Use null for any field not found - do NOT guess
   `,
 
   operating_budget: `
-You are a commercial real estate financial analyst extracting operating budget data. Extract EVERY line item - completeness is critical for NOI calculations and investment analysis.
+**CRITICAL ACCURACY RULES (MUST FOLLOW):**
+- Extract ONLY data that is EXPLICITLY written in this document
+- NEVER invent, estimate, or assume any data
+- If a value is not visible in the document, use null
+- Missing data is acceptable - WRONG data is NOT acceptable
+- Do NOT fill in fields based on typical values or assumptions
 
-**EXTRACTION REQUIREMENTS:**
-1. Count all income and expense line items across all pages
-2. Extract complete data for every line item
-3. Verify totals match document calculations
-4. Calculate accurate NOI and cash flow metrics
+**FORMATTING RULES:**
+- Prices/amounts: Include "$" prefix (e.g., "$150,000")
+- Percentages: Include "%" suffix (e.g., "5%")
+- Dates: YYYY-MM-DD format
 
-**INCOME DATA TO EXTRACT:**
-- Gross rental income (by category/tenant type)
-- Parking, storage, and miscellaneous income
-- Tenant reimbursements (CAM, taxes, insurance, utilities)
-- Vacancy allowance and loss factors
-- Effective gross income
+You are extracting operating budget data.
 
-**EXPENSE DATA TO EXTRACT:**
-- Real estate taxes
-- Property insurance
-- Property management fees
-- Utilities (electric, gas, water, sewer, trash)
-- Maintenance and repairs
-- Cleaning and janitorial
-- Landscaping and grounds
-- Professional fees (legal, accounting)
-- Marketing and leasing commissions
-- General and administrative expenses
+**CORE FIELDS TO EXTRACT (only if visible):**
+- period (budget year/timeframe)
+- Income items with amounts
+- Expense items with amounts
+- NOI if shown
 
-**CAPEX & NOI CALCULATIONS:**
-- Capital expenditure budget and forecasts
-- NOI = Total Income - Total Operating Expenses
-- Cash Flow = NOI - Capital Expenditures
-
-Return JSON with this structure:
+Return JSON:
 {
   "documentType": "operating_budget",
   "metadata": {
-    "propertyName": "Complete property name",
-    "propertyAddress": "Full address",
-    "propertyType": "Office/Retail/Industrial/Multifamily/Mixed-Use",
-    "totalSquareFeet": 0,
-    "extractedDate": "2025-01-15"
+    "propertyName": null,
+    "propertyAddress": null,
+    "extractedDate": "YYYY-MM-DD"
   },
   "data": {
-    "period": "2025 Operating Budget",
+    "period": null,
     "income": {
-      "grossRentalIncome": 0,
-      "vacancyAllowance": 0,
-      "effectiveGrossIncome": 0,
-      "otherIncome": 0,
-      "totalIncome": 0
+      "grossRentalIncome": null,
+      "totalIncome": null
     },
     "expenses": {
-      "propertyTaxes": 0,
-      "insurance": 0,
-      "utilities": 0,
-      "maintenance": 0,
-      "management": 0,
-      "marketing": 0,
-      "totalOperatingExpenses": 0
+      "totalOperatingExpenses": null
     },
-    "noi": 0,
-    "capexForecast": 0,
-    "cashFlow": 0
+    "noi": null
   }
 }
 
 **IMPORTANT:**
-- Process all pages - multi-page budgets must be complete
-- Use 0 for unavailable numeric fields
-- Ensure all totals are mathematically correct
-- Include variance analysis and prior year data if present
+- Only include fields that have actual values in the document
+- Use null for any field not found - do NOT guess or calculate
   `,
 
   broker_sales_comparables: `
-You are extracting ALL sales comparable data from a commercial real estate document. Your goal is to capture every property sale with complete and accurate information.
+**CRITICAL ACCURACY RULES (MUST FOLLOW):**
+- Extract ONLY data that is EXPLICITLY written in this document
+- NEVER invent, estimate, calculate, or assume any data
+- If a value is not visible in the document, use null
+- Missing data is acceptable - WRONG data is NOT acceptable
+- Do NOT fill in fields based on typical values or assumptions
+- Do NOT calculate pricePerSF - only use if explicitly shown
 
-**OBJECTIVE:**
-Extract every sales comparable into structured JSON format. Each property must have all required fields populated with actual data from the document.
+**FORMATTING RULES:**
+- Prices: Include "$" prefix (e.g., "$5,700,000" or "$5.7M")
+- Percentages: Include "%" suffix (e.g., "95%" or "5.5%")
+- Dates: YYYY-MM-DD format
+- Square feet: number only
 
-**REQUIRED FIELDS (7 per property):**
-1. propertyAddress - Full street address, city, state (e.g., "123 Main Street, Los Angeles, CA")
-2. propertyType - Industrial, Office, Retail, Multifamily, or Mixed-Use
-3. saleDate - Transaction date in YYYY-MM-DD format (e.g., "2024-06-15")
-4. salePrice - Total purchase price in dollars (e.g., 5700000 for $5.7M)
-5. pricePerSF - Price per square foot (calculate: salePrice ÷ buildingSize)
-6. buildingSize - Total building square feet as a number
-7. occupancyAtSale - Occupancy percentage at time of sale (0-100)
+You are extracting sales comparable data. Extract all visible property sales.
 
-**OPTIONAL FIELDS (extract if visible):**
-- yearBuilt - Year property was constructed
-- yearRenovated - Year of major renovation
-- capRate - Capitalization rate as percentage
-- noiAtSale - Net Operating Income at sale
-- buyer - Buyer entity name
-- seller - Seller entity name
+**CORE FIELDS TO EXTRACT (only if visible in document):**
+- propertyAddress (full address as shown)
+- saleDate (YYYY-MM-DD)
+- salePrice (with $ prefix)
+- buildingSize (square feet)
+- pricePerSF (ONLY if explicitly shown - do NOT calculate)
 
-**DATA HANDLING RULES:**
-- Extract EVERY property in the document - do not skip any rows or entries
-- Read data exactly as shown - do NOT invent or assume information
-- For missing required fields: use "Not specified" for text, 0 for numbers
-- Convert all dates to YYYY-MM-DD format
-- Recognize price abbreviations: "$5.7M" = 5700000, "$12.3K" = 12300
-- Calculate pricePerSF if not explicitly shown: salePrice ÷ buildingSize
-- Occupancy should be a percentage (e.g., 95 for 95%, not 0.95)
+**OPTIONAL FIELDS (only if explicitly shown):**
+- propertyType, yearBuilt, capRate, buyer, seller
 
-**EXTRACTION PROCESS:**
-1. Count total properties/sales in the document
-2. Process each property systematically (page by page, row by row)
-3. Extract all 7 required fields for each property
-4. Double-check your count matches the number of properties in your JSON array
-
-**QUALITY CHECKS:**
-- Total properties extracted = total properties in document?
-- Every property has all 7 required fields?
-- All dates in YYYY-MM-DD format?
-- All numeric values are reasonable?
-- PricePerSF = salePrice ÷ buildingSize?
-- Occupancy rates between 0-100%?
-
-Return JSON in this structure:
+Return JSON:
 {
   "documentType": "broker_sales_comparables",
   "metadata": {
-    "reportTitle": "Complete report title",
-    "reportDate": "YYYY-MM-DD",
-    "marketArea": "Geographic area analyzed",
-    "extractedDate": "2025-01-15"
+    "reportTitle": null,
+    "extractedDate": "YYYY-MM-DD"
   },
   "data": {
     "comparableSales": [
       {
-        "propertyAddress": "Complete street address",
-        "city": "City",
-        "state": "State",
-        "zipCode": "Zip code",
-        "transactionDetails": {
-          "saleDate": "YYYY-MM-DD",
-          "salePrice": 0,
-          "daysOnMarket": 0,
-          "termsOfSale": "Cash/Financed/Other"
-        },
-        "pricingMetrics": {
-          "pricePerSquareFoot": 0.00,
-          "pricePerUnit": 0.00
-        },
-        "propertyCharacteristics": {
-          "propertyType": "Office/Retail/Industrial/Multifamily/Mixed-Use",
-          "buildingClass": "A/B/C",
-          "totalBuildingSquareFeet": 0,
-          "numberOfUnits": 0,
-          "yearBuilt": 0,
-          "yearRenovated": 0
-        },
-        "financialPerformance": {
-          "noiAtSale": 0,
-          "grossRentalIncomeAtSale": 0,
-          "occupancyRateAtSale": 0.00,
-          "capRateAtSale": 0.00
-        },
-        "transactionParties": {
-          "buyerName": "Buyer entity name",
-          "buyerType": "Individual/Corporation/REIT/Fund",
-          "sellerName": "Seller entity name",
-          "sellerType": "Individual/Corporation/REIT/Fund"
-        }
+        "propertyAddress": "Address from document",
+        "saleDate": "2024-06-15",
+        "salePrice": "$5,700,000",
+        "buildingSize": 50000,
+        "pricePerSF": "$114"
       }
-    ],
-    "marketSummary": {
-      "totalSalesAnalyzed": 0,
-      "salesPeriod": "Date range of sales",
-      "averageDaysOnMarket": 0
-    },
-    "marketAnalysis": {
-      "pricingAnalysis": {
-        "averagePricePerSF": 0.00,
-        "medianPricePerSF": 0.00,
-        "pricePerSFRange": {"min": 0.00, "max": 0.00}
-      },
-      "capRateAnalysis": {
-        "averageCapRate": 0.00,
-        "medianCapRate": 0.00,
-        "capRateRange": {"min": 0.00, "max": 0.00}
-      }
-    }
+    ]
   }
 }
 
-**CRITICAL EXTRACTION INSTRUCTIONS:**
-- Extract data from EVERY visible property/sale in the document
-- For each sale, extract BOTH buyer AND seller information when available
-- Process tables row by row to ensure completeness
-- Recognize ALL format variations (e.g., "$5.7M" = "$5,700,000")
-- Count extracted properties to verify you captured them all
+**IMPORTANT:**
+- Only include fields that have actual values in the document
+- Use null for any field not found - do NOT guess or calculate
+- Keep the structure flat and simple - no nested objects unless data exists
   `,
 
   broker_lease_comparables: `
-You are extracting ALL lease comparable data from a commercial real estate document. Your goal is to capture every lease with complete and accurate information.
+**CRITICAL ACCURACY RULES (MUST FOLLOW):**
+- Extract ONLY data that is EXPLICITLY written in this document
+- NEVER invent, estimate, calculate, or assume any data
+- If a value is not visible in the document, use null
+- Missing data is acceptable - WRONG data is NOT acceptable
+- Do NOT fill in fields based on typical values or assumptions
+- Do NOT calculate effectiveRent - only use if explicitly shown
 
-**OBJECTIVE:**
-Extract every lease comparable into structured JSON format. Each lease must have all required fields populated with actual data from the document.
+**FORMATTING RULES:**
+- Prices/rent: Include "$" prefix (e.g., "$25.00/SF")
+- Percentages: Include "%" suffix (e.g., "3%")
+- Dates: YYYY-MM-DD format
+- Square feet: number only
 
-**REQUIRED FIELDS (9 per lease):**
-1. propertyAddress - Full street address, city, state (e.g., "5959 Santa Fe Street, San Diego, CA")
-2. propertyType - Industrial, Office, Retail, or Other
-3. leaseCommencementDate - Start date in YYYY-MM-DD format (e.g., "2025-04-01")
-4. tenantIndustry - Tenant's business type or industry (e.g., "Beverage Manufacturing", "Technology", "Retail")
-5. leaseTerm - Lease duration in months (convert years to months if needed)
-6. squareFootage - Rentable square feet as a number
-7. baseRent - Starting rent in $/SF/month (if yearly, divide by 12)
-8. leaseType - Must be exactly one of: "NNN", "Gross", or "Modified Gross"
-9. effectiveRent - Actual rent after accounting for free rent periods and concessions ($/SF/month)
+You are extracting lease comparable data. Extract all visible lease comparables.
 
-**OPTIONAL FIELDS (extract if visible):**
-- rentEscalations - Description of rent increases (e.g., "3% annually", "4.0%")
-- concessions - Free rent or other incentives (e.g., "3 months free", "$0.38 PSF OPEX")
+**CORE FIELDS TO EXTRACT (only if visible in document):**
+- propertyAddress (full address as shown)
+- squareFootage
+- baseRent (with $ prefix)
+- leaseCommencementDate (YYYY-MM-DD)
+- leaseTerm (in months)
 
-**DATA HANDLING RULES:**
-- Extract EVERY lease in the document - do not skip any rows or entries
-- Read data exactly as shown - do NOT invent or assume information
-- For missing required fields: use "Not specified" for text, 0 for numbers
-- Convert all dates to YYYY-MM-DD format
-- Convert lease terms to months (e.g., "99 Months" = 99, "5 Years" = 60)
-- Recognize tenant names from logos or company names in the document
-- Calculate effective rent by factoring in free rent periods
+**OPTIONAL FIELDS (only if explicitly shown):**
+- propertyType, leaseType, tenantName, rentEscalations, concessions
 
-**EXTRACTION PROCESS:**
-1. Count total lease comparables in the document
-2. Process each lease systematically (page by page, row by row)
-3. Extract all 9 required fields for each lease
-4. Double-check your count matches the number of leases in your JSON array
-
-**QUALITY CHECKS:**
-- Total leases extracted = total leases in document?
-- Every lease has all 9 required fields?
-- All dates in YYYY-MM-DD format?
-- All numeric values are reasonable?
-- Effective rent ≤ base rent (accounts for concessions)?
-
-Return JSON in this structure:
+Return JSON:
 {
   "documentType": "broker_lease_comparables",
   "metadata": {
-    "surveyTitle": "Market survey title",
-    "surveyDate": "YYYY-MM-DD",
-    "marketArea": "Geographic area surveyed",
-    "extractedDate": "2025-01-15"
+    "surveyTitle": null,
+    "extractedDate": "YYYY-MM-DD"
   },
   "data": {
     "comparables": [
       {
-        "propertyAddress": "Complete address",
-        "propertyType": "Office/Retail/Industrial/Other",
-        "buildingClass": "A/B/C",
-        "leaseCommencementDate": "YYYY-MM-DD",
-        "tenantIndustry": "Industry classification",
-        "leaseTerm": 60,
+        "propertyAddress": "Address from document",
         "squareFootage": 5000,
-        "baseRent": 25.00,
-        "rentEscalations": "3% annually",
-        "leaseType": "NNN",
-        "concessions": "3 months free rent",
-        "effectiveRent": 23.50
+        "baseRent": "$25.00/SF",
+        "leaseCommencementDate": "2025-04-01",
+        "leaseTerm": 60
       }
-    ],
-    "summary": {
-      "averageBaseRent": 0.00,
-      "averageEffectiveRent": 0.00,
-      "rentRange": {"min": 0.00, "max": 0.00}
-    }
+    ]
   }
 }
+
+**IMPORTANT:**
+- Only include fields that have actual values in the document
+- Use null for any field not found - do NOT guess or calculate
   `,
 
   broker_listing: `
-You are a commercial real estate broker extracting listing agreement data. Extract all terms and conditions - completeness is critical for transaction tracking and commission management.
+**CRITICAL ACCURACY RULES (MUST FOLLOW):**
+- Extract ONLY data that is EXPLICITLY written in this document
+- NEVER invent, estimate, or assume any data
+- If a value is not visible in the document, use null
+- Missing data is acceptable - WRONG data is NOT acceptable
 
-**EXTRACTION REQUIREMENTS:**
-1. Extract all parties (owner, broker, agents) and contact information
-2. Capture complete property identification and characteristics
-3. Extract all financial terms (listing price, commission structure, fees)
-4. Record all dates and deadlines (commencement, expiration, key milestones)
+**FORMATTING RULES:**
+- Prices: Include "$" prefix (e.g., "$5,000,000")
+- Percentages: Include "%" suffix (e.g., "6%")
+- Dates: YYYY-MM-DD format
 
-**PARTIES AND REPRESENTATION DATA:**
-- Property owner name and contact information
-- Brokerage firm name, license number, and contact details
-- Individual broker/agent names and license numbers
+You are extracting broker listing agreement data.
 
-**PROPERTY IDENTIFICATION DATA:**
-- Complete legal property description and address
-- Property type and use classification
-- Building square footage and lot size/acreage
-- Year built, parking details, zoning classification
+**CORE FIELDS TO EXTRACT (only if visible):**
+- propertyAddress
+- listingPrice or askingRent (with $ prefix)
+- listingDate, expirationDate (YYYY-MM-DD)
+- propertyOwner, brokerFirm
 
-**LISTING TERMS DATA:**
-- Listing type (exclusive right to sell/lease, exclusive agency, open listing)
-- Listing commencement date and expiration date
-- Asking price (sale) or asking rent (lease)
-- Commission structure and payment terms
-- Listing term duration
+**OPTIONAL FIELDS (only if explicitly shown):**
+- commissionStructure, propertyType, squareFootage
 
-**BROKER OBLIGATIONS DATA:**
-- Complete list of broker duties and responsibilities
-- Marketing obligations and requirements
-- Termination provisions and conditions
-
-Return JSON with this structure:
+Return JSON:
 {
   "documentType": "broker_listing",
   "metadata": {
-    "listingType": "Sale/Lease/Both",
-    "agreementDate": "YYYY-MM-DD",
-    "extractedDate": "2025-01-15"
+    "extractedDate": "YYYY-MM-DD"
   },
   "data": {
-    "listingDetails": {
-      "propertyOwner": "Complete owner entity name",
-      "brokerFirm": "Brokerage company name",
-      "brokerName": "Primary agent name",
-      "listingPrice": 0,
-      "askingRent": 0.00,
-      "listingType": "sale",
-      "commissionStructure": "Commission details",
-      "listingTerm": "Term length",
-      "listingDate": "YYYY-MM-DD",
-      "expirationDate": "YYYY-MM-DD"
-    },
-    "propertyDetails": {
-      "address": "Full property address",
-      "propertyType": "Detailed property type",
-      "squareFootage": 0,
-      "lotSize": 0.00,
-      "yearBuilt": 0,
-      "parking": "Parking details",
-      "zoning": "Zoning classification"
-    },
-    "brokerDuties": ["Complete list of broker duties"],
-    "terminationProvisions": ["All termination provisions"]
+    "propertyAddress": null,
+    "listingPrice": null,
+    "listingDate": null,
+    "expirationDate": null,
+    "propertyOwner": null,
+    "brokerFirm": null
   }
 }
 
 **IMPORTANT:**
-- Process all pages including addendums and special provisions
-- Use "N/A" for unavailable text fields, 0 for unavailable numeric fields
-- Dates in YYYY-MM-DD format
-- Verify commission structures are complete and unambiguous
+- Only include fields that have actual values in the document
+- Use null for any field not found - do NOT guess
   `,
 
   offering_memo: `
-You are a commercial real estate investment analyst extracting offering memorandum data. Extract every data point - completeness is critical for institutional investment decision-making.
+**CRITICAL ACCURACY RULES (MUST FOLLOW):**
+- Extract ONLY data that is EXPLICITLY written in this document
+- NEVER invent, estimate, calculate, or assume any data
+- If a value is not visible in the document, use null
+- Missing data is acceptable - WRONG data is NOT acceptable
+- Do NOT calculate cap rates or NOI - only use if explicitly shown
 
-**EXTRACTION REQUIREMENTS:**
-1. Extract property overview and characteristics
-2. Capture financial performance (income, expenses, NOI)
-3. Extract investment metrics (pricing, cap rate)
-4. Record tenant summaries and occupancy data
+**FORMATTING RULES:**
+- Prices: Include "$" prefix (e.g., "$15,000,000")
+- Percentages: Include "%" suffix (e.g., "5.5%")
+- Dates: YYYY-MM-DD format
 
-**PROPERTY DATA:**
-- Property name, address, location
-- Property type (Office/Retail/Industrial/Multifamily/Mixed-Use)
-- Year built, year renovated, square footage, lot size
-- Investment highlights
+You are extracting offering memorandum data.
 
-**FINANCIAL DATA:**
-- Gross rental income and other income
-- Operating expenses by category
-- Net Operating Income (NOI)
+**CORE FIELDS TO EXTRACT (only if visible):**
+- propertyName, propertyAddress
+- askingPrice (with $ prefix)
+- capRate (with % suffix)
+- noi (with $ prefix)
+- totalSquareFeet
 
-**TENANT DATA:**
-- Total units and occupancy rate
-- Average rent per unit/SF
-- Key lease terms
-- Major tenant information
+**OPTIONAL FIELDS (only if explicitly shown):**
+- propertyType, yearBuilt, occupancyRate, investmentHighlights
 
-**MARKET DATA:**
-- Market overview
-- Neighborhood description
-- Demographics and transportation
-
-**INVESTMENT METRICS:**
-- Asking price and cap rate
-- Price per square foot
-- Comparable properties
-
-Return JSON with this structure:
+Return JSON:
 {
   "documentType": "offering_memo",
   "metadata": {
-    "propertyName": "Complete property name",
-    "propertyAddress": "Full address",
-    "extractedDate": "2025-01-15"
+    "propertyName": null,
+    "propertyAddress": null,
+    "extractedDate": "YYYY-MM-DD"
   },
   "data": {
-    "propertyOverview": {
-      "name": "Building name",
-      "address": "Complete address",
-      "propertyType": "Detailed property classification",
-      "yearBuilt": 0,
-      "totalSquareFeet": 0,
-      "lotSize": 0.00
-    },
-    "investmentHighlights": ["All major selling points"],
-    "marketOverview": "Market conditions and trends",
-    "rentRollSummary": {
-      "totalUnits": 0,
-      "occupancyRate": 0.00,
-      "averageRent": 0.00
-    },
-    "operatingStatement": {
-      "grossIncome": 0,
-      "operatingExpenses": 0,
-      "noi": 0
-    },
-    "leaseTerms": ["Key lease terms"],
-    "comparables": [
-      {
-        "address": "Comparable property address",
-        "salePrice": 0,
-        "capRate": 0.00
-      }
-    ],
-    "pricing": {
-      "askingPrice": 0,
-      "capRate": 0.00,
-      "pricePerSF": 0.00
-    },
-    "locationData": {
-      "neighborhood": "Neighborhood description",
-      "demographics": "Area demographics",
-      "transportation": "Transportation access"
-    }
+    "askingPrice": null,
+    "capRate": null,
+    "noi": null,
+    "totalSquareFeet": null
   }
 }
 
 **IMPORTANT:**
-- Process all pages including executive summary and financial exhibits
-- Use "N/A" for unavailable text fields, 0 for unavailable numeric fields
-- Verify NOI = gross income - operating expenses and cap rate = NOI ÷ asking price
+- Only include fields that have actual values in the document
+- Use null for any field not found - do NOT guess or calculate
   `,
 
   lease_agreement: `
-You are a commercial real estate lease administrator extracting lease agreement data. Extract every clause and term - completeness is critical for lease administration and portfolio management.
+**CRITICAL ACCURACY RULES (MUST FOLLOW):**
+- Extract ONLY data that is EXPLICITLY written in this document
+- NEVER invent, estimate, calculate, or assume any data
+- If a value is not visible in the document, use null
+- Missing data is acceptable - WRONG data is NOT acceptable
+- Do NOT calculate rent per SF - only use if explicitly shown
 
-**EXTRACTION REQUIREMENTS:**
-1. Extract all parties (tenant, landlord) and legal entity names
-2. Capture complete premises description, address, and square footage
-3. Extract all financial terms (rent, escalations, deposits, expense allocations)
-4. Record all dates (start, end, renewal options, key deadlines)
+**FORMATTING RULES:**
+- Prices/rent: Include "$" prefix (e.g., "$5,000/month")
+- Percentages: Include "%" suffix (e.g., "3%")
+- Dates: YYYY-MM-DD format
 
-**PARTIES DATA:**
-- Complete tenant legal entity name
-- Complete landlord legal entity name
+You are extracting lease agreement data.
 
-**PREMISES DATA:**
-- Complete property address and legal description
-- Rentable square footage
-- Detailed premises description (suite/floor/building)
+**CORE FIELDS TO EXTRACT (only if visible):**
+- tenant, landlord (party names)
+- propertyAddress
+- baseRent (with $ prefix)
+- startDate, endDate (YYYY-MM-DD)
+- squareFeet
 
-**LEASE TERM DATA:**
-- Lease commencement date
-- Lease expiration date
-- Total term in months
-- Renewal options and terms
+**OPTIONAL FIELDS (only if explicitly shown):**
+- leaseType, rentEscalations, securityDeposit, renewalOptions
 
-**RENT AND FINANCIAL DATA:**
-- Monthly base rent
-- Rent per square foot
-- Rent escalation schedule (percentage or fixed amounts)
-- Security deposit amount
-- Rent commencement date if different from lease start
-
-**OPERATING EXPENSES DATA:**
-- Expense responsibility type (NNN, Gross, Modified Gross)
-- CAM charges and allocation method
-- Utility responsibilities (tenant vs landlord)
-- Real estate tax responsibilities
-- Insurance responsibilities
-
-**OBLIGATIONS AND PROVISIONS DATA:**
-- Landlord maintenance responsibilities
-- Tenant maintenance responsibilities
-- Assignment and subletting provisions
-- Default remedies and cure periods
-- Insurance requirements and coverage types
-
-Return JSON with this structure:
+Return JSON:
 {
   "documentType": "lease_agreement",
   "metadata": {
-    "propertyAddress": "Complete property address",
-    "leaseDate": "YYYY-MM-DD",
-    "extractedDate": "2025-01-15"
+    "propertyAddress": null,
+    "extractedDate": "YYYY-MM-DD"
   },
   "data": {
-    "parties": {
-      "tenant": "Complete tenant entity name",
-      "landlord": "Complete landlord entity name"
-    },
-    "premises": {
-      "propertyAddress": "Complete address and legal description",
-      "squareFeet": 0,
-      "description": "Detailed premises description"
-    },
-    "leaseTerm": {
-      "startDate": "YYYY-MM-DD",
-      "endDate": "YYYY-MM-DD",
-      "termMonths": 0
-    },
-    "rentSchedule": {
-      "baseRent": 0,
-      "rentEscalations": "Escalation schedule",
-      "rentPerSqFt": 0.00
-    },
-    "operatingExpenses": {
-      "responsibilityType": "NNN",
-      "camCharges": 0,
-      "utilities": "Utility responsibility",
-      "taxes": "Tax responsibility",
-      "insurance": "Insurance responsibility"
-    },
-    "securityDeposit": 0,
-    "renewalOptions": ["Renewal option details"],
-    "maintenanceObligations": {
-      "landlord": ["Landlord maintenance responsibilities"],
-      "tenant": ["Tenant maintenance responsibilities"]
-    },
-    "assignmentProvisions": "Assignment and subletting provisions",
-    "defaultRemedies": ["Default remedies and cure periods"],
-    "insuranceRequirements": ["Insurance coverage requirements"]
+    "tenant": null,
+    "landlord": null,
+    "propertyAddress": null,
+    "squareFeet": null,
+    "baseRent": null,
+    "startDate": null,
+    "endDate": null
   }
 }
 
 **IMPORTANT:**
-- Process all pages including exhibits, addendums, and amendments
-- Use "N/A" for unavailable text fields, 0 for unavailable numeric fields
-- Dates in YYYY-MM-DD format
-- Calculate rent per SF = base rent ÷ square footage
-- Verify lease dates are chronologically valid (start before end)
+- Only include fields that have actual values in the document
+- Use null for any field not found - do NOT guess or calculate
   `,
 
   financial_statements: `
-You are a commercial real estate financial analyst extracting financial statement data. Extract every line item - completeness is critical for accurate investment analysis and asset management.
+**CRITICAL ACCURACY RULES (MUST FOLLOW):**
+- Extract ONLY data that is EXPLICITLY written in this document
+- NEVER invent, estimate, calculate, or assume any data
+- If a value is not visible in the document, use null
+- Missing data is acceptable - WRONG data is NOT acceptable
+- Do NOT calculate NOI or totals - only use if explicitly shown
 
-**EXTRACTION REQUIREMENTS:**
-1. Count all income and expense line items before extraction
-2. Extract complete income statement data (all revenue and expense categories)
-3. Extract balance sheet data if present (assets, liabilities, equity)
-4. Calculate and verify NOI and cash flow metrics
+**FORMATTING RULES:**
+- All amounts: Include "$" prefix (e.g., "$500,000")
+- Percentages: Include "%" suffix
+- Dates: YYYY-MM-DD format
 
-**INCOME STATEMENT DATA:**
-- Rental income by category
-- Other income sources (parking, storage, fees, etc.)
-- Total gross income
-- Vacancy loss and credit loss
-- Effective gross income
+You are extracting financial statement data.
 
-**OPERATING EXPENSES DATA:**
-- Property taxes
-- Insurance (property, liability)
-- Utilities (electric, gas, water, sewer, trash)
-- Maintenance and repairs
-- Property management fees
-- Professional fees (legal, accounting)
-- Marketing and leasing costs
-- Administrative expenses
-- Other operating expenses
-- Total operating expenses
+**CORE FIELDS TO EXTRACT (only if visible):**
+- period (timeframe of the statement)
+- totalIncome, totalExpenses (with $ prefix)
+- noi (with $ prefix)
 
-**FINANCIAL PERFORMANCE METRICS:**
-- Net Operating Income (NOI = effective gross income - total operating expenses)
-- Debt service (if applicable)
-- Cash flow (NOI - debt service)
+**OPTIONAL FIELDS (only if explicitly shown):**
+- Individual income items, expense items, balance sheet items
 
-**BALANCE SHEET DATA (if present):**
-- Assets: Real estate value, cash, other assets, total assets
-- Liabilities: Mortgage balance, other liabilities, total liabilities
-- Equity: Owner's equity
-
-**CAPITAL EXPENDITURE DATA:**
-- Current year capital expenditures
-- Forecasted capital expenditures (multi-year if available)
-
-Return JSON with this structure:
+Return JSON:
 {
   "documentType": "financial_statements",
   "metadata": {
-    "propertyName": "Complete property name",
-    "propertyAddress": "Full property address",
-    "extractedDate": "2025-01-15"
+    "propertyName": null,
+    "extractedDate": "YYYY-MM-DD"
   },
   "data": {
-    "period": "Period ending YYYY-MM-DD",
-    "operatingIncome": {
-      "rentalIncome": 0,
-      "otherIncome": 0,
-      "totalIncome": 0,
-      "vacancyLoss": 0,
-      "effectiveGrossIncome": 0
-    },
-    "operatingExpenses": {
-      "propertyTaxes": 0,
-      "insurance": 0,
-      "utilities": 0,
-      "maintenance": 0,
-      "management": 0,
-      "professionalFees": 0,
-      "otherExpenses": 0,
-      "totalExpenses": 0
-    },
-    "noi": 0,
-    "debtService": 0,
-    "cashFlow": 0,
-    "balanceSheet": {
-      "assets": {
-        "realEstate": 0,
-        "cash": 0,
-        "otherAssets": 0,
-        "totalAssets": 0
-      },
-      "liabilities": {
-        "mortgage": 0,
-        "otherLiabilities": 0,
-        "totalLiabilities": 0
-      },
-      "equity": 0
-    },
-    "capex": {
-      "currentYear": 0,
-      "forecast": [0, 0, 0, 0, 0]
-    }
+    "period": null,
+    "totalIncome": null,
+    "totalExpenses": null,
+    "noi": null
   }
 }
 
 **IMPORTANT:**
-- Process all pages including all statement types and schedules
-- Use 0 for unavailable numeric fields
-- Verify total income = sum of all income line items
-- Verify total expenses = sum of all expense categories
-- Verify NOI = effective gross income - total operating expenses
-- Verify balance sheet balances: total assets = total liabilities + equity
+- Only include fields that have actual values in the document
+- Use null for any field not found - do NOT guess or calculate
   `,
 
   // Legacy prompts for backward compatibility
   comparable_sales: `
-You are an expert commercial real estate appraiser extracting comparable sales data. Extract ALL properties with addresses, sale prices, dates, square footage, price per SF, property types, and years built.
+**CRITICAL:** Extract ONLY data explicitly shown in document. NEVER invent data. Use null for missing values.
 
 Return JSON:
 {
   "documentType": "comparable_sales",
-  "metadata": {"extractedDate": "2025-01-15"},
+  "metadata": {"extractedDate": "YYYY-MM-DD"},
   "data": {
-    "properties": [
-      {
-        "address": "456 Commerce St",
-        "salePrice": 2500000,
-        "saleDate": "2024-11-15",
-        "squareFeet": 12500,
-        "pricePerSqFt": 200,
-        "propertyType": "Retail",
-        "yearBuilt": 1988
-      }
-    ]
+    "properties": [{"address": null, "salePrice": null, "saleDate": null}]
   }
 }
   `,
 
   financial_statement: `
-You are an expert commercial real estate financial analyst extracting operating performance data. Extract ALL revenue streams and operating expense categories.
+**CRITICAL:** Extract ONLY data explicitly shown in document. NEVER invent data. Use null for missing values.
 
 Return JSON:
 {
   "documentType": "financial_statement",
-  "metadata": {"extractedDate": "2025-01-15"},
+  "metadata": {"extractedDate": "YYYY-MM-DD"},
   "data": {
-    "period": "Year Ending 2024",
-    "revenue": {
-      "grossRent": 480000,
-      "otherIncome": 25000,
-      "totalRevenue": 505000
-    },
-    "expenses": {
-      "operatingExpenses": 85000,
-      "maintenance": 32000,
-      "insurance": 18000,
-      "taxes": 45000,
-      "utilities": 28000,
-      "management": 25000,
-      "totalExpenses": 233000
-    },
-    "netOperatingIncome": 272000
+    "period": null,
+    "totalRevenue": null,
+    "totalExpenses": null,
+    "netOperatingIncome": null
   }
 }
   `
@@ -992,7 +650,7 @@ export async function classifyDocument(imageDataUrls: string[]): Promise<Documen
     const response = await getAnthropicClient().messages.create({
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 500,
-      temperature: 0.7,
+      temperature: 0.0, // Zero temperature for accurate classification
       stop_sequences: ['</verification>'],
       system: 'You are an expert commercial real estate professional with 20+ years of experience analyzing property investment documents. Respond only with valid JSON.',
       messages: [
@@ -1147,10 +805,10 @@ export async function extractData(
     try {
       response = await getAnthropicClient().messages.create({
         model: modelToUse,
-        max_tokens: 64000, // Increased to match native PDF path (was 16K, causing truncation)
-        temperature: 0.7, // Increased for variation and non-deterministic output
+        max_tokens: 64000,
+        temperature: 0.0, // Zero temperature for accurate, deterministic extraction
         stop_sequences: ['</verification>'],
-        system: "You are a meticulous data extraction specialist. Your primary objective is to extract EVERY data point from the document - completeness is more important than speed. You MUST count items before extraction, verify counts after extraction, and ensure 100% completeness. Follow all instructions exactly, including mandatory output format requirements.",
+        system: "You are a precise data extraction specialist. CRITICAL RULES: 1) ONLY extract data that is EXPLICITLY written in the document. 2) NEVER invent, assume, estimate, or hallucinate any data. 3) If a field is not found in the document, use null or leave it empty. 4) If unsure about a value, use null - do NOT guess. 5) Accuracy is more important than completeness - missing data is acceptable, WRONG data is NOT acceptable. 6) Format prices with $ prefix, percentages with % suffix.",
         messages: [
           {
             role: 'user',
@@ -1306,17 +964,17 @@ async function extractDataFromNativePDF(
     console.log('║  DIAGNOSTIC: NATIVE PDF PATH API PARAMETERS                ║');
     console.log('╠════════════════════════════════════════════════════════════╣');
     console.log(`║  Model: ${await getActiveModelForDocumentType(documentType)}`);
-    console.log(`║  Temperature: 0.7 (increased for variation)`);
+    console.log(`║  Temperature: 0.0 (zero for accurate extraction)`);
     console.log(`║  max_tokens: 64000`);
     console.log(`║  Prompt length: ${prompt.length} chars`);
     console.log('╚════════════════════════════════════════════════════════════╝');
 
     const response = await getAnthropicClient().messages.create({
       model: await getActiveModelForDocumentType(documentType),
-      max_tokens: 64000, // Maximum for Claude Sonnet 4.5 (supports large documents with many comparables)
-      temperature: 0.7, // Increased for variation and non-deterministic output
+      max_tokens: 64000,
+      temperature: 0.0, // Zero temperature for accurate, deterministic extraction
       stop_sequences: ['</verification>'],
-      system: "You are a meticulous data extraction specialist. Your primary objective is to extract EVERY data point from the document - completeness is more important than speed. You MUST count items before extraction, verify counts after extraction, and ensure 100% completeness. Follow all instructions exactly, including mandatory output format requirements.",
+      system: "You are a precise data extraction specialist. CRITICAL RULES: 1) ONLY extract data that is EXPLICITLY written in the document. 2) NEVER invent, assume, estimate, or hallucinate any data. 3) If a field is not found in the document, use null or leave it empty. 4) If unsure about a value, use null - do NOT guess. 5) Accuracy is more important than completeness - missing data is acceptable, WRONG data is NOT acceptable. 6) Format prices with $ prefix, percentages with % suffix.",
       messages: [
         {
           role: 'user',
