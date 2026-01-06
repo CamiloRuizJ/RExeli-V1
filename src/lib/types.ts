@@ -39,35 +39,39 @@ export type DocumentType =
   | 'financial_statement'
   | 'unknown';
 
+export interface ExtractedDataMetadata {
+  // Document metadata (extracted from PDF content - can be null if not found):
+  propertyName?: string | null;
+  propertyAddress?: string | null;
+  totalSquareFeet?: number | null;
+  totalUnits?: number | null;
+  extractedDate: string;
+
+  // User metadata (system-generated):
+  pdfFileName: string;
+  rexeliUserName: string;
+  rexeliUserEmail: string;
+  extractionTimestamp: string;
+  documentId: string;
+
+  // Additional optional fields from AI extraction:
+  asOfDate?: string | null;
+  budgetPeriod?: string | null;
+  reportTitle?: string | null;
+  preparedBy?: string | null;
+  reportDate?: string | null;
+  surveyTitle?: string | null;
+  surveyDate?: string | null;
+  period?: string | null;
+  statementType?: string | null;
+
+  // Allow any additional fields from AI extraction (compatible with Zod passthrough)
+  [key: string]: unknown;
+}
+
 export interface ExtractedData {
   documentType: DocumentType;
-  metadata: {
-    // Document metadata (extracted from PDF content - can be null if not found):
-    propertyName?: string | null;
-    propertyAddress?: string | null;
-    totalSquareFeet?: number | null;
-    totalUnits?: number | null;
-    extractedDate: string;
-
-    // User metadata (system-generated):
-    pdfFileName: string;
-    rexeliUserName: string;
-    rexeliUserEmail: string;
-    extractionTimestamp: string;
-    documentId: string;
-
-    // Additional optional fields from AI extraction:
-    asOfDate?: string | null;
-    budgetPeriod?: string | null;
-    reportTitle?: string | null;
-    preparedBy?: string | null;
-    reportDate?: string | null;
-    surveyTitle?: string | null;
-    surveyDate?: string | null;
-    period?: string | null;
-    statementType?: string | null;
-    [key: string]: string | number | null | undefined;  // Allow additional fields
-  };
+  metadata: ExtractedDataMetadata;
   data: RentRollData | OperatingBudgetData | BrokerSalesComparablesData | BrokerLeaseComparablesData | BrokerListingData | OfferingMemoData | LeaseData | FinancialStatementsData | ComparableData | FinancialData;
 }
 
