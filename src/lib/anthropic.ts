@@ -889,7 +889,7 @@ export async function extractData(
 ): Promise<ExtractedData> {
   try {
     console.log('╔════════════════════════════════════════════════════════════╗');
-    console.log('║  EXTRACTION PATH: IMAGE/MULTI-PAGE (64K tokens, temp 0.7) ║');
+    console.log('║  EXTRACTION PATH: IMAGE/MULTI-PAGE (64K tokens, temp 0.5) ║');
     console.log('╚════════════════════════════════════════════════════════════╝');
     console.log(`Claude: Starting data extraction for ${documentType} with ${imageDataUrls.length} page(s)...`);
 
@@ -959,7 +959,7 @@ export async function extractData(
     console.log('║  DIAGNOSTIC: IMAGE PATH API PARAMETERS                     ║');
     console.log('╠════════════════════════════════════════════════════════════╣');
     console.log(`║  Model: ${modelToUse}`);
-    console.log(`║  Temperature: 0.7 (balanced for document understanding)`);
+    console.log(`║  Temperature: 0.5 (balanced for document understanding)`);
     console.log(`║  max_tokens: 64000`);
     console.log(`║  Prompt length: ${promptText.length} chars`);
     console.log('╚════════════════════════════════════════════════════════════╝');
@@ -972,7 +972,7 @@ export async function extractData(
       response = await getAnthropicClient().messages.create({
         model: modelToUse,
         max_tokens: 64000,
-        temperature: 0.7, // Higher temperature allows AI to better understand document structure
+        temperature: 0.5, // Balanced temperature for document understanding without hallucination
         stop_sequences: ['</verification>'],
         system: "You are an expert commercial real estate analyst with 20+ years of experience. Your task is to thoroughly extract ALL data from this document. RULES: 1) Extract every piece of data visible in the document - be comprehensive. 2) NEVER invent or hallucinate data that is not in the document. 3) Understand document structure and column headers intelligently (e.g., 'Sq Ft' = squareFootage, 'Mo. Rent' = monthlyRent). 4) Use null only for fields genuinely not present. 5) Format prices with $ prefix, percentages with % suffix. 6) Include any additional fields found in the document, even if not in the template.",
         messages: [
@@ -1119,7 +1119,7 @@ async function extractDataFromNativePDF(
 
   try {
     console.log('╔════════════════════════════════════════════════════════════╗');
-    console.log('║  EXTRACTION PATH: NATIVE PDF (64K tokens, temp 0.7)       ║');
+    console.log('║  EXTRACTION PATH: NATIVE PDF (64K tokens, temp 0.5)       ║');
     console.log('╚════════════════════════════════════════════════════════════╝');
     console.log(`Calling Claude with native PDF for ${documentType}...`);
 
@@ -1130,7 +1130,7 @@ async function extractDataFromNativePDF(
     console.log('║  DIAGNOSTIC: NATIVE PDF PATH API PARAMETERS                ║');
     console.log('╠════════════════════════════════════════════════════════════╣');
     console.log(`║  Model: ${await getActiveModelForDocumentType(documentType)}`);
-    console.log(`║  Temperature: 0.7 (balanced for document understanding)`);
+    console.log(`║  Temperature: 0.5 (balanced for document understanding)`);
     console.log(`║  max_tokens: 64000`);
     console.log(`║  Prompt length: ${prompt.length} chars`);
     console.log('╚════════════════════════════════════════════════════════════╝');
