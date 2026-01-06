@@ -29,18 +29,29 @@ export const DocumentTypeSchema = z.enum([
 // ============================================
 
 // Base metadata schema
+// Note: Use .nullish() for fields that can be null (AI returns null for missing data)
 const ExtractedDataMetadataSchema = z.object({
-  propertyName: z.string().optional(),
-  propertyAddress: z.string().optional(),
-  totalSquareFeet: z.number().optional(),
-  totalUnits: z.number().optional(),
+  propertyName: z.string().nullish(),        // Can be null, undefined, or string
+  propertyAddress: z.string().nullish(),     // Can be null, undefined, or string
+  totalSquareFeet: z.number().nullish(),     // Can be null, undefined, or number
+  totalUnits: z.number().nullish(),          // Can be null, undefined, or number
   extractedDate: z.string(),
   pdfFileName: z.string(),
   rexeliUserName: z.string(),
   rexeliUserEmail: z.string().email(),
   extractionTimestamp: z.string(),
-  documentId: z.string()
-});
+  documentId: z.string(),
+  // Additional optional fields that AI might include
+  asOfDate: z.string().nullish(),
+  budgetPeriod: z.string().nullish(),
+  reportTitle: z.string().nullish(),
+  preparedBy: z.string().nullish(),
+  reportDate: z.string().nullish(),
+  surveyTitle: z.string().nullish(),
+  surveyDate: z.string().nullish(),
+  period: z.string().nullish(),
+  statementType: z.string().nullish()
+}).passthrough();  // Allow additional fields not explicitly defined
 
 // Relaxed data schema - allows any structure since document types vary
 const ExtractedDataDataSchema = z.record(z.string(), z.any());

@@ -171,46 +171,52 @@ Respond with this exact JSON structure:
  */
 const EXTRACTION_PROMPTS = {
   rent_roll: `
-**CRITICAL ACCURACY RULES (MUST FOLLOW):**
-- Extract ONLY data that is EXPLICITLY written in this document
-- NEVER invent, estimate, or assume any data
-- If a value is not visible in the document, use null
-- Missing data is acceptable - WRONG data is NOT acceptable
-- Do NOT fill in fields based on typical values or assumptions
+You are an expert commercial real estate analyst extracting rent roll data from this document.
 
-**FORMATTING RULES:**
-- Prices: Include "$" prefix (e.g., "$4,000" not 4000)
-- Percentages: Include "%" suffix (e.g., "92%" not 0.92)
-- Dates: YYYY-MM-DD format
+**ACCURACY RULES:**
+- Extract ALL data that appears in the document - be thorough and comprehensive
+- NEVER invent or hallucinate data that is not in the document
+- Use null for fields where data is genuinely not present
+- Understand column headers intelligently - documents may use different naming conventions
+  (e.g., "Unit #" = suiteUnit, "Monthly Rent" = baseRent, "Sq Ft" = squareFootage)
+
+**FORMATTING:**
+- Prices: Include "$" prefix (e.g., "$4,000")
+- Percentages: Include "%" suffix (e.g., "92%")
+- Dates: YYYY-MM-DD format when possible
 - Square feet: number only
 
-You are extracting rent roll data. Extract all visible tenant rows.
+**EXTRACT ALL VISIBLE COLUMNS - Common rent roll fields include:**
+- tenantName (use "VACANT" for vacant/empty units)
+- suiteUnit / unitNumber / space
+- squareFootage / rentableSF / usableSF
+- baseRent / monthlyRent / annualRent (specify if monthly or annual)
+- leaseStart / leaseEnd / expirationDate
+- leaseType (NNN, Gross, Modified Gross, etc.)
+- rentPerSF / rentPSF
+- escalations / annualIncrease
+- camCharges / operatingExpenses / additionalRent
+- securityDeposit
+- options / renewalOptions
+- notes / comments
 
-**CORE FIELDS TO EXTRACT (only if visible in document):**
-- tenantName (use "VACANT" for vacant units)
-- suiteUnit
-- squareFootage
-- baseRent (monthly, with $ prefix)
-- leaseStart, leaseEnd (YYYY-MM-DD)
-- leaseType (NNN/Gross/Modified Gross if shown)
-
-**OPTIONAL FIELDS (only if explicitly shown):**
-- rentEscalations, camReimbursements, securityDeposit
-- renewalOptions, freeRentConcessions, occupancyStatus
+**IMPORTANT:** Include ANY additional columns that appear in the document, even if not listed above.
+Use the exact column names from the document when possible.
 
 Return JSON:
 {
   "documentType": "rent_roll",
   "metadata": {
-    "propertyName": null,
-    "propertyAddress": null,
+    "propertyName": "from document or null",
+    "propertyAddress": "from document or null",
+    "asOfDate": "date shown on rent roll or null",
     "extractedDate": "YYYY-MM-DD"
   },
   "data": {
     "tenants": [
       {
-        "tenantName": "Tenant Name from document",
-        "suiteUnit": "Unit from document",
+        "tenantName": "Actual tenant name",
+        "suiteUnit": "101",
         "squareFootage": 2000,
         "baseRent": "$4,000",
         "leaseStart": "2024-01-01",
@@ -219,36 +225,57 @@ Return JSON:
     ],
     "summary": {
       "totalUnits": null,
-      "occupancyRate": null
+      "totalSquareFootage": null,
+      "occupiedSquareFootage": null,
+      "occupancyRate": null,
+      "totalMonthlyRent": null
     }
   }
 }
-
-**IMPORTANT:**
-- Only include fields that have actual values in the document
-- Use null for any field not found - do NOT guess
   `,
 
   operating_budget: `
-**CRITICAL ACCURACY RULES (MUST FOLLOW):**
-- Extract ONLY data that is EXPLICITLY written in this document
-- NEVER invent, estimate, or assume any data
-- If a value is not visible in the document, use null
-- Missing data is acceptable - WRONG data is NOT acceptable
-- Do NOT fill in fields based on typical values or assumptions
+You are an expert commercial real estate analyst extracting operating budget/pro forma data.
 
-**FORMATTING RULES:**
-- Prices/amounts: Include "$" prefix (e.g., "$150,000")
-- Percentages: Include "%" suffix (e.g., "5%")
+**ACCURACY RULES:**
+- Extract ALL line items that appear in the document - be thorough
+- NEVER invent data - only extract what's visible
+- Use null for missing values
+- Understand document structure - budgets may be organized by category
+
+**FORMATTING:**
+- Amounts: Include "$" prefix (e.g., "$150,000")
+- Percentages: Include "%" suffix
 - Dates: YYYY-MM-DD format
 
-You are extracting operating budget data.
+**EXTRACT ALL VISIBLE LINE ITEMS - Common categories include:**
 
-**CORE FIELDS TO EXTRACT (only if visible):**
-- period (budget year/timeframe)
-- Income items with amounts
-- Expense items with amounts
-- NOI if shown
+INCOME:
+- grossPotentialRent / scheduledRent
+- vacancyLoss / vacancy
+- effectiveGrossIncome
+- otherIncome (parking, laundry, etc.)
+- reimbursements / recoveries
+- totalIncome / totalRevenue
+
+EXPENSES:
+- propertyTaxes / realEstateTaxes
+- insurance
+- utilities (electric, gas, water, trash)
+- repairs / maintenance
+- management / propertyManagement
+- administrative / general
+- payroll / salaries
+- landscaping / groundsKeeping
+- security
+- legal / professional
+- reserves / replacementReserves
+- totalExpenses / totalOperatingExpenses
+
+BOTTOM LINE:
+- noi / netOperatingIncome
+- debtService
+- cashFlow
 
 Return JSON:
 {
@@ -256,153 +283,190 @@ Return JSON:
   "metadata": {
     "propertyName": null,
     "propertyAddress": null,
+    "budgetPeriod": "2024" or "2024-2025",
     "extractedDate": "YYYY-MM-DD"
   },
   "data": {
-    "period": null,
     "income": {
-      "grossRentalIncome": null,
+      "grossPotentialRent": null,
+      "vacancyLoss": null,
+      "effectiveGrossIncome": null,
+      "otherIncome": null,
       "totalIncome": null
     },
     "expenses": {
-      "totalOperatingExpenses": null
+      "propertyTaxes": null,
+      "insurance": null,
+      "utilities": null,
+      "management": null,
+      "maintenance": null,
+      "totalExpenses": null
     },
-    "noi": null
+    "noi": null,
+    "lineItems": []
   }
 }
 
-**IMPORTANT:**
-- Only include fields that have actual values in the document
-- Use null for any field not found - do NOT guess or calculate
+Include a "lineItems" array with ALL individual budget items exactly as they appear.
   `,
 
   broker_sales_comparables: `
-**CRITICAL ACCURACY RULES (MUST FOLLOW):**
-- Extract ONLY data that is EXPLICITLY written in this document
-- NEVER invent, estimate, calculate, or assume any data
-- If a value is not visible in the document, use null
-- Missing data is acceptable - WRONG data is NOT acceptable
-- Do NOT fill in fields based on typical values or assumptions
-- Do NOT calculate pricePerSF - only use if explicitly shown
+You are an expert commercial real estate analyst extracting sales comparable data.
 
-**FORMATTING RULES:**
+**ACCURACY RULES:**
+- Extract ALL properties/sales shown in the document
+- NEVER invent data - only extract what's visible
+- Use null for fields not present
+- Understand that different brokers format comparables differently
+
+**FORMATTING:**
 - Prices: Include "$" prefix (e.g., "$5,700,000" or "$5.7M")
-- Percentages: Include "%" suffix (e.g., "95%" or "5.5%")
+- Percentages: Include "%" suffix (e.g., "5.5%")
 - Dates: YYYY-MM-DD format
 - Square feet: number only
 
-You are extracting sales comparable data. Extract all visible property sales.
-
-**CORE FIELDS TO EXTRACT (only if visible in document):**
-- propertyAddress (full address as shown)
-- saleDate (YYYY-MM-DD)
-- salePrice (with $ prefix)
-- buildingSize (square feet)
-- pricePerSF (ONLY if explicitly shown - do NOT calculate)
-
-**OPTIONAL FIELDS (only if explicitly shown):**
-- propertyType, yearBuilt, capRate, buyer, seller
+**EXTRACT ALL VISIBLE FIELDS - Common sales comp fields include:**
+- propertyName / name
+- propertyAddress / address / location
+- city, state, zip
+- saleDate / closingDate / transactionDate
+- salePrice / price / consideration
+- buildingSize / squareFeet / SF / GLA / NRA
+- landArea / lotSize / acres
+- pricePerSF / pricePSF (extract if shown, don't calculate)
+- pricePerUnit (for multifamily)
+- capRate / cap
+- noi / netOperatingIncome
+- occupancy / occupancyRate
+- yearBuilt / built
+- propertyType / type / use
+- propertyClass / class (A, B, C)
+- numberOfUnits / units
+- buyer / purchaser
+- seller / grantor
+- brokerNotes / comments
 
 Return JSON:
 {
   "documentType": "broker_sales_comparables",
   "metadata": {
     "reportTitle": null,
+    "preparedBy": null,
+    "reportDate": null,
     "extractedDate": "YYYY-MM-DD"
   },
   "data": {
     "comparableSales": [
       {
-        "propertyAddress": "Address from document",
+        "propertyAddress": "123 Main St, City, ST",
         "saleDate": "2024-06-15",
         "salePrice": "$5,700,000",
         "buildingSize": 50000,
-        "pricePerSF": "$114"
+        "pricePerSF": "$114",
+        "capRate": "5.5%",
+        "propertyType": "Office",
+        "yearBuilt": 1995
       }
-    ]
+    ],
+    "marketSummary": null
   }
 }
-
-**IMPORTANT:**
-- Only include fields that have actual values in the document
-- Use null for any field not found - do NOT guess or calculate
-- Keep the structure flat and simple - no nested objects unless data exists
   `,
 
   broker_lease_comparables: `
-**CRITICAL ACCURACY RULES (MUST FOLLOW):**
-- Extract ONLY data that is EXPLICITLY written in this document
-- NEVER invent, estimate, calculate, or assume any data
-- If a value is not visible in the document, use null
-- Missing data is acceptable - WRONG data is NOT acceptable
-- Do NOT fill in fields based on typical values or assumptions
-- Do NOT calculate effectiveRent - only use if explicitly shown
+You are an expert commercial real estate analyst extracting lease comparable data.
 
-**FORMATTING RULES:**
-- Prices/rent: Include "$" prefix (e.g., "$25.00/SF")
-- Percentages: Include "%" suffix (e.g., "3%")
+**ACCURACY RULES:**
+- Extract ALL lease comparables shown in the document
+- NEVER invent data - only extract what's visible
+- Use null for missing fields
+- Understand varying broker formats and terminology
+
+**FORMATTING:**
+- Rent: Include "$" and units (e.g., "$25.00/SF/YR" or "$2,500/month")
+- Percentages: Include "%" suffix
 - Dates: YYYY-MM-DD format
-- Square feet: number only
 
-You are extracting lease comparable data. Extract all visible lease comparables.
-
-**CORE FIELDS TO EXTRACT (only if visible in document):**
-- propertyAddress (full address as shown)
-- squareFootage
-- baseRent (with $ prefix)
-- leaseCommencementDate (YYYY-MM-DD)
-- leaseTerm (in months)
-
-**OPTIONAL FIELDS (only if explicitly shown):**
-- propertyType, leaseType, tenantName, rentEscalations, concessions
+**EXTRACT ALL VISIBLE FIELDS - Common lease comp fields include:**
+- propertyName / buildingName
+- propertyAddress / address / location
+- tenantName / tenant
+- suiteUnit / suite / space
+- squareFootage / leasedSF / SF
+- leaseType (NNN, FSG, MG, IG, etc.)
+- baseRent / startingRent / facialRent
+- effectiveRent (if shown - don't calculate)
+- rentPerSF / rentPSF
+- leaseCommencementDate / startDate
+- leaseExpirationDate / endDate
+- leaseTerm / term (months or years)
+- freeRent / abatement / concessions
+- tenantImprovements / TI / TIA
+- escalations / annualIncreases / bumps
+- options / renewalOptions
+- executionDate / signedDate
+- propertyType / use
+- landlord
 
 Return JSON:
 {
   "documentType": "broker_lease_comparables",
   "metadata": {
     "surveyTitle": null,
+    "preparedBy": null,
+    "surveyDate": null,
     "extractedDate": "YYYY-MM-DD"
   },
   "data": {
     "comparables": [
       {
-        "propertyAddress": "Address from document",
+        "propertyAddress": "123 Main St",
+        "tenantName": "ABC Corp",
         "squareFootage": 5000,
-        "baseRent": "$25.00/SF",
+        "baseRent": "$25.00/SF/YR",
+        "leaseType": "NNN",
         "leaseCommencementDate": "2025-04-01",
-        "leaseTerm": 60
+        "leaseTerm": "60 months"
       }
     ]
   }
 }
-
-**IMPORTANT:**
-- Only include fields that have actual values in the document
-- Use null for any field not found - do NOT guess or calculate
   `,
 
   broker_listing: `
-**CRITICAL ACCURACY RULES (MUST FOLLOW):**
-- Extract ONLY data that is EXPLICITLY written in this document
-- NEVER invent, estimate, or assume any data
-- If a value is not visible in the document, use null
-- Missing data is acceptable - WRONG data is NOT acceptable
+You are an expert commercial real estate analyst extracting broker listing data.
 
-**FORMATTING RULES:**
-- Prices: Include "$" prefix (e.g., "$5,000,000")
-- Percentages: Include "%" suffix (e.g., "6%")
+**ACCURACY RULES:**
+- Extract ALL listing information shown in the document
+- NEVER invent data - only extract what's visible
+- Use null for missing values
+
+**FORMATTING:**
+- Prices: Include "$" prefix
+- Percentages: Include "%" suffix
 - Dates: YYYY-MM-DD format
 
-You are extracting broker listing agreement data.
-
-**CORE FIELDS TO EXTRACT (only if visible):**
-- propertyAddress
-- listingPrice or askingRent (with $ prefix)
-- listingDate, expirationDate (YYYY-MM-DD)
-- propertyOwner, brokerFirm
-
-**OPTIONAL FIELDS (only if explicitly shown):**
-- commissionStructure, propertyType, squareFootage
+**EXTRACT ALL VISIBLE FIELDS including:**
+- propertyName / name
+- propertyAddress / address
+- propertyType / type
+- listingPrice / askingPrice / price
+- askingRent / leasingRate (for lease listings)
+- squareFootage / buildingSize / SF
+- landArea / lotSize
+- pricePerSF
+- capRate (if investment sale)
+- noi
+- yearBuilt
+- zoning
+- listingBroker / agent
+- brokerFirm / company
+- listingDate
+- expirationDate
+- propertyOwner / owner
+- commissionRate / commission
+- propertyDescription
+- highlights / features
 
 Return JSON:
 {
@@ -411,44 +475,72 @@ Return JSON:
     "extractedDate": "YYYY-MM-DD"
   },
   "data": {
+    "propertyName": null,
     "propertyAddress": null,
+    "propertyType": null,
     "listingPrice": null,
+    "squareFootage": null,
+    "pricePerSF": null,
     "listingDate": null,
     "expirationDate": null,
     "propertyOwner": null,
-    "brokerFirm": null
+    "brokerFirm": null,
+    "listingBroker": null,
+    "description": null,
+    "highlights": []
   }
 }
-
-**IMPORTANT:**
-- Only include fields that have actual values in the document
-- Use null for any field not found - do NOT guess
   `,
 
   offering_memo: `
-**CRITICAL ACCURACY RULES (MUST FOLLOW):**
-- Extract ONLY data that is EXPLICITLY written in this document
-- NEVER invent, estimate, calculate, or assume any data
-- If a value is not visible in the document, use null
-- Missing data is acceptable - WRONG data is NOT acceptable
-- Do NOT calculate cap rates or NOI - only use if explicitly shown
+You are an expert commercial real estate analyst extracting offering memorandum data.
 
-**FORMATTING RULES:**
-- Prices: Include "$" prefix (e.g., "$15,000,000")
-- Percentages: Include "%" suffix (e.g., "5.5%")
+**ACCURACY RULES:**
+- Extract ALL investment details from the document - be thorough
+- NEVER invent data - only extract what's visible
+- Use null for missing values
+- OMs contain rich data - capture as much as possible
+
+**FORMATTING:**
+- Prices: Include "$" prefix
+- Percentages: Include "%" suffix
 - Dates: YYYY-MM-DD format
 
-You are extracting offering memorandum data.
+**EXTRACT ALL VISIBLE FIELDS including:**
 
-**CORE FIELDS TO EXTRACT (only if visible):**
-- propertyName, propertyAddress
-- askingPrice (with $ prefix)
-- capRate (with % suffix)
-- noi (with $ prefix)
-- totalSquareFeet
+PROPERTY INFORMATION:
+- propertyName
+- propertyAddress, city, state, zip
+- propertyType / assetType
+- propertyClass (A, B, C)
+- yearBuilt / yearRenovated
+- totalSquareFeet / GLA / NRA
+- landArea / acres
+- numberOfUnits (if multifamily)
+- numberOfFloors / stories
+- parkingSpaces / parkingRatio
+- zoning
 
-**OPTIONAL FIELDS (only if explicitly shown):**
-- propertyType, yearBuilt, occupancyRate, investmentHighlights
+FINANCIAL METRICS:
+- askingPrice / listPrice / guidancePrice
+- pricePerSF / pricePSF
+- pricePerUnit (multifamily)
+- capRate / goingInCap
+- noi / netOperatingIncome
+- grossIncome / effectiveGrossIncome
+- operatingExpenses
+- occupancyRate / occupancy
+- averageRent / avgRentPSF
+
+TENANT/LEASE INFO (if included):
+- majorTenants / tenantRoster
+- walt / weightedAverageLeaseterm
+- leaseExpiration schedule
+
+INVESTMENT HIGHLIGHTS:
+- investmentHighlights / keyPoints
+- locationHighlights
+- marketOverview
 
 Return JSON:
 {
@@ -456,45 +548,75 @@ Return JSON:
   "metadata": {
     "propertyName": null,
     "propertyAddress": null,
+    "preparedBy": null,
     "extractedDate": "YYYY-MM-DD"
   },
   "data": {
     "askingPrice": null,
     "capRate": null,
     "noi": null,
-    "totalSquareFeet": null
+    "totalSquareFeet": null,
+    "pricePerSF": null,
+    "propertyType": null,
+    "yearBuilt": null,
+    "occupancyRate": null,
+    "investmentHighlights": [],
+    "tenantSummary": null
   }
 }
-
-**IMPORTANT:**
-- Only include fields that have actual values in the document
-- Use null for any field not found - do NOT guess or calculate
   `,
 
   lease_agreement: `
-**CRITICAL ACCURACY RULES (MUST FOLLOW):**
-- Extract ONLY data that is EXPLICITLY written in this document
-- NEVER invent, estimate, calculate, or assume any data
-- If a value is not visible in the document, use null
-- Missing data is acceptable - WRONG data is NOT acceptable
-- Do NOT calculate rent per SF - only use if explicitly shown
+You are an expert commercial real estate analyst extracting lease agreement data.
 
-**FORMATTING RULES:**
-- Prices/rent: Include "$" prefix (e.g., "$5,000/month")
-- Percentages: Include "%" suffix (e.g., "3%")
+**ACCURACY RULES:**
+- Extract ALL lease terms and provisions from the document
+- NEVER invent data - only extract what's visible
+- Use null for missing values
+- Leases are detailed - capture key business terms
+
+**FORMATTING:**
+- Rent: Include "$" and specify if monthly/annual/PSF
+- Percentages: Include "%" suffix
 - Dates: YYYY-MM-DD format
 
-You are extracting lease agreement data.
+**EXTRACT ALL VISIBLE FIELDS including:**
 
-**CORE FIELDS TO EXTRACT (only if visible):**
-- tenant, landlord (party names)
-- propertyAddress
-- baseRent (with $ prefix)
-- startDate, endDate (YYYY-MM-DD)
-- squareFeet
+PARTIES:
+- tenant / lessee
+- landlord / lessor
+- guarantor (if any)
 
-**OPTIONAL FIELDS (only if explicitly shown):**
-- leaseType, rentEscalations, securityDeposit, renewalOptions
+PREMISES:
+- propertyAddress / premises
+- suiteNumber / unit
+- squareFeet / rentableArea / usableArea
+- floor
+
+TERM:
+- leaseCommencementDate / startDate
+- leaseExpirationDate / endDate
+- leaseTerm (months/years)
+- rentCommencementDate (if different)
+
+RENT:
+- baseRent / minimumRent
+- rentPerSF
+- rentSchedule / escalations
+- percentageRent (retail)
+- additionalRent / CAM / operatingExpenses
+- taxEscalations
+
+OTHER TERMS:
+- securityDeposit
+- tenantImprovementAllowance / TI
+- freeRent / abatement
+- renewalOptions
+- expansionOptions
+- terminationRights
+- useClause / permittedUse
+- assignmentSublet provisions
+- parkingAllocation
 
 Return JSON:
 {
@@ -506,80 +628,123 @@ Return JSON:
   "data": {
     "tenant": null,
     "landlord": null,
-    "propertyAddress": null,
+    "premises": null,
     "squareFeet": null,
     "baseRent": null,
-    "startDate": null,
-    "endDate": null
+    "rentPerSF": null,
+    "leaseCommencementDate": null,
+    "leaseExpirationDate": null,
+    "leaseTerm": null,
+    "leaseType": null,
+    "securityDeposit": null,
+    "renewalOptions": null,
+    "rentEscalations": null,
+    "additionalTerms": []
   }
 }
-
-**IMPORTANT:**
-- Only include fields that have actual values in the document
-- Use null for any field not found - do NOT guess or calculate
   `,
 
   financial_statements: `
-**CRITICAL ACCURACY RULES (MUST FOLLOW):**
-- Extract ONLY data that is EXPLICITLY written in this document
-- NEVER invent, estimate, calculate, or assume any data
-- If a value is not visible in the document, use null
-- Missing data is acceptable - WRONG data is NOT acceptable
-- Do NOT calculate NOI or totals - only use if explicitly shown
+You are an expert commercial real estate analyst extracting financial statement data.
 
-**FORMATTING RULES:**
-- All amounts: Include "$" prefix (e.g., "$500,000")
+**ACCURACY RULES:**
+- Extract ALL financial line items from the document
+- NEVER invent data - only extract what's visible
+- Use null for missing values
+- Preserve the document's categorization and structure
+
+**FORMATTING:**
+- Amounts: Include "$" prefix
 - Percentages: Include "%" suffix
 - Dates: YYYY-MM-DD format
 
-You are extracting financial statement data.
+**EXTRACT ALL VISIBLE LINE ITEMS including:**
 
-**CORE FIELDS TO EXTRACT (only if visible):**
-- period (timeframe of the statement)
-- totalIncome, totalExpenses (with $ prefix)
-- noi (with $ prefix)
+INCOME STATEMENT ITEMS:
+- grossPotentialRent / scheduledRent
+- vacancyLoss
+- concessions
+- effectiveGrossIncome
+- otherIncome (itemize: parking, laundry, fees, etc.)
+- totalRevenue / totalIncome
 
-**OPTIONAL FIELDS (only if explicitly shown):**
-- Individual income items, expense items, balance sheet items
+EXPENSE ITEMS:
+- propertyTaxes / realEstateTaxes
+- insurance
+- utilities (itemize if shown)
+- repairs / maintenance
+- management / propertyManagement
+- administrative
+- payroll
+- professional fees (legal, accounting)
+- marketing
+- landscaping
+- security
+- reserves / replacementReserves
+- totalOperatingExpenses
+
+BOTTOM LINE:
+- noi / netOperatingIncome
+- debtService / mortgagePayment
+- cashFlowBeforeTax
+- capitalExpenditures
+
+BALANCE SHEET (if included):
+- assets, liabilities, equity items
 
 Return JSON:
 {
   "documentType": "financial_statements",
   "metadata": {
     "propertyName": null,
+    "period": "Year ending 2024" or "Jan-Dec 2024",
+    "statementType": "Actual" or "Pro Forma" or "Budget",
     "extractedDate": "YYYY-MM-DD"
   },
   "data": {
-    "period": null,
-    "totalIncome": null,
-    "totalExpenses": null,
-    "noi": null
+    "income": {
+      "grossPotentialRent": null,
+      "vacancyLoss": null,
+      "effectiveGrossIncome": null,
+      "otherIncome": null,
+      "totalIncome": null
+    },
+    "expenses": {
+      "propertyTaxes": null,
+      "insurance": null,
+      "utilities": null,
+      "management": null,
+      "maintenance": null,
+      "totalExpenses": null
+    },
+    "noi": null,
+    "lineItems": []
   }
 }
 
-**IMPORTANT:**
-- Only include fields that have actual values in the document
-- Use null for any field not found - do NOT guess or calculate
+Include a "lineItems" array with ALL individual items exactly as they appear in the document.
   `,
 
   // Legacy prompts for backward compatibility
   comparable_sales: `
-**CRITICAL:** Extract ONLY data explicitly shown in document. NEVER invent data. Use null for missing values.
+You are an expert CRE analyst. Extract ALL sales data from this document.
+NEVER invent data. Use null for missing values.
 
-Return JSON:
+Return JSON with all visible fields:
 {
   "documentType": "comparable_sales",
   "metadata": {"extractedDate": "YYYY-MM-DD"},
   "data": {
-    "properties": [{"address": null, "salePrice": null, "saleDate": null}]
+    "properties": [{"address": null, "salePrice": null, "saleDate": null, "squareFeet": null, "pricePerSF": null}]
   }
 }
   `,
 
   financial_statement: `
-**CRITICAL:** Extract ONLY data explicitly shown in document. NEVER invent data. Use null for missing values.
+You are an expert CRE analyst. Extract ALL financial data from this document.
+NEVER invent data. Use null for missing values.
 
-Return JSON:
+Return JSON with all visible line items:
 {
   "documentType": "financial_statement",
   "metadata": {"extractedDate": "YYYY-MM-DD"},
@@ -587,7 +752,8 @@ Return JSON:
     "period": null,
     "totalRevenue": null,
     "totalExpenses": null,
-    "netOperatingIncome": null
+    "netOperatingIncome": null,
+    "lineItems": []
   }
 }
   `
@@ -723,7 +889,7 @@ export async function extractData(
 ): Promise<ExtractedData> {
   try {
     console.log('╔════════════════════════════════════════════════════════════╗');
-    console.log('║  EXTRACTION PATH: IMAGE/MULTI-PAGE (16K tokens, temp 0.3) ║');
+    console.log('║  EXTRACTION PATH: IMAGE/MULTI-PAGE (64K tokens, temp 0.0) ║');
     console.log('╚════════════════════════════════════════════════════════════╝');
     console.log(`Claude: Starting data extraction for ${documentType} with ${imageDataUrls.length} page(s)...`);
 
@@ -793,8 +959,8 @@ export async function extractData(
     console.log('║  DIAGNOSTIC: IMAGE PATH API PARAMETERS                     ║');
     console.log('╠════════════════════════════════════════════════════════════╣');
     console.log(`║  Model: ${modelToUse}`);
-    console.log(`║  Temperature: 0.7 (increased for variation)`);
-    console.log(`║  max_tokens: 64000 (matching PDF path)`);
+    console.log(`║  Temperature: 0.0 (zero for accurate extraction)`);
+    console.log(`║  max_tokens: 64000`);
     console.log(`║  Prompt length: ${promptText.length} chars`);
     console.log('╚════════════════════════════════════════════════════════════╝');
 
@@ -808,7 +974,7 @@ export async function extractData(
         max_tokens: 64000,
         temperature: 0.0, // Zero temperature for accurate, deterministic extraction
         stop_sequences: ['</verification>'],
-        system: "You are a precise data extraction specialist. CRITICAL RULES: 1) ONLY extract data that is EXPLICITLY written in the document. 2) NEVER invent, assume, estimate, or hallucinate any data. 3) If a field is not found in the document, use null or leave it empty. 4) If unsure about a value, use null - do NOT guess. 5) Accuracy is more important than completeness - missing data is acceptable, WRONG data is NOT acceptable. 6) Format prices with $ prefix, percentages with % suffix.",
+        system: "You are an expert commercial real estate analyst with 20+ years of experience. Your task is to thoroughly extract ALL data from this document. RULES: 1) Extract every piece of data visible in the document - be comprehensive. 2) NEVER invent or hallucinate data that is not in the document. 3) Understand document structure and column headers intelligently (e.g., 'Sq Ft' = squareFootage, 'Mo. Rent' = monthlyRent). 4) Use null only for fields genuinely not present. 5) Format prices with $ prefix, percentages with % suffix. 6) Include any additional fields found in the document, even if not in the template.",
         messages: [
           {
             role: 'user',
@@ -953,7 +1119,7 @@ async function extractDataFromNativePDF(
 
   try {
     console.log('╔════════════════════════════════════════════════════════════╗');
-    console.log('║  EXTRACTION PATH: NATIVE PDF (64K tokens, temp 0.7)       ║');
+    console.log('║  EXTRACTION PATH: NATIVE PDF (64K tokens, temp 0.0)       ║');
     console.log('╚════════════════════════════════════════════════════════════╝');
     console.log(`Calling Claude with native PDF for ${documentType}...`);
 
@@ -974,7 +1140,7 @@ async function extractDataFromNativePDF(
       max_tokens: 64000,
       temperature: 0.0, // Zero temperature for accurate, deterministic extraction
       stop_sequences: ['</verification>'],
-      system: "You are a precise data extraction specialist. CRITICAL RULES: 1) ONLY extract data that is EXPLICITLY written in the document. 2) NEVER invent, assume, estimate, or hallucinate any data. 3) If a field is not found in the document, use null or leave it empty. 4) If unsure about a value, use null - do NOT guess. 5) Accuracy is more important than completeness - missing data is acceptable, WRONG data is NOT acceptable. 6) Format prices with $ prefix, percentages with % suffix.",
+      system: "You are an expert commercial real estate analyst with 20+ years of experience. Your task is to thoroughly extract ALL data from this document. RULES: 1) Extract every piece of data visible in the document - be comprehensive. 2) NEVER invent or hallucinate data that is not in the document. 3) Understand document structure and column headers intelligently (e.g., 'Sq Ft' = squareFootage, 'Mo. Rent' = monthlyRent). 4) Use null only for fields genuinely not present. 5) Format prices with $ prefix, percentages with % suffix. 6) Include any additional fields found in the document, even if not in the template.",
       messages: [
         {
           role: 'user',

@@ -255,10 +255,15 @@ function setColumnWidths(sheet: ExcelJS.Worksheet, widths: number[]): void {
 
 /**
  * Convert camelCase field name to Title Case header
+ * Handles dot notation by using only the last part (most specific field name)
  * Example: "propertyAddress" → "Property Address"
+ * Example: "propertyCharacteristics.address" → "Address"
  */
 function camelCaseToTitleCase(str: string): string {
-  return str
+  // Handle dot notation by taking only the last part (most specific field name)
+  const fieldName = str.includes('.') ? str.split('.').pop()! : str;
+
+  return fieldName
     .replace(/([A-Z])/g, ' $1') // Add space before capitals
     .replace(/^./, (char) => char.toUpperCase()) // Capitalize first letter
     .trim();
