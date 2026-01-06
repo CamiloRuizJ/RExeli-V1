@@ -1138,7 +1138,7 @@ async function extractDataFromNativePDF(
     const response = await getAnthropicClient().messages.create({
       model: await getActiveModelForDocumentType(documentType),
       max_tokens: 64000,
-      temperature: 0.7, // Higher temperature allows AI to better understand document structure
+      temperature: 0.5, // Balanced temperature for document understanding without hallucination
       stop_sequences: ['</verification>'],
       system: "You are an expert commercial real estate analyst with 20+ years of experience. Your task is to thoroughly extract ALL data from this document. RULES: 1) Extract every piece of data visible in the document - be comprehensive. 2) NEVER invent or hallucinate data that is not in the document. 3) Understand document structure and column headers intelligently (e.g., 'Sq Ft' = squareFootage, 'Mo. Rent' = monthlyRent). 4) Use null only for fields genuinely not present. 5) Format prices with $ prefix, percentages with % suffix. 6) Include any additional fields found in the document, even if not in the template.",
       messages: [
