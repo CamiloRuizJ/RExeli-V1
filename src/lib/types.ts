@@ -42,11 +42,11 @@ export type DocumentType =
 export interface ExtractedData {
   documentType: DocumentType;
   metadata: {
-    // Document metadata (extracted from PDF content):
-    propertyName?: string;
-    propertyAddress?: string;
-    totalSquareFeet?: number;
-    totalUnits?: number;
+    // Document metadata (extracted from PDF content - can be null if not found):
+    propertyName?: string | null;
+    propertyAddress?: string | null;
+    totalSquareFeet?: number | null;
+    totalUnits?: number | null;
     extractedDate: string;
 
     // User metadata (system-generated):
@@ -55,6 +55,18 @@ export interface ExtractedData {
     rexeliUserEmail: string;
     extractionTimestamp: string;
     documentId: string;
+
+    // Additional optional fields from AI extraction:
+    asOfDate?: string | null;
+    budgetPeriod?: string | null;
+    reportTitle?: string | null;
+    preparedBy?: string | null;
+    reportDate?: string | null;
+    surveyTitle?: string | null;
+    surveyDate?: string | null;
+    period?: string | null;
+    statementType?: string | null;
+    [key: string]: string | number | null | undefined;  // Allow additional fields
   };
   data: RentRollData | OperatingBudgetData | BrokerSalesComparablesData | BrokerLeaseComparablesData | BrokerListingData | OfferingMemoData | LeaseData | FinancialStatementsData | ComparableData | FinancialData;
 }
