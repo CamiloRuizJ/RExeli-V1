@@ -218,9 +218,23 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (createError) {
-      console.error('Error creating group:', createError);
+      console.error('Error creating group:', {
+        code: createError.code,
+        message: createError.message,
+        details: createError.details,
+        hint: createError.hint
+      });
+
+      // Check if it's an RLS policy error - likely means service role key is not configured
+      if (createError.code === '42501') {
+        return NextResponse.json(
+          { success: false, error: 'Permission denied. Please ensure SUPABASE_SERVICE_ROLE_KEY is configured in environment variables.' },
+          { status: 500 }
+        );
+      }
+
       return NextResponse.json(
-        { success: false, error: 'Failed to create group' },
+        { success: false, error: `Failed to create group: ${createError.message}` },
         { status: 500 }
       );
     }

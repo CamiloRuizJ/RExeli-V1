@@ -49,8 +49,24 @@ export async function GET(request: NextRequest) {
     const { data: users, error: usersError } = await query;
 
     if (usersError) {
-      console.error('Error fetching users:', usersError);
+      console.error('Error fetching users:', {
+        code: usersError.code,
+        message: usersError.message,
+        details: usersError.details,
+        hint: usersError.hint
+      });
+
+      // Check if it's an RLS policy error
+      if (usersError.code === '42501') {
+        return NextResponse.json({ error: 'Permission denied. SUPABASE_SERVICE_ROLE_KEY may not be configured.' }, { status: 500 });
+      }
+
       return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    }
+
+    console.log(`[Admin Users API] Fetched ${users?.length || 0} users for search: "${search || 'all'}"`);
+    if (users && users.length > 0) {
+      console.log('[Admin Users API] Sample user subscription types:', users.slice(0, 5).map(u => u.subscription_type));
     }
 
     // Get stats

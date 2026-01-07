@@ -63,7 +63,13 @@
       "Bash($env:SUPABASE_ACCESS_TOKEN=\"sbp_90bc13d5cb349c3d00807ca5bef4dd851f0cac05\")",
       "Bash(mcp list-tools:*)",
       "Bash(rm:*)",
-      "Bash(xargs cat:*)"
+      "Bash(xargs cat:*)",
+      "Bash(cmd /c \"npm run build 2>&1\")",
+      "Bash(powershell -Command \"cd ''c:\\\\Users\\\\camrj\\\\RExeli\\\\RExeli-V1''; npx tsc --noEmit 2>&1\")",
+      "Bash(where:*)",
+      "Bash(cmd /c \"npx tsc --noEmit 2>&1\")",
+      "Bash(cmd /c \"npx vercel --prod\")",
+      "Bash(/c/Program Files/nodejs/npx.cmd vercel --prod)"
     ],
     "deny": [],
     "ask": []

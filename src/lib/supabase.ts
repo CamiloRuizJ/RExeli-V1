@@ -65,7 +65,9 @@ if (typeof window === 'undefined') {
     url: supabaseUrl.substring(0, 30) + '...',
     keyPrefix: supabaseAnonKey.substring(0, 10) + '...',
     hasUrl: !!supabaseUrl && supabaseUrl !== 'https://dummy.supabase.co',
-    hasKey: !!supabaseAnonKey && supabaseAnonKey !== 'dummy-key'
+    hasKey: !!supabaseAnonKey && supabaseAnonKey !== 'dummy-key',
+    hasServiceKey: !!serviceKey && serviceKey !== 'build-time-placeholder-service-key',
+    serviceKeyPrefix: serviceKey ? serviceKey.substring(0, 10) + '...' : 'NOT SET'
   });
 }
 
