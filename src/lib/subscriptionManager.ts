@@ -770,7 +770,7 @@ export function getGroupSubscriptionDetails(planType: GroupSubscriptionType): {
   const credits = GROUP_SUBSCRIPTION_CREDITS[planType] || 0;
   const maxMembers = GROUP_MAX_MEMBERS[planType] || 3;
 
-  let name = planType;
+  let name: string = planType;
   let billingCycle: 'monthly' | 'annual' = 'monthly';
 
   if (planType.includes('monthly')) {
