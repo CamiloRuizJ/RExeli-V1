@@ -10,19 +10,24 @@ import type { GroupSubscriptionType } from './types';
 
 /**
  * Subscription plan credit allocations (individual users)
- * Based on average 5 pages per document
+ * 1 credit = 1 page
  */
 export const SUBSCRIPTION_CREDITS = {
   free: 0,
-  entrepreneur_monthly: 250, // 50 docs × 5 pages
-  professional_monthly: 1500, // 300 docs × 5 pages
-  business_monthly: 7500, // 1500 docs × 5 pages
-  entrepreneur_annual: 250, // Same monthly allocation
-  professional_annual: 1500,
-  business_annual: 7500,
-  one_time_entrepreneur: 250,
-  one_time_professional: 1250,
-  one_time_business: 6250,
+  // Monthly subscriptions
+  entrepreneur_monthly: 250,   // $15/mo
+  professional_monthly: 1500,  // $89/mo
+  business_monthly: 7500,      // $349/mo
+  // Annual subscriptions (same monthly allocation)
+  entrepreneur_annual: 250,    // $165/yr
+  professional_annual: 1500,   // $979/yr
+  business_annual: 7500,       // $3,839/yr
+  // One-time purchases (no expiration)
+  one_time_starter: 50,        // $8
+  one_time_basic: 150,         // $20
+  one_time_standard: 500,      // $55
+  one_time_pro: 1500,          // $135
+  one_time_enterprise: 5000,   // $400
 } as const;
 
 export type SubscriptionType = keyof typeof SUBSCRIPTION_CREDITS;

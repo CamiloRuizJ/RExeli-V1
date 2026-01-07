@@ -326,7 +326,7 @@ export default function LandingPage() {
           <Tabs defaultValue="monthly" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
               <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger value="annual">Annual (-20%)</TabsTrigger>
+              <TabsTrigger value="annual">Annual (1 mo free)</TabsTrigger>
               <TabsTrigger value="payg">One-Time Purchase</TabsTrigger>
             </TabsList>
 
@@ -334,7 +334,7 @@ export default function LandingPage() {
             <TabsContent value="monthly" className="space-y-8">
               <div className="text-center mb-6">
                 <Badge className="bg-emerald-100 text-emerald-800 text-sm px-4 py-2">
-                  Flexible monthly billing - Cancel anytime, no commitments required
+                  Flexible monthly billing - Cancel anytime, 1 credit = 1 page
                 </Badge>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -344,16 +344,16 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Entrepreneur</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$19</span>
+                        <span className="text-4xl font-bold text-gray-900">$15</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-emerald-600 font-medium">$0.38 per document</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.06 per page</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">50 documents/month</span>
+                        <span className="text-sm">250 pages/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -361,7 +361,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.75 per extra doc</span>
+                        <span className="text-sm">$0.10 per extra page</span>
                       </div>
                     </div>
 
@@ -380,16 +380,16 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Professional</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$119</span>
+                        <span className="text-4xl font-bold text-gray-900">$89</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-emerald-600 font-medium">$0.40 per document</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.06 per page</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">300 documents/month</span>
+                        <span className="text-sm">1,500 pages/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -397,7 +397,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.55 per extra doc</span>
+                        <span className="text-sm">$0.08 per extra page</span>
                       </div>
                     </div>
 
@@ -413,16 +413,16 @@ export default function LandingPage() {
                     <div className="space-y-2">
                       <h3 className="text-xl font-bold text-gray-900">Business</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$389</span>
+                        <span className="text-4xl font-bold text-gray-900">$349</span>
                         <span className="text-gray-500">/mo</span>
                       </div>
-                      <p className="text-sm text-emerald-600 font-medium">$0.26 per document</p>
+                      <p className="text-sm text-emerald-600 font-medium">$0.05 per page</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">1,500 documents/month</span>
+                        <span className="text-sm">7,500 pages/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -430,7 +430,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.35 per extra doc</span>
+                        <span className="text-sm">$0.06 per extra page</span>
                       </div>
                     </div>
 
@@ -454,7 +454,7 @@ export default function LandingPage() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">10,000+ documents/month</span>
+                        <span className="text-sm">50,000+ pages/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -478,7 +478,7 @@ export default function LandingPage() {
             <TabsContent value="annual" className="space-y-8">
               <div className="text-center mb-6">
                 <Badge className="bg-emerald-100 text-emerald-800 text-sm px-4 py-2">
-                  Save 20% with annual billing - Best value for committed teams
+                  Get 1 month free with annual billing - Best value for committed teams
                 </Badge>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -489,18 +489,18 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold text-gray-900">Entrepreneur</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$182</span>
+                          <span className="text-4xl font-bold text-gray-900">$165</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$15/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $46/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$13.75/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $15/year</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">50 documents/month</span>
+                        <span className="text-sm">250 pages/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -508,7 +508,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">Paid annually</span>
+                        <span className="text-sm">$0.10 per extra page</span>
                       </div>
                     </div>
 
@@ -528,18 +528,18 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold text-gray-900">Professional</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$1,142</span>
+                          <span className="text-4xl font-bold text-gray-900">$979</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$95/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $286/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$81.58/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $89/year</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">300 documents/month</span>
+                        <span className="text-sm">1,500 pages/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -547,7 +547,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">Paid annually</span>
+                        <span className="text-sm">$0.08 per extra page</span>
                       </div>
                     </div>
 
@@ -564,18 +564,18 @@ export default function LandingPage() {
                       <h3 className="text-xl font-bold text-gray-900">Business</h3>
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold text-gray-900">$3,734</span>
+                          <span className="text-4xl font-bold text-gray-900">$3,839</span>
                           <span className="text-gray-500">/yr</span>
                         </div>
-                        <p className="text-sm text-emerald-600 font-medium">$311/mo effective</p>
-                        <p className="text-xs text-gray-500">Save $934/year</p>
+                        <p className="text-sm text-emerald-600 font-medium">$319.92/mo effective</p>
+                        <p className="text-xs text-gray-500">Save $349/year</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">1,500 documents/month</span>
+                        <span className="text-sm">7,500 pages/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -583,7 +583,7 @@ export default function LandingPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">Paid annually</span>
+                        <span className="text-sm">$0.06 per extra page</span>
                       </div>
                     </div>
 
@@ -607,7 +607,7 @@ export default function LandingPage() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">10,000+ documents/month</span>
+                        <span className="text-sm">50,000+ pages/month</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
@@ -631,17 +631,17 @@ export default function LandingPage() {
             <TabsContent value="payg" className="space-y-8">
               <div className="text-center mb-6">
                 <Badge className="bg-blue-100 text-blue-800 text-sm px-4 py-2">
-                  One-time payment, no recurring charges - Perfect for occasional use
+                  One-time payment, credits never expire - Perfect for occasional use
                 </Badge>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Entrepreneur Pack */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                {/* Starter Pack */}
                 <Card className="border-gray-200 hover:shadow-lg transition-shadow">
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900">Entrepreneur Pack</h3>
+                      <h3 className="text-xl font-bold text-gray-900">Starter</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$39</span>
+                        <span className="text-4xl font-bold text-gray-900">$8</span>
                       </div>
                       <p className="text-sm text-gray-600">One-time payment</p>
                     </div>
@@ -649,19 +649,15 @@ export default function LandingPage() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">50 documents</span>
+                        <span className="text-sm">50 pages</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">1 user</span>
+                        <span className="text-sm">$0.16 per page</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.78 per doc</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">90 day expiration</span>
+                        <span className="text-sm">Never expires</span>
                       </div>
                     </div>
 
@@ -671,16 +667,13 @@ export default function LandingPage() {
                   </CardContent>
                 </Card>
 
-                {/* Professional Pack */}
-                <Card className="border-blue-500 border-2 hover:shadow-xl transition-shadow relative">
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-blue-600 text-white px-4 py-1">Best Value</Badge>
-                  </div>
+                {/* Basic Pack */}
+                <Card className="border-gray-200 hover:shadow-lg transition-shadow">
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900">Professional Pack</h3>
+                      <h3 className="text-xl font-bold text-gray-900">Basic</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$149</span>
+                        <span className="text-4xl font-bold text-gray-900">$20</span>
                       </div>
                       <p className="text-sm text-gray-600">One-time payment</p>
                     </div>
@@ -688,19 +681,50 @@ export default function LandingPage() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">250 documents</span>
+                        <span className="text-sm">150 pages</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">3 users</span>
+                        <span className="text-sm">$0.13 per page</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm font-semibold">$0.60 per doc</span>
+                        <span className="text-sm">Never expires</span>
+                      </div>
+                    </div>
+
+                    <Link href="/auth/signup">
+                      <Button variant="outline" className="w-full">Buy Now</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+
+                {/* Standard Pack */}
+                <Card className="border-blue-500 border-2 hover:shadow-xl transition-shadow relative">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-blue-600 text-white px-4 py-1">Best Value</Badge>
+                  </div>
+                  <CardContent className="p-6 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-gray-900">Standard</h3>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-bold text-gray-900">$55</span>
+                      </div>
+                      <p className="text-sm text-gray-600">One-time payment</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">500 pages</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">6 month expiration</span>
+                        <span className="text-sm font-semibold">$0.11 per page</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm">Never expires</span>
                       </div>
                     </div>
 
@@ -710,13 +734,13 @@ export default function LandingPage() {
                   </CardContent>
                 </Card>
 
-                {/* Business Pack */}
+                {/* Pro Pack */}
                 <Card className="border-gray-200 hover:shadow-lg transition-shadow">
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900">Business Pack</h3>
+                      <h3 className="text-xl font-bold text-gray-900">Pro</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-gray-900">$539</span>
+                        <span className="text-4xl font-bold text-gray-900">$135</span>
                       </div>
                       <p className="text-sm text-gray-600">One-time payment</p>
                     </div>
@@ -724,19 +748,15 @@ export default function LandingPage() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">1,250 documents</span>
+                        <span className="text-sm">1,500 pages</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">5 users</span>
+                        <span className="text-sm">$0.09 per page</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.43 per doc</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">12 month expiration</span>
+                        <span className="text-sm">Never expires</span>
                       </div>
                     </div>
 
@@ -750,35 +770,31 @@ export default function LandingPage() {
                 <Card className="border-gray-200 hover:shadow-lg transition-shadow bg-gradient-to-br from-gray-50 to-white">
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
-                      <h3 className="text-xl font-bold text-gray-900">Enterprise Pack</h3>
+                      <h3 className="text-xl font-bold text-gray-900">Enterprise</h3>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-bold text-gray-900">Custom</span>
+                        <span className="text-4xl font-bold text-gray-900">$400</span>
                       </div>
-                      <p className="text-sm text-gray-600">Tailored for you</p>
+                      <p className="text-sm text-gray-600">One-time payment</p>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">10,000+ documents</span>
+                        <span className="text-sm">5,000 pages</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">Unlimited users</span>
+                        <span className="text-sm">$0.08 per page</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">$0.50-$0.69 per doc</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span className="text-sm">12 mo+ or no expiration</span>
+                        <span className="text-sm">Never expires</span>
                       </div>
                     </div>
 
-                    <a href="mailto:sales@rexeli.com">
-                      <Button variant="outline" className="w-full">Contact Sales</Button>
-                    </a>
+                    <Link href="/auth/signup">
+                      <Button variant="outline" className="w-full">Buy Now</Button>
+                    </Link>
                   </CardContent>
                 </Card>
               </div>
