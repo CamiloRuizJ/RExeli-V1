@@ -16,6 +16,7 @@ interface UserOption {
   email: string;
   name: string;
   group_id: string | null;
+  subscription_type: string;
 }
 
 function CreateGroupContent() {
@@ -284,7 +285,22 @@ function CreateGroupContent() {
                         onClick={() => selectOwner(option)}
                         className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                       >
-                        <div className="font-medium text-gray-900">{option.name || 'Unknown'}</div>
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium text-gray-900">{option.name || 'Unknown'}</div>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            option.subscription_type === 'free'
+                              ? 'bg-gray-100 text-gray-600'
+                              : option.subscription_type?.includes('enterprise')
+                              ? 'bg-purple-100 text-purple-700'
+                              : option.subscription_type?.includes('business')
+                              ? 'bg-blue-100 text-blue-700'
+                              : option.subscription_type?.includes('professional')
+                              ? 'bg-green-100 text-green-700'
+                              : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {option.subscription_type?.replace('_', ' ') || 'free'}
+                          </span>
+                        </div>
                         <div className="text-sm text-gray-600">{option.email}</div>
                       </button>
                     ))}

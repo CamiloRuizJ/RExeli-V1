@@ -10,7 +10,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FileText, Upload, Clock, CheckCircle, CreditCard, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
+import { FileText, Upload, Clock, CheckCircle, CreditCard, TrendingUp, AlertCircle, RefreshCw, Users, Building2 } from 'lucide-react';
 import { useMultipleRealtimeSubscriptions } from '@/hooks/useRealtimeSubscription';
 
 interface UserData {
@@ -40,6 +40,19 @@ interface Document {
   processing_status: string;
 }
 
+interface GroupInfo {
+  id: string;
+  name: string;
+  description?: string;
+  credits: number;
+  subscriptionType: string;
+  subscriptionStatus: string;
+  documentVisibility: string;
+  role: string;
+  isOwner: boolean;
+  memberCount: number;
+}
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -48,6 +61,7 @@ export default function DashboardPage() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
   const [userName, setUserName] = useState<string>('');
+  const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +84,7 @@ export default function DashboardPage() {
       setUserStats(data.stats);
       setRecentDocuments(data.recentDocuments);
       setUserName(data.userName);
+      setGroupInfo(data.groupInfo || null);
       setError(null);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -248,6 +263,49 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Group/Company Info Card - Displayed prominently if user is in a group */}
+      {groupInfo && (
+        <div className="mb-8">
+          <div className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Building2 className="w-8 h-8 text-purple-200" />
+                <div>
+                  <h2 className="text-2xl font-bold">{groupInfo.name}</h2>
+                  {groupInfo.description && (
+                    <p className="text-purple-200 text-sm mt-1">{groupInfo.description}</p>
+                  )}
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                groupInfo.isOwner
+                  ? 'bg-yellow-400 text-yellow-900'
+                  : 'bg-purple-400 text-purple-900'
+              }`}>
+                {groupInfo.isOwner ? 'Owner' : 'Member'}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-6 mt-4">
+              <div>
+                <p className="text-purple-200 text-sm">Group Credits</p>
+                <p className="text-3xl font-bold">{groupInfo.credits.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-purple-200 text-sm">Team Members</p>
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-purple-200" />
+                  <p className="text-3xl font-bold">{groupInfo.memberCount}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-purple-200 text-sm">Document Sharing</p>
+                <p className="text-xl font-semibold capitalize">{groupInfo.documentVisibility}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Credit & Subscription Overview */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Overview</h2>
@@ -255,40 +313,40 @@ export default function DashboardPage() {
           {/* Credits Card */}
           <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-blue-100 text-sm">Available Credits</span>
+              <span className="text-blue-100 text-sm">{groupInfo ? 'Your Individual Credits' : 'Available Credits'}</span>
               <CreditCard className="w-5 h-5 text-blue-200" />
             </div>
             <p className="text-4xl font-bold mb-1">{userData.credits.toLocaleString()}</p>
             <p className="text-blue-100 text-sm">
-              1 credit = 1 page
+              {groupInfo ? 'Group credits used for processing' : '1 credit = 1 page'}
             </p>
           </div>
 
           {/* Subscription Card */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 text-sm">Subscription Plan</span>
+              <span className="text-gray-600 text-sm">{groupInfo ? 'Group Plan' : 'Subscription Plan'}</span>
               <FileText className="w-5 h-5 text-gray-400" />
             </div>
             <p className="text-2xl font-bold text-gray-900 mb-1">
-              {userData.subscription_type
+              {(groupInfo ? groupInfo.subscriptionType : userData.subscription_type)
                 .replace(/_/g, ' ')
                 .replace(/\b\w/g, (l: string) => l.toUpperCase())}
             </p>
             <div className="flex items-center gap-2">
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                  userData.subscription_status === 'active'
+                  (groupInfo ? groupInfo.subscriptionStatus : userData.subscription_status) === 'active'
                     ? 'bg-green-100 text-green-800'
-                    : userData.subscription_status === 'cancelled'
+                    : (groupInfo ? groupInfo.subscriptionStatus : userData.subscription_status) === 'cancelled'
                     ? 'bg-yellow-100 text-yellow-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}
               >
-                {userData.subscription_status}
+                {groupInfo ? groupInfo.subscriptionStatus : userData.subscription_status}
               </span>
             </div>
-            {userData.billing_cycle_end && (
+            {!groupInfo && userData.billing_cycle_end && (
               <p className="text-xs text-gray-500 mt-2">
                 Renews {new Date(userData.billing_cycle_end).toLocaleDateString()}
               </p>

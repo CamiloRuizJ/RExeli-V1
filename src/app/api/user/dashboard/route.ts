@@ -19,10 +19,10 @@ export async function GET() {
 
     // Fetch all data in parallel
     const [userResult, usageLogsResult, recentDocsResult] = await Promise.all([
-      // User data
+      // User data (include group_id)
       supabase
         .from('users')
-        .select('credits, subscription_type, subscription_status, monthly_usage, lifetime_usage, billing_cycle_end')
+        .select('credits, subscription_type, subscription_status, monthly_usage, lifetime_usage, billing_cycle_end, group_id')
         .eq('id', userId)
         .single(),
 
@@ -63,11 +63,53 @@ export async function GET() {
         : 0,
     };
 
+    // Fetch group info if user is in a group
+    let groupInfo = null;
+    if (userResult.data?.group_id) {
+      const [groupResult, memberResult, memberCountResult] = await Promise.all([
+        // Group details
+        supabase
+          .from('user_groups')
+          .select('id, name, description, credits, subscription_type, subscription_status, owner_id, document_visibility')
+          .eq('id', userResult.data.group_id)
+          .single(),
+        // User's role in group
+        supabase
+          .from('group_members')
+          .select('role')
+          .eq('group_id', userResult.data.group_id)
+          .eq('user_id', userId)
+          .single(),
+        // Member count
+        supabase
+          .from('group_members')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_id', userResult.data.group_id)
+          .eq('is_active', true)
+      ]);
+
+      if (groupResult.data) {
+        groupInfo = {
+          id: groupResult.data.id,
+          name: groupResult.data.name,
+          description: groupResult.data.description,
+          credits: groupResult.data.credits,
+          subscriptionType: groupResult.data.subscription_type,
+          subscriptionStatus: groupResult.data.subscription_status,
+          documentVisibility: groupResult.data.document_visibility,
+          role: memberResult.data?.role || 'member',
+          isOwner: groupResult.data.owner_id === userId,
+          memberCount: memberCountResult.count || 0
+        };
+      }
+    }
+
     return NextResponse.json({
       userData: userResult.data,
       stats,
       recentDocuments: recentDocsResult.data || [],
-      userName: session.user.name || session.user.email
+      userName: session.user.name || session.user.email,
+      groupInfo
     });
 
   } catch (error) {

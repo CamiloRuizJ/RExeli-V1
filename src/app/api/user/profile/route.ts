@@ -19,6 +19,8 @@ export interface UserProfileResponse {
   subscription_type: string;
   subscription_status: string;
   is_active: boolean;
+  group_id?: string;
+  group_name?: string;
 }
 
 export async function GET(request: NextRequest) {
@@ -41,7 +43,7 @@ export async function GET(request: NextRequest) {
     // Use auth_user_id to find the user in public.users table
     const { data: profile, error } = await supabaseAdmin
       .from('users')
-      .select('id, auth_user_id, email, name, role, credits, subscription_type, subscription_status, is_active')
+      .select('id, auth_user_id, email, name, role, credits, subscription_type, subscription_status, is_active, group_id')
       .eq('auth_user_id', authUser.id)
       .eq('is_active', true)
       .single();
@@ -56,9 +58,24 @@ export async function GET(request: NextRequest) {
 
     console.log('Profile API: Found profile with role:', profile.role);
 
+    // Fetch group name if user is in a group
+    let groupName: string | undefined;
+    if (profile.group_id) {
+      const { data: group } = await supabaseAdmin
+        .from('user_groups')
+        .select('name')
+        .eq('id', profile.group_id)
+        .single();
+
+      groupName = group?.name;
+    }
+
     return NextResponse.json<ApiResponse<UserProfileResponse>>({
       success: true,
-      data: profile
+      data: {
+        ...profile,
+        group_name: groupName
+      }
     });
 
   } catch (error) {

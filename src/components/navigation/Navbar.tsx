@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth, signOut } from '@/hooks/useAuth';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut, User, Building2 } from 'lucide-react';
 import MobileMenu from './MobileMenu';
 
 import { Logo } from '@/components/ui/Logo';
@@ -106,12 +106,18 @@ export default function Navbar() {
                           className="fixed inset-0 z-40"
                           onClick={() => setUserMenuOpen(false)}
                         />
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-50">
+                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-100 py-1 z-50">
                           <div className="px-4 py-2 border-b border-slate-100">
                             <p className="text-xs text-slate-500">Signed in as</p>
                             <p className="text-sm font-medium text-slate-900 truncate">
                               {user.email}
                             </p>
+                            {userProfile?.group_name && (
+                              <div className="flex items-center gap-1.5 mt-2 text-xs text-purple-700 bg-purple-50 px-2 py-1 rounded">
+                                <Building2 className="w-3 h-3" />
+                                <span className="truncate font-medium">{userProfile.group_name}</span>
+                              </div>
+                            )}
                           </div>
                           <button
                             onClick={handleSignOut}

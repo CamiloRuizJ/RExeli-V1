@@ -23,6 +23,8 @@ export interface UserProfile {
   subscription_type: string
   subscription_status: string
   is_active: boolean
+  group_id?: string
+  group_name?: string
 }
 
 /**
