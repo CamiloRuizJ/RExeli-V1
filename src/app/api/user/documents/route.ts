@@ -1,6 +1,9 @@
 /**
  * User Documents API
  * Returns all documents for the current user with optional filtering
+ *
+ * For users in groups with shared visibility, also returns documents
+ * created by other group members.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -37,42 +40,110 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid document type' }, { status: 400 });
     }
 
-    // Build query for documents
-    let documentsQuery = supabase
-      .from('user_documents')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    // Check if user is in a group with shared visibility
+    const { data: userData } = await supabase
+      .from('users')
+      .select('group_id')
+      .eq('id', userId)
+      .single();
 
-    if (documentType && documentType !== 'all') {
-      documentsQuery = documentsQuery.eq('document_type', documentType);
+    let groupInfo: { id: string; document_visibility: string } | null = null;
+
+    if (userData?.group_id) {
+      const { data: groupData } = await supabase
+        .from('user_groups')
+        .select('id, document_visibility, is_active')
+        .eq('id', userData.group_id)
+        .single();
+
+      if (groupData?.is_active && groupData.document_visibility === 'shared') {
+        groupInfo = groupData;
+      }
     }
 
-    // Fetch documents and stats in parallel
-    const [documentsResult, statsResult] = await Promise.all([
-      documentsQuery,
-      supabase
-        .from('user_documents')
-        .select('page_count, credits_used, processing_status')
-        .eq('user_id', userId)
-    ]);
+    let documents: any[] = [];
+    let allDocsForStats: any[] = [];
 
-    if (documentsResult.error) {
-      console.error('Error fetching documents:', documentsResult.error);
-      return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 });
+    if (groupInfo) {
+      // User is in a group with shared visibility - get all group documents
+      let groupDocsQuery = supabase
+        .from('user_documents')
+        .select('*, users!inner(email, name)')
+        .eq('group_id', groupInfo.id)
+        .order('created_at', { ascending: false });
+
+      if (documentType && documentType !== 'all') {
+        groupDocsQuery = groupDocsQuery.eq('document_type', documentType);
+      }
+
+      const [groupDocsResult, statsResult] = await Promise.all([
+        groupDocsQuery,
+        supabase
+          .from('user_documents')
+          .select('page_count, credits_used, processing_status')
+          .eq('group_id', groupInfo.id)
+      ]);
+
+      if (groupDocsResult.error) {
+        console.error('Error fetching group documents:', groupDocsResult.error);
+        return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 });
+      }
+
+      // Enrich documents with owner info
+      documents = (groupDocsResult.data || []).map(doc => ({
+        ...doc,
+        owner_email: (doc as any).users?.email,
+        owner_name: (doc as any).users?.name,
+        is_own_document: doc.user_id === userId,
+      }));
+
+      allDocsForStats = statsResult.data || [];
+    } else {
+      // Individual user or group with private visibility - get only own documents
+      let documentsQuery = supabase
+        .from('user_documents')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (documentType && documentType !== 'all') {
+        documentsQuery = documentsQuery.eq('document_type', documentType);
+      }
+
+      const [documentsResult, statsResult] = await Promise.all([
+        documentsQuery,
+        supabase
+          .from('user_documents')
+          .select('page_count, credits_used, processing_status')
+          .eq('user_id', userId)
+      ]);
+
+      if (documentsResult.error) {
+        console.error('Error fetching documents:', documentsResult.error);
+        return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 });
+      }
+
+      documents = (documentsResult.data || []).map(doc => ({
+        ...doc,
+        is_own_document: true,
+      }));
+
+      allDocsForStats = statsResult.data || [];
     }
 
     // Calculate stats
-    const allDocs = statsResult.data || [];
     const stats = {
-      totalDocuments: allDocs.length,
-      totalPages: allDocs.reduce((sum, doc) => sum + (doc.page_count || 0), 0),
-      totalCreditsUsed: allDocs.reduce((sum, doc) => sum + (doc.credits_used || 0), 0),
-      completedDocuments: allDocs.filter(doc => doc.processing_status === 'completed').length,
+      totalDocuments: allDocsForStats.length,
+      totalPages: allDocsForStats.reduce((sum, doc) => sum + (doc.page_count || 0), 0),
+      totalCreditsUsed: allDocsForStats.reduce((sum, doc) => sum + (doc.credits_used || 0), 0),
+      completedDocuments: allDocsForStats.filter(doc => doc.processing_status === 'completed').length,
+      // Group info
+      isGroupMember: !!groupInfo,
+      groupSharedVisibility: groupInfo?.document_visibility === 'shared',
     };
 
     return NextResponse.json({
-      documents: documentsResult.data || [],
+      documents,
       stats
     });
 

@@ -939,3 +939,250 @@ export interface TriggerCheckResult {
   trigger_threshold: number;
   reason: string;
 }
+
+// =====================================================
+// User Groups System Types
+// =====================================================
+
+export type GroupSubscriptionType =
+  | 'professional_monthly'
+  | 'professional_annual'
+  | 'business_monthly'
+  | 'business_annual'
+  | 'enterprise_monthly'
+  | 'enterprise_annual';
+
+export type GroupSubscriptionStatus = 'active' | 'inactive' | 'cancelled' | 'expired';
+export type GroupDocumentVisibility = 'shared' | 'private';
+export type GroupMemberRole = 'owner' | 'member';
+export type GroupCreditTransactionType =
+  | 'purchase'
+  | 'deduction'
+  | 'admin_add'
+  | 'subscription_reset'
+  | 'refund'
+  | 'bonus'
+  | 'initial_creation';
+
+export interface UserGroup {
+  id: string;
+
+  // Group Information
+  name: string;
+  description?: string;
+
+  // Owner Reference
+  owner_id: string;
+
+  // Credit Pool (shared by all members)
+  credits: number;
+  monthly_usage: number;
+  lifetime_usage: number;
+
+  // Subscription
+  subscription_type: GroupSubscriptionType;
+  subscription_status: GroupSubscriptionStatus;
+  billing_cycle_start?: string;
+  billing_cycle_end?: string;
+
+  // Group Settings
+  document_visibility: GroupDocumentVisibility;
+  max_members: number;
+
+  // Status
+  is_active: boolean;
+
+  // Audit
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+}
+
+export interface GroupMember {
+  id: string;
+
+  // References
+  group_id: string;
+  user_id: string;
+
+  // Member Role
+  role: GroupMemberRole;
+
+  // Status
+  joined_at: string;
+  invited_by?: string;
+  is_active: boolean;
+}
+
+export interface GroupCreditTransaction {
+  id: string;
+
+  group_id: string;
+  user_id?: string;  // Who triggered the transaction (null for admin/system)
+
+  amount: number;  // Positive = add, Negative = deduct
+  transaction_type: GroupCreditTransactionType;
+  description?: string;
+
+  admin_id?: string;  // If admin action
+
+  timestamp: string;
+}
+
+// Extended types with related data
+
+export interface UserGroupWithOwner extends UserGroup {
+  owner_email?: string;
+  owner_name?: string;
+}
+
+export interface GroupMemberWithUser extends GroupMember {
+  user_email?: string;
+  user_name?: string;
+}
+
+export interface GroupWithMembers extends UserGroupWithOwner {
+  members: GroupMemberWithUser[];
+  member_count: number;
+}
+
+export interface GroupSummary {
+  id: string;
+  name: string;
+  description?: string;
+  owner_id: string;
+  owner_email?: string;
+  owner_name?: string;
+  credits: number;
+  monthly_usage: number;
+  lifetime_usage: number;
+  subscription_type: GroupSubscriptionType;
+  subscription_status: GroupSubscriptionStatus;
+  billing_cycle_start?: string;
+  billing_cycle_end?: string;
+  document_visibility: GroupDocumentVisibility;
+  max_members: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  member_count: number;
+}
+
+// User extension for group membership
+export interface UserWithGroup {
+  id: string;
+  email: string;
+  name?: string;
+  group_id?: string;
+  group?: UserGroup;
+}
+
+// API Request/Response Types for Groups
+
+export interface CreateGroupRequest {
+  name: string;
+  description?: string;
+  owner_id: string;
+  subscription_type: GroupSubscriptionType;
+  document_visibility?: GroupDocumentVisibility;
+  initial_credits?: number;
+}
+
+export interface CreateGroupResponse {
+  success: boolean;
+  group: UserGroup;
+  message: string;
+}
+
+export interface UpdateGroupRequest {
+  name?: string;
+  description?: string;
+  subscription_type?: GroupSubscriptionType;
+  subscription_status?: GroupSubscriptionStatus;
+  document_visibility?: GroupDocumentVisibility;
+  max_members?: number;
+  is_active?: boolean;
+  billing_cycle_start?: string;
+  billing_cycle_end?: string;
+}
+
+export interface UpdateGroupResponse {
+  success: boolean;
+  group: UserGroup;
+  message: string;
+}
+
+export interface AddGroupMemberRequest {
+  user_id: string;
+  role?: GroupMemberRole;
+}
+
+export interface AddGroupMemberResponse {
+  success: boolean;
+  member: GroupMemberWithUser;
+  message: string;
+}
+
+export interface RemoveGroupMemberRequest {
+  user_id: string;
+}
+
+export interface RemoveGroupMemberResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface AddGroupCreditsRequest {
+  amount: number;
+  transaction_type: GroupCreditTransactionType;
+  description?: string;
+}
+
+export interface AddGroupCreditsResponse {
+  success: boolean;
+  group: UserGroup;
+  transaction: GroupCreditTransaction;
+  message: string;
+}
+
+export interface GroupsListQuery {
+  is_active?: boolean;
+  subscription_type?: GroupSubscriptionType;
+  subscription_status?: GroupSubscriptionStatus;
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface GroupsListResponse {
+  success: boolean;
+  groups: GroupSummary[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface GroupDetailResponse {
+  success: boolean;
+  group: GroupWithMembers;
+}
+
+export interface GroupCreditTransactionsQuery {
+  limit?: number;
+  offset?: number;
+}
+
+export interface GroupCreditTransactionsResponse {
+  success: boolean;
+  transactions: GroupCreditTransaction[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface UserGroupInfoResponse {
+  success: boolean;
+  group?: GroupWithMembers;
+  is_member: boolean;
+  role?: GroupMemberRole;
+}

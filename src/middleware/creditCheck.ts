@@ -3,15 +3,67 @@
  *
  * Handles credit validation, deduction, and usage logging
  * Credit Model: 1 credit = 1 page
+ *
+ * Supports both individual users and group users:
+ * - Individual users: credits deducted from users.credits
+ * - Group users: credits deducted from user_groups.credits (shared pool)
  */
 
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 
 /**
+ * Get user's group information if they belong to a group
+ * @param userId - User's UUID
+ * @returns Group info or null if not in a group
+ */
+export async function getUserGroupInfo(userId: string): Promise<{
+  groupId: string;
+  groupName: string;
+  groupCredits: number;
+  isOwner: boolean;
+} | null> {
+  try {
+    // Get user's group_id
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('group_id')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !user || !user.group_id) {
+      return null;
+    }
+
+    // Get group details
+    const { data: group, error: groupError } = await supabase
+      .from('user_groups')
+      .select('id, name, credits, owner_id, is_active')
+      .eq('id', user.group_id)
+      .single();
+
+    if (groupError || !group || !group.is_active) {
+      return null;
+    }
+
+    return {
+      groupId: group.id,
+      groupName: group.name,
+      groupCredits: group.credits || 0,
+      isOwner: group.owner_id === userId,
+    };
+  } catch (error) {
+    console.error('Error getting user group info:', error);
+    return null;
+  }
+}
+
+/**
  * Check if user has sufficient credits for processing
+ * Supports both individual users and group users (shared credit pool)
+ *
  * @param userId - User's UUID
  * @param requiredPages - Number of pages (credits) needed
- * @returns Object with hasCredits boolean and current credit balance
+ * @returns Object with hasCredits boolean, current credit balance, and group info
  */
 export async function checkUserCredits(
   userId: string,
@@ -20,12 +72,15 @@ export async function checkUserCredits(
   hasCredits: boolean;
   currentCredits: number;
   shortage?: number;
+  isGroupMember?: boolean;
+  groupId?: string;
+  groupName?: string;
 }> {
   try {
-    // Get user's current credit balance
+    // Get user's current info including group membership
     const { data: user, error } = await supabase
       .from('users')
-      .select('credits, is_active')
+      .select('credits, is_active, group_id')
       .eq('id', userId)
       .single();
 
@@ -37,6 +92,38 @@ export async function checkUserCredits(
       throw new Error('Account is inactive. Please contact support.');
     }
 
+    // Check if user is in a group
+    if (user.group_id) {
+      // Get group credits from the shared pool
+      const { data: group, error: groupError } = await supabase
+        .from('user_groups')
+        .select('id, name, credits, is_active')
+        .eq('id', user.group_id)
+        .single();
+
+      if (groupError || !group) {
+        // Group not found, fall back to individual credits
+        console.warn(`Group ${user.group_id} not found for user ${userId}, using individual credits`);
+      } else if (!group.is_active) {
+        // Group is inactive, fall back to individual credits
+        console.warn(`Group ${user.group_id} is inactive for user ${userId}, using individual credits`);
+      } else {
+        // Use group credits
+        const groupCredits = group.credits || 0;
+        const hasCredits = groupCredits >= requiredPages;
+
+        return {
+          hasCredits,
+          currentCredits: groupCredits,
+          shortage: hasCredits ? undefined : requiredPages - groupCredits,
+          isGroupMember: true,
+          groupId: group.id,
+          groupName: group.name,
+        };
+      }
+    }
+
+    // Individual user credits
     const currentCredits = user.credits || 0;
     const hasCredits = currentCredits >= requiredPages;
 
@@ -44,6 +131,7 @@ export async function checkUserCredits(
       hasCredits,
       currentCredits,
       shortage: hasCredits ? undefined : requiredPages - currentCredits,
+      isGroupMember: false,
     };
   } catch (error) {
     console.error('Error checking user credits:', error);
@@ -52,10 +140,12 @@ export async function checkUserCredits(
 }
 
 /**
- * Deduct credits from user account
+ * Deduct credits from user account (or group pool if user is in a group)
+ * Uses the deduct_effective_credits database function which handles both cases
+ *
  * @param userId - User's UUID
  * @param pageCount - Number of pages (credits) to deduct
- * @returns Success status and remaining credits
+ * @returns Success status, remaining credits, and group info if applicable
  */
 export async function deductCredits(
   userId: string,
@@ -64,10 +154,21 @@ export async function deductCredits(
   success: boolean;
   remainingCredits: number;
   error?: string;
+  isGroupDeduction?: boolean;
+  groupId?: string;
 }> {
   try {
-    // Call the database function for atomic credit deduction
-    const { data, error } = await supabase.rpc('deduct_user_credits', {
+    // First check if user is in a group
+    const { data: user } = await supabase
+      .from('users')
+      .select('group_id')
+      .eq('id', userId)
+      .single();
+
+    const isGroupMember = !!user?.group_id;
+
+    // Call the database function that handles both individual and group deduction
+    const { data, error } = await supabase.rpc('deduct_effective_credits', {
       p_user_id: userId,
       p_page_count: pageCount,
     });
@@ -77,31 +178,64 @@ export async function deductCredits(
     }
 
     if (!data) {
-      // Insufficient credits
-      const { data: user } = await supabase
+      // Insufficient credits - get current balance
+      if (isGroupMember && user?.group_id) {
+        const { data: group } = await supabase
+          .from('user_groups')
+          .select('credits')
+          .eq('id', user.group_id)
+          .single();
+
+        return {
+          success: false,
+          remainingCredits: group?.credits || 0,
+          error: 'Insufficient group credits',
+          isGroupDeduction: true,
+          groupId: user.group_id,
+        };
+      } else {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('credits')
+          .eq('id', userId)
+          .single();
+
+        return {
+          success: false,
+          remainingCredits: userData?.credits || 0,
+          error: 'Insufficient credits',
+          isGroupDeduction: false,
+        };
+      }
+    }
+
+    // Get updated credit balance
+    if (isGroupMember && user?.group_id) {
+      const { data: updatedGroup } = await supabase
+        .from('user_groups')
+        .select('credits')
+        .eq('id', user.group_id)
+        .single();
+
+      return {
+        success: true,
+        remainingCredits: updatedGroup?.credits || 0,
+        isGroupDeduction: true,
+        groupId: user.group_id,
+      };
+    } else {
+      const { data: updatedUser } = await supabase
         .from('users')
         .select('credits')
         .eq('id', userId)
         .single();
 
       return {
-        success: false,
-        remainingCredits: user?.credits || 0,
-        error: 'Insufficient credits',
+        success: true,
+        remainingCredits: updatedUser?.credits || 0,
+        isGroupDeduction: false,
       };
     }
-
-    // Get updated credit balance
-    const { data: updatedUser } = await supabase
-      .from('users')
-      .select('credits')
-      .eq('id', userId)
-      .single();
-
-    return {
-      success: true,
-      remainingCredits: updatedUser?.credits || 0,
-    };
   } catch (error) {
     console.error('Error deducting credits:', error);
     return {
@@ -171,6 +305,8 @@ export async function logUsage(
 
 /**
  * Save processed document to user's history
+ * Automatically sets group_id if user is part of a group (for shared document visibility)
+ *
  * @param userId - User's UUID
  * @param documentData - Document data
  * @returns Document ID if successful
@@ -189,7 +325,14 @@ export async function saveUserDocument(
   try {
     console.log('[saveUserDocument] Attempting to save document for user:', userId, 'file:', documentData.fileName);
 
-    const insertData = {
+    // Check if user is in a group
+    const { data: user } = await supabase
+      .from('users')
+      .select('group_id')
+      .eq('id', userId)
+      .single();
+
+    const insertData: Record<string, any> = {
       user_id: userId,
       file_path: documentData.filePath,
       file_name: documentData.fileName,
@@ -199,6 +342,12 @@ export async function saveUserDocument(
       credits_used: documentData.pageCount,
       processing_status: documentData.processingStatus,
     };
+
+    // Add group_id if user is in a group (for shared document visibility)
+    if (user?.group_id) {
+      insertData.group_id = user.group_id;
+      console.log('[saveUserDocument] User is in group:', user.group_id);
+    }
 
     console.log('[saveUserDocument] Insert data (without extracted_data):', JSON.stringify({
       ...insertData,
@@ -267,16 +416,19 @@ export async function sendLowCreditsEmail(
 
 /**
  * Check if user should receive low credits warning
- * @param currentCredits - User's current credit balance
- * @param subscription - User's subscription type
+ * Supports both individual and group subscription types
+ *
+ * @param currentCredits - User's current credit balance (individual or group)
+ * @param subscription - User's or group's subscription type
  * @returns True if warning should be sent
  */
 export function shouldSendLowCreditsWarning(
   currentCredits: number,
   subscription: string
 ): boolean {
-  // Define thresholds based on subscription
+  // Define thresholds based on subscription (10% of monthly allocation)
   const thresholds: Record<string, number> = {
+    // Individual plans
     entrepreneur_monthly: 25, // 10% of 250
     professional_monthly: 150, // 10% of 1500
     business_monthly: 750, // 10% of 7500
@@ -285,6 +437,10 @@ export function shouldSendLowCreditsWarning(
     business_annual: 750,
     one_time: 5, // 10% of average 50
     free: 2, // 10% of 25 free credits
+
+    // Group plans (same thresholds as individual plans of same tier)
+    // Group professional: 1500 credits / month
+    // Group business: 7500 credits / month
   };
 
   const threshold = thresholds[subscription] || 5;
@@ -292,9 +448,9 @@ export function shouldSendLowCreditsWarning(
 }
 
 /**
- * Get user's credit information
+ * Get user's credit information (returns group info if user is in a group)
  * @param userId - User's UUID
- * @returns Credit and subscription information
+ * @returns Credit and subscription information (individual or group)
  */
 export async function getUserCreditInfo(userId: string): Promise<{
   credits: number;
@@ -303,18 +459,48 @@ export async function getUserCreditInfo(userId: string): Promise<{
   monthlyUsage: number;
   lifetimeUsage: number;
   billingCycleEnd: string | null;
+  // Group-specific fields
+  isGroupMember?: boolean;
+  groupId?: string;
+  groupName?: string;
 } | null> {
   try {
     const { data: user, error } = await supabase
       .from('users')
       .select(
-        'credits, subscription_type, subscription_status, monthly_usage, lifetime_usage, billing_cycle_end'
+        'credits, subscription_type, subscription_status, monthly_usage, lifetime_usage, billing_cycle_end, group_id'
       )
       .eq('id', userId)
       .single();
 
     if (error || !user) {
       return null;
+    }
+
+    // If user is in a group, return group credit info instead
+    if (user.group_id) {
+      const { data: group, error: groupError } = await supabase
+        .from('user_groups')
+        .select(
+          'id, name, credits, subscription_type, subscription_status, monthly_usage, lifetime_usage, billing_cycle_end, is_active'
+        )
+        .eq('id', user.group_id)
+        .single();
+
+      if (!groupError && group && group.is_active) {
+        return {
+          credits: group.credits || 0,
+          subscriptionType: group.subscription_type || 'professional_monthly',
+          subscriptionStatus: group.subscription_status || 'active',
+          monthlyUsage: group.monthly_usage || 0,
+          lifetimeUsage: group.lifetime_usage || 0,
+          billingCycleEnd: group.billing_cycle_end,
+          isGroupMember: true,
+          groupId: group.id,
+          groupName: group.name,
+        };
+      }
+      // Group not found or inactive, fall through to individual credits
     }
 
     return {
@@ -324,6 +510,7 @@ export async function getUserCreditInfo(userId: string): Promise<{
       monthlyUsage: user.monthly_usage || 0,
       lifetimeUsage: user.lifetime_usage || 0,
       billingCycleEnd: user.billing_cycle_end,
+      isGroupMember: false,
     };
   } catch (error) {
     console.error('Error getting user credit info:', error);
@@ -333,6 +520,8 @@ export async function getUserCreditInfo(userId: string): Promise<{
 
 /**
  * Validate credit transaction before processing
+ * Supports both individual and group credit pools
+ *
  * @param userId - User's UUID
  * @param pageCount - Number of pages to process
  * @returns Validation result with user-friendly message
@@ -344,19 +533,27 @@ export async function validateCreditTransaction(
   isValid: boolean;
   message: string;
   currentCredits?: number;
+  isGroupMember?: boolean;
+  groupName?: string;
 }> {
   try {
     const creditCheck = await checkUserCredits(userId, pageCount);
 
     if (!creditCheck.hasCredits) {
+      const creditSource = creditCheck.isGroupMember && creditCheck.groupName
+        ? `your group "${creditCheck.groupName}"`
+        : 'you';
+
       return {
         isValid: false,
         message: `Insufficient credits. This document has ${pageCount} ${
           pageCount === 1 ? 'page' : 'pages'
-        } but you only have ${creditCheck.currentCredits} ${
+        } but ${creditSource} only ${creditCheck.isGroupMember ? 'has' : 'have'} ${creditCheck.currentCredits} ${
           creditCheck.currentCredits === 1 ? 'credit' : 'credits'
-        } remaining. Please upgrade your plan to continue.`,
+        } remaining. ${creditCheck.isGroupMember ? 'Please contact your group admin to add credits.' : 'Please upgrade your plan to continue.'}`,
         currentCredits: creditCheck.currentCredits,
+        isGroupMember: creditCheck.isGroupMember,
+        groupName: creditCheck.groupName,
       };
     }
 
@@ -374,14 +571,20 @@ export async function validateCreditTransaction(
       }
     }
 
+    const creditSource = creditCheck.isGroupMember && creditCheck.groupName
+      ? `Your group "${creditCheck.groupName}" has`
+      : 'You have';
+
     return {
       isValid: true,
       message: `This document has ${pageCount} ${
         pageCount === 1 ? 'page' : 'pages'
       } and will use ${pageCount} ${
         pageCount === 1 ? 'credit' : 'credits'
-      }. You have ${creditCheck.currentCredits} credits remaining.`,
+      }. ${creditSource} ${creditCheck.currentCredits} credits remaining.`,
       currentCredits: creditCheck.currentCredits,
+      isGroupMember: creditCheck.isGroupMember,
+      groupName: creditCheck.groupName,
     };
   } catch (error) {
     console.error('Error validating credit transaction:', error);

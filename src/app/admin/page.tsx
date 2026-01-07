@@ -27,12 +27,19 @@ export default async function AdminPage() {
         <p className="text-gray-600 mt-2">Welcome, {session.user.name || session.user.email}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* User Management */}
         <Link href="/admin/users" className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">User Management</h2>
           <p className="text-gray-600 text-sm mb-4">Manage user accounts, credits, and subscriptions.</p>
           <span className="text-blue-600 font-medium">Manage Users →</span>
+        </Link>
+
+        {/* User Groups */}
+        <Link href="/admin/groups" className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">User Groups</h2>
+          <p className="text-gray-600 text-sm mb-4">Manage user groups with shared credit pools for multi-user packages.</p>
+          <span className="text-blue-600 font-medium">Manage Groups →</span>
         </Link>
 
         {/* Payments & Billing */}
